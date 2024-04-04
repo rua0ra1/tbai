@@ -17,3 +17,5 @@ Towards better athletic intelligence
 - [ ] tbai_perceptive_rl
 - [ ] tbai_blind_rl
 - [ ] tbai_dtc
+
+Mention that some of the code is part of the `ocs2` fork in branch tbai
