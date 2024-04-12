@@ -13,6 +13,7 @@ class YamlConfigTest : public ::testing::Test {
         const std::string configPath = DUMMY_CONFIG_PATH;
         std::ofstream file(configPath);
         std::string content = "a:\n  b: hello\n  c: 1\n  d: 3.14\n  e:\n    f: 28\nvec: [1,2,3] \nmat: [[1,2],[3,4]]\n";
+        content = content + "joint_names: [joint1, joint2, joint3]\n";
         file << content;
         file.close();
     }
@@ -43,6 +44,19 @@ TEST_F(YamlConfigTest, delimForwardslash) {
     ASSERT_EQ(config.get<int>("a/c"), 1);
     ASSERT_EQ(config.get<double>("a/d"), 3.14);
     ASSERT_EQ(config.get<int>("a/e/f"), 28);
+}
+
+TEST_F(YamlConfigTest, listOfStrings) {
+    const std::string configPath = DUMMY_CONFIG_PATH;
+    const char delim = '/';
+    tbai::config::YamlConfig config(configPath, delim);
+
+    std::vector<std::string> jointNames = config.get<std::vector<std::string>>("joint_names");
+    ASSERT_EQ(jointNames.size(), 3);
+    ASSERT_EQ(jointNames[0], "joint1");
+    ASSERT_EQ(jointNames[1], "joint2");
+    ASSERT_EQ(jointNames[2], "joint3");
+
 }
 
 TEST_F(YamlConfigTest, vector) {
