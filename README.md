@@ -19,3 +19,9 @@ Towards better athletic intelligence
 - [ ] tbai_dtc
 
 Mention that some of the code is part of the `ocs2` fork in branch tbai
+
+
+## Project linting
+```bash
+cpplint --recursive .
+```
