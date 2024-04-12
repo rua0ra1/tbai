@@ -25,3 +25,8 @@ Mention that some of the code is part of the `ocs2` fork in branch tbai
 ```bash
 cpplint --recursive .
 ```
+
+## Docs
+```bash
+google-chrome ./build/tbai_docs/output/doxygen/html/index.html
+```
