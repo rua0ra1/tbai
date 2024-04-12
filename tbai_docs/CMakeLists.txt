@@ -4,6 +4,7 @@ project (tbai_docs VERSION 0.0.0)
 
 # Modules to document
 list(APPEND TBAI_MODULES
+  tbai_core
   tbai_config
 )
 
