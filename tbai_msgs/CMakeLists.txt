@@ -14,7 +14,7 @@ add_message_files(
     FILES
     JointCommand.msg
     JointCommandArray.msg
-    RobotState.msg
+    RbdState.msg
 )
 
 generate_messages(
