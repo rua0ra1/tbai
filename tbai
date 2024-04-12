@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 
 function print_help() {
-	echo "Usage: ./tbai [--format|--lint|--build|--test]"
+	echo "Usage: ./tbai [--format|--lint|--build|--test|--docs]"
 }
 
 function lint() {
@@ -50,6 +50,12 @@ function test() {
     catkin test $ros_packages
 }
 
+function open_docs() {
+    script_dir=$(dirname "$0")
+    docs_dir=${script_dir}/../../build/tbai_docs/output/doxygen/html/index.html
+    google-chrome $docs_dir
+}
+
 
 if [[ "$1" == "--help" || "$1" == "-h" || -z "$1" ]]; then
 	print_help
@@ -73,6 +79,11 @@ fi
 
 if [[ "$1" == "--test" ]]; then
     test
+    exit
+fi
+
+if [[ "$1" == "--docs" ]]; then
+    open_docs
     exit
 fi
 
