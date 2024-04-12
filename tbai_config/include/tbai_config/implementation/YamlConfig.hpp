@@ -33,7 +33,8 @@ T YamlConfig::parseNode(const YAML::Node &node) const {
 /**********************************************************************************************************************/
 /**********************************************************************************************************************/
 /**********************************************************************************************************************/
-template <>  // TODO(lnotspotl): This specialization breaks doxygen
+/// \cond  // TODO(lnotspotl): This specialization breaks doxygen
+template <>
 vector_t YamlConfig::parseNode(const YAML::Node &node) const {
     const size_t len = node.size();
     vector_t output(len);
@@ -42,11 +43,13 @@ vector_t YamlConfig::parseNode(const YAML::Node &node) const {
     }
     return output;
 }
+/// \endcond
 
 /**********************************************************************************************************************/
 /**********************************************************************************************************************/
 /**********************************************************************************************************************/
-template <>  // TODO(lnotspotl): This specialization breaks doxygen
+/// \cond  // TODO(lnotspotl): This specialization breaks doxygen
+template <>
 matrix_t YamlConfig::parseNode(const YAML::Node &node) const {
     const size_t rows = node.size();
     const size_t cols = node[0].size();
@@ -58,6 +61,7 @@ matrix_t YamlConfig::parseNode(const YAML::Node &node) const {
     }
     return output;
 }
+/// \endcond
 
 /**********************************************************************************************************************/
 /**********************************************************************************************************************/
