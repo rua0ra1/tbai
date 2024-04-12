@@ -2,6 +2,7 @@
 
 #include <fstream>
 #include <string>
+#include <tbai_core/Types.hpp>
 
 #include "tbai_config/YamlConfig.hpp"
 
@@ -12,7 +13,7 @@ class YamlConfigTest : public ::testing::Test {
     static void SetUpTestSuite() {
         const std::string configPath = DUMMY_CONFIG_PATH;
         std::ofstream file(configPath);
-        std::string content = "a:\n  b: hello\n  c: 1\n  d: 3.14\n  e:\n    f: 28";
+        std::string content = "a:\n  b: hello\n  c: 1\n  d: 3.14\n  e:\n    f: 28\nvec: [1,2,3] \nmat: [[1,2],[3,4]]\n";
         file << content;
         file.close();
     }
@@ -43,6 +44,32 @@ TEST_F(YamlConfigTest, delimForwardslash) {
     ASSERT_EQ(config.get<int>("a/c"), 1);
     ASSERT_EQ(config.get<double>("a/d"), 3.14);
     ASSERT_EQ(config.get<int>("a/e/f"), 28);
+}
+
+TEST_F(YamlConfigTest, vector) {
+    const std::string configPath = DUMMY_CONFIG_PATH;
+    const char delim = '/';
+    tbai::config::YamlConfig config(configPath, delim);
+
+    tbai::vector_t vec = config.get<tbai::vector_t>("vec");
+    ASSERT_EQ(vec.size(), 3);
+    ASSERT_EQ(vec(0), 1.0);
+    ASSERT_EQ(vec(1), 2.0);
+    ASSERT_EQ(vec(2), 3.0);
+}
+
+TEST_F(YamlConfigTest, matrix) {
+    const std::string configPath = DUMMY_CONFIG_PATH;
+    const char delim = '/';
+    tbai::config::YamlConfig config(configPath, delim);
+
+    tbai::matrix_t mat = config.get<tbai::matrix_t>("mat");
+    ASSERT_EQ(mat.rows(), 2);
+    ASSERT_EQ(mat.cols(), 2);
+    ASSERT_EQ(mat(0, 0), 1.0);
+    ASSERT_EQ(mat(0, 1), 2.0);
+    ASSERT_EQ(mat(1, 0), 3.0);
+    ASSERT_EQ(mat(1, 1), 4.0);
 }
 
 int main(int argc, char **argv) {

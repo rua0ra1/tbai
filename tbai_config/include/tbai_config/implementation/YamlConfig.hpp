@@ -3,6 +3,8 @@
 
 #include <iostream>
 #include <string>
+#include <tbai_core/Types.hpp>
+
 namespace tbai {
 
 namespace config {
@@ -23,8 +25,37 @@ T YamlConfig::traverse(const YAML::Node &node, const std::string &key) const {
 /**********************************************************************************************************************/
 /**********************************************************************************************************************/
 template <typename T>
-inline T YamlConfig::parseNode(const YAML::Node &node) const {
+T YamlConfig::parseNode(const YAML::Node &node) const {
     return node.as<T>();
+}
+
+/**********************************************************************************************************************/
+/**********************************************************************************************************************/
+/**********************************************************************************************************************/
+template <>
+vector_t YamlConfig::parseNode(const YAML::Node &node) const {
+    const size_t len = node.size();
+    vector_t output(len);
+    for (size_t i = 0; i < len; ++i) {
+        output(i) = node[i].as<scalar_t>();
+    }
+    return output;
+}
+
+/**********************************************************************************************************************/
+/**********************************************************************************************************************/
+/**********************************************************************************************************************/
+template <>
+matrix_t YamlConfig::parseNode(const YAML::Node &node) const {
+    const size_t rows = node.size();
+    const size_t cols = node[0].size();
+    matrix_t output(rows, cols);
+    for (size_t i = 0; i < rows; ++i) {
+        for (size_t j = 0; j < cols; ++j) {
+            output(i, j) = node[i][j].as<scalar_t>();
+        }
+    }
+    return output;
 }
 
 /**********************************************************************************************************************/

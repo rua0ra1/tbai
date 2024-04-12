@@ -44,7 +44,7 @@ class YamlConfig {
 
     /** Get value from a YAML node */
     template <typename T>
-    inline T parseNode(const YAML::Node &node) const;
+    T parseNode(const YAML::Node &node) const;
 
     /** Get YAML node specified by its path in config*/
     template <typename T>

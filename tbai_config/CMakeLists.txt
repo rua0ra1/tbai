@@ -7,12 +7,13 @@ add_compile_options(-std=c++17)
 ## Find packages
 find_package(catkin REQUIRED COMPONENTS 
     roscpp
+    tbai_core
 )
 find_package(yaml-cpp REQUIRED)
 
 catkin_package(
     INCLUDE_DIRS include
-    CATKIN_DEPENDS roscpp
+    CATKIN_DEPENDS roscpp tbai_core
     DEPENDS yaml-cpp
 )
 

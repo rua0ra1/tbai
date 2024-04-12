@@ -10,7 +10,7 @@ find_package(catkin REQUIRED
 
 catkin_package(
  INCLUDE_DIRS include
- LIBRARIES tbai_core
+ LIBRARIES 
   CATKIN_DEPENDS ocs2_core
   DEPENDS Eigen
 )
