@@ -8,3 +8,4 @@ IndentWidth: 4
 SortIncludes: true
 
 ColumnLimit: 120
+AllowShortFunctionsOnASingleLine: Inline

@@ -30,3 +30,8 @@ cpplint --recursive .
 ```bash
 google-chrome ./build/tbai_docs/output/doxygen/html/index.html
 ```
+
+## Running tests
+```bash
+catkin test
+```

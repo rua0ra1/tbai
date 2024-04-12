@@ -1,42 +1,37 @@
-#ifndef TBAI_CONFIG_INCLUDE_TBAI_CONFIG_IMPLEMENTATION_YAMLCONFIG_HPP_
-#define TBAI_CONFIG_INCLUDE_TBAI_CONFIG_IMPLEMENTATION_YAMLCONFIG_HPP_
+#include "tbai_config/YamlConfig.hpp"
 
-#include <iostream>
-#include <string>
+#include <ros/ros.h>
+
 namespace tbai {
-
 namespace config {
 
 /**********************************************************************************************************************/
 /**********************************************************************************************************************/
 /**********************************************************************************************************************/
-template <typename T>
-T YamlConfig::traverse(const YAML::Node &node, const std::string &key) const {
-    YAML::Node component(node);
-    for (auto &k : split(key)) {
-        component = component[k];
+YamlConfig::YamlConfig(const std::string &configPath, const char delim)
+    : configPath_(configPath), delim_(delim) {}
+
+/**********************************************************************************************************************/
+/**********************************************************************************************************************/
+/**********************************************************************************************************************/
+YamlConfig YamlConfig::fromRosParam(const std::string &pathParam, const char delim) {
+    std::string configPath;
+    ros::param::get(pathParam, configPath);
+    return YamlConfig(configPath, delim);
+}
+
+/**********************************************************************************************************************/
+/**********************************************************************************************************************/
+/**********************************************************************************************************************/
+std::vector<std::string> YamlConfig::split(const std::string &s) const {
+    std::vector<std::string> result;
+    std::stringstream ss(s);
+    std::string item;
+    while (std::getline(ss, item, delim_)) {
+        result.push_back(item);
     }
-    return parseNode<T>(component);
-}
-
-/**********************************************************************************************************************/
-/**********************************************************************************************************************/
-/**********************************************************************************************************************/
-template <typename T>
-inline T YamlConfig::parseNode(const YAML::Node &node) const {
-    return node.as<T>();
-}
-
-/**********************************************************************************************************************/
-/**********************************************************************************************************************/
-/**********************************************************************************************************************/
-template <typename T>
-T YamlConfig::get(const std::string &path) const {
-    YAML::Node config = YAML::LoadFile(configPath_);
-    return traverse<T>(config, path);
+    return result;
 }
 
 }  // namespace config
 }  // namespace tbai
-
-#endif  // TBAI_CONFIG_INCLUDE_TBAI_CONFIG_IMPLEMENTATION_YAMLCONFIG_HPP_

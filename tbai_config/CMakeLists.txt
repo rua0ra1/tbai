@@ -8,18 +8,48 @@ add_compile_options(-std=c++17)
 find_package(catkin REQUIRED COMPONENTS 
     roscpp
 )
-
 find_package(yaml-cpp REQUIRED)
 
 catkin_package(
     INCLUDE_DIRS include
-    CATKIN_DEPENDS
+    CATKIN_DEPENDS roscpp
     DEPENDS yaml-cpp
 )
 
+## Include directories
+include_directories(
+    include
+    ${catkin_INCLUDE_DIRS}
+    ${YAML_CPP_INCLUDE_DIR}
+)
+
+## Add library
+add_library(${PROJECT_NAME}
+    src/YamlConfig.cpp
+)
+target_link_libraries(${PROJECT_NAME}
+    ${catkin_LIBRARIES}
+    ${YAML_CPP_LIBRARIES}
+)
+
 ## Install
+
+install(
+  TARGETS ${PROJECT_NAME}
+  ARCHIVE DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
+  LIBRARY DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
+  RUNTIME DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
+)
+
 install(DIRECTORY include/${PROJECT_NAME}/
   DESTINATION ${CATKIN_PACKAGE_INCLUDE_DESTINATION}
-  FILES_MATCHING PATTERN "*.h"
-  PATTERN ".svn" EXCLUDE
+)
+
+## Testing
+catkin_add_gtest(test_config
+  test/testConfig.cpp
+)
+target_link_libraries(test_config
+  ${PROJECT_NAME}
+  ${catkin_LIBRARIES}
 )
