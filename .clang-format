@@ -1,0 +1,10 @@
+BasedOnStyle: Google
+Language: Cpp
+
+DerivePointerAlignment: false
+PointerAlignment: Right
+
+IndentWidth: 4
+SortIncludes: true
+
+ColumnLimit: 120
