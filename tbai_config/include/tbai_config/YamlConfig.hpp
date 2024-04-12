@@ -1,10 +1,10 @@
 #ifndef TBAI_CONFIG_INCLUDE_TBAI_CONFIG_YAMLCONFIG_HPP_
 #define TBAI_CONFIG_INCLUDE_TBAI_CONFIG_YAMLCONFIG_HPP_
 
-#include <yaml-cpp/yaml.h>
-
 #include <string>
 #include <vector>
+
+#include <yaml-cpp/yaml.h>
 
 namespace tbai {
 namespace config {

@@ -3,6 +3,7 @@
 
 #include <iostream>
 #include <string>
+
 #include <tbai_core/Types.hpp>
 
 namespace tbai {
@@ -32,7 +33,7 @@ T YamlConfig::parseNode(const YAML::Node &node) const {
 /**********************************************************************************************************************/
 /**********************************************************************************************************************/
 /**********************************************************************************************************************/
-template <>
+template <>  // TODO(lnotspotl): This specialization breaks doxygen
 vector_t YamlConfig::parseNode(const YAML::Node &node) const {
     const size_t len = node.size();
     vector_t output(len);
@@ -45,7 +46,7 @@ vector_t YamlConfig::parseNode(const YAML::Node &node) const {
 /**********************************************************************************************************************/
 /**********************************************************************************************************************/
 /**********************************************************************************************************************/
-template <>
+template <>  // TODO(lnotspotl): This specialization breaks doxygen
 matrix_t YamlConfig::parseNode(const YAML::Node &node) const {
     const size_t rows = node.size();
     const size_t cols = node[0].size();

@@ -1,10 +1,9 @@
-#include <gtest/gtest.h>
-
 #include <fstream>
 #include <string>
-#include <tbai_core/Types.hpp>
 
 #include "tbai_config/YamlConfig.hpp"
+#include <gtest/gtest.h>
+#include <tbai_core/Types.hpp>
 
 #define DUMMY_CONFIG_PATH "./test_config_abc123.yaml"
 

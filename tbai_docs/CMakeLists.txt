@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 3.10.2)
 
-project (tbai_docs VERSION 0.0.0)
+project (tbai_docs VERSION 0.0.1)
 
 # Modules to document
 list(APPEND TBAI_MODULES
@@ -13,7 +13,7 @@ find_package(Doxygen REQUIRED)
 set(DOXYFILE_IN ${CMAKE_CURRENT_SOURCE_DIR}/tools/doxygen/Doxyfile.in)
 set(DOXYFILE ${CMAKE_CURRENT_BINARY_DIR}/tools/doxygen/Doxyfile)
 
-set(DOXYGEN_PROJECT_NAME ${PROJECT})
+set(DOXYGEN_PROJECT_NAME "TBAI")
 set(DOXYGEN_PROJECT_NUMBER ${CMAKE_PROJECT_VERSION})
 set(DOXYGEN_OUTPUT_DIR ${CMAKE_CURRENT_BINARY_DIR}/output/doxygen)
 set(DOXYGEN_HTML_FILE ${DOXYGEN_OUTPUT_DIR}/html/index.html)
