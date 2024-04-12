@@ -10,7 +10,6 @@
 
   <buildtool_depend>catkin</buildtool_depend>
   <depend>roscpp</depend>
-  <depend>ocs2_core</depend>
 
   <export>
   </export>

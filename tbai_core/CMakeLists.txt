@@ -5,13 +5,12 @@ project(tbai_core)
 add_compile_options(-std=c++17)
 
 find_package(catkin REQUIRED
-    ocs2_core
 )
 
 catkin_package(
  INCLUDE_DIRS include
  LIBRARIES 
-  CATKIN_DEPENDS ocs2_core
+  CATKIN_DEPENDS 
   DEPENDS Eigen
 )
 

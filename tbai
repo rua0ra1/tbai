@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 
 function print_help() {
-	echo "Usage: ./tbai [--format|--lint|--build|--test|--docs]"
+	echo "Usage: ./tbai [--format|--lint|--build|--test|--docs|--rebuild_docs]"
 }
 
 function lint() {
@@ -85,6 +85,11 @@ fi
 if [[ "$1" == "--docs" ]]; then
     open_docs
     exit
+fi
+
+if [[ "$1" == "--rebuild_docs" ]]; then
+    catkin clean tbai_docs
+    catkin build tbai_docs
 fi
 
 print_help
