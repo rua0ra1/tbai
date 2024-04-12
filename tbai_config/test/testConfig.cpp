@@ -56,7 +56,6 @@ TEST_F(YamlConfigTest, listOfStrings) {
     ASSERT_EQ(jointNames[0], "joint1");
     ASSERT_EQ(jointNames[1], "joint2");
     ASSERT_EQ(jointNames[2], "joint3");
-
 }
 
 TEST_F(YamlConfigTest, vector) {

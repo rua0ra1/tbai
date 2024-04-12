@@ -6,6 +6,7 @@ project (tbai_docs VERSION 0.0.1)
 list(APPEND TBAI_MODULES
   tbai_core
   tbai_config
+  tbai_gazebo
 )
 
 find_package(Doxygen REQUIRED)

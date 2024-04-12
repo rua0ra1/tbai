@@ -12,6 +12,7 @@
   <doc_depend>doxygen</doc_depend>
   <depend>tbai_core</depend>
   <depend>tbai_config</depend>
+  <depend>tbai_gazebo</depend>
 
   <export>
   </export>

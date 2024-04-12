@@ -2,8 +2,10 @@
 #define TBAI_GAZEBO_INCLUDE_TBAI_GAZEBO_JOINTCONTROLLER_HPP_
 
 // System
+#include <string>
 #include <unordered_map>
 #include <utility>
+#include <vector>
 
 // Config
 #include <tbai_config/YamlConfig.hpp>
@@ -26,7 +28,7 @@ namespace gazebo {
 class JointController : public controller_interface::Controller<hardware_interface::EffortJointInterface> {
    public:
     /** Initialize joint controller plugin */
-    bool init(hardware_interface::EffortJointInterface *hw, ros::NodeHandle &n);
+    bool init(hardware_interface::EffortJointInterface *hw, ros::NodeHandle &n);  // NOLINT
 
     /** Update joint controllers - called after every simulation tick */
     void update(const ros::Time &time, const ros::Duration &period);
