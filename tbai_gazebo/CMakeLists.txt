@@ -14,6 +14,7 @@ find_package(catkin REQUIRED COMPONENTS
   tbai_msgs
   tbai_config
   tbai_core
+  ocs2_robotic_tools
 )
 
 find_package(gazebo REQUIRED)
@@ -23,8 +24,6 @@ catkin_package(
  DEPENDS pinocchio
 )
 
-
-
 include_directories(
   include
   ${catkin_INCLUDE_DIRS}
@@ -32,9 +31,13 @@ include_directories(
   ${pinocchio_INCLUDE_DIRS}
 )
 
-
 ## Joint controller plugin
 add_library(JointController src/JointController.cpp)
 target_link_libraries(JointController ${catkin_LIBRARIES}) 
+target_compile_options(JointController PRIVATE ${OCS2_CXX_FLAGS})
 
 ## RBD state plugin
+# Anymal state estimator plugin
+add_library(StatePublisher src/StatePublisher.cpp)
+target_link_libraries(StatePublisher ${gazebo_LIBRARIES} ${catkin_LIBRARIES})
+target_compile_options(StatePublisher PRIVATE ${OCS2_CXX_FLAGS})
