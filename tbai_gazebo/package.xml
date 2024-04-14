@@ -13,18 +13,10 @@
   <depend>tbai_config</depend>
   <depend>tbai_msgs</depend>
   <depend>ocs2_robotic_tools</depend>
-  <build_depend>controller_interface</build_depend>
-  <build_depend>hardware_interface</build_depend>
-  <build_depend>pluginlib</build_depend>
-  <build_depend>roscpp</build_depend>
-  <build_export_depend>controller_interface</build_export_depend>
-  <build_export_depend>hardware_interface</build_export_depend>
-  <build_export_depend>pluginlib</build_export_depend>
-  <build_export_depend>roscpp</build_export_depend>
-  <exec_depend>controller_interface</exec_depend>
-  <exec_depend>hardware_interface</exec_depend>
-  <exec_depend>pluginlib</exec_depend>
-  <exec_depend>roscpp</exec_depend>
+  <depend>controller_interface</depend>
+  <depend>hardware_interface</depend>
+  <depend>pluginlib</depend>
+  <depend>roscpp</depend>
 
   <export>
       <controller_interface plugin="${prefix}/controller_plugins.xml"/>
