@@ -1,3 +1,6 @@
 [submodule "dependencies/ocs2"]
 	path = dependencies/ocs2
 	url = git@github.com:lnotspotl/ocs2.git
+[submodule "dependencies/ocs2_robotic_assets"]
+	path = dependencies/ocs2_robotic_assets
+	url = git@github.com:projectatctu/ocs2_robotic_assets.git
