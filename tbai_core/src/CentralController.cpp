@@ -32,17 +32,29 @@ void CentralController::start() {
     stateSubscriberPtr_->waitTillInitialized();
 
     if (ros::ok()) {
-        // Start of epoch
-        initTime_ = ros::Time::now();
-
         // Main loop rate
         loopRate_ = ros::Rate(activeController_->getRate());
+
+        // Start of epoch
+        initTime_ = ros::Time::now();
     }
 
+    scalar_t lastTime = 0.0;
     while (ros::ok()) {
+        // Spin once to allow ROS run callbacks
         ros::spinOnce();
-        step(getCurrentTime());
+
+        // Compute current time and time since last call
+        scalar_t currentTime = getCurrentTime();
+        scalar_t dt = currentTime - lastTime;
+
+        // Step controller
+        step(currentTime, dt);
+
+        // Allow controller to visualize stuff
         visualize();
+
+        lastTime = currentTime;
         loopRate_.sleep();
     }
 }
@@ -60,8 +72,8 @@ void CentralController::addController(std::unique_ptr<Controller> controller, bo
 /*********************************************************************************************************************/
 /*********************************************************************************************************************/
 /*********************************************************************************************************************/
-void CentralController::step(scalar_t currentTime) {
-    auto commandMessage = activeController_->getCommandMessage(currentTime);
+void CentralController::step(scalar_t currentTime, scalar_t dt) {
+    auto commandMessage = activeController_->getCommandMessage(currentTime, dt);
     commandPublisher_.publish(commandMessage);
 }
 

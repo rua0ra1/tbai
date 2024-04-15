@@ -20,10 +20,10 @@ class StaticController : public tbai::core::Controller {
      *
      * @param configRosParam : ROS parameter name for controller configuration file
      */
-    StaticController(const std::string &configRosParam, std::shared_ptr<tbai::core::StateSubscriber> stateSubscriberPtr,
-                     scalar_t initialTime);
+    StaticController(const std::string &configRosParam,
+                     std::shared_ptr<tbai::core::StateSubscriber> stateSubscriberPtr);
 
-    tbai_msgs::JointCommandArray getCommandMessage(scalar_t currentTime) override;
+    tbai_msgs::JointCommandArray getCommandMessage(scalar_t currentTime, scalar_t dt) override;
 
     void visualize() override;
 
@@ -62,11 +62,8 @@ class StaticController : public tbai::core::Controller {
     tf::TransformBroadcaster tfBroadcaster_;
     std::unique_ptr<robot_state_publisher::RobotStatePublisher> robotStatePublisherPtr_;
 
-    /** last time getCommandMessage() was called */
-    scalar_t lastTime_;
-
     /** Time since last visualization step */
-    scalar_t timeSinceLastUpdate_;
+    scalar_t timeSinceLastVisualizationUpdate_;
 
     /** PD constants */
     scalar_t kp_;
@@ -88,6 +85,7 @@ class StaticController : public tbai::core::Controller {
     /** Interpolation phase: -1 means interpolation has finished */
     scalar_t alpha_;
 
+    /** Rate at which the controller should be running */
     scalar_t rate_;
 
     /** Joint names */
@@ -97,7 +95,7 @@ class StaticController : public tbai::core::Controller {
     std::string currentControllerType_;
 };
 
-}  // namespace core
+}  // namespace static_
 }  // namespace tbai
 
 #endif  // TBAI_STATIC_INCLUDE_TBAI_STATIC_STATICCONTROLLER_HPP_

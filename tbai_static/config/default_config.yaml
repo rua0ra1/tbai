@@ -1,4 +1,4 @@
-robot_name: 'a'
+robot_name: 'anymal_d'
 
 joint_names: &jn ["LF_HAA", "LF_HFE", "LF_KFE", "LH_HAA", "LH_HFE", "LH_KFE", "RF_HAA", "RF_HFE", "RF_KFE", "RH_HAA", "RH_HFE", "RH_KFE"]
 base_name: "base"

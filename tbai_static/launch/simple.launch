@@ -30,4 +30,7 @@
         <arg name="paused" value="$(arg paused)"/>
     </include>
 
+    <!-- Launch simple node -->
+    <node name="simple" pkg="tbai_static" type="simple" output="screen"/>
+
 </launch>

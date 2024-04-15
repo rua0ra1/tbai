@@ -7,6 +7,7 @@ list(APPEND TBAI_MODULES
   tbai_core
   tbai_config
   tbai_gazebo
+  tbai_static
 )
 
 find_package(Doxygen REQUIRED)

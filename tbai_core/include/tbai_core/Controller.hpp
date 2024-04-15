@@ -18,9 +18,10 @@ class Controller {
      * @brief Produce command message for robot
      *
      * @param currentTime : Current time in seconds
+     * @param dt : Time since last call in seconds, should be roughly 1/rate
      * @return tbai_msgs::JointCommandArray : ROS message with joint commands
      */
-    virtual tbai_msgs::JointCommandArray getCommandMessage(scalar_t currentTime) = 0;
+    virtual tbai_msgs::JointCommandArray getCommandMessage(scalar_t currentTime, scalar_t dt) = 0;
 
     /**
      * @brief Visualize robot (typically in RViz)

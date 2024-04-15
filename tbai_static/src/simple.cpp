@@ -16,9 +16,12 @@ int main(int argc, char *argv[]) {
 
     ros::NodeHandle nh;
     tbai::core::CentralController controller(nh, stateTopic, commandTopic, changeControllerTopic);
-    controller.addController(std::unique_ptr<tbai::core::Controller>(
-        new tbai::static_::StaticController(configParam, controller.getStateSubscriberPtr(), 0.0)));
+    
+    // Add static controller
+    controller.addController(
+        std::make_unique<tbai::static_::StaticController>(configParam, controller.getStateSubscriberPtr()));
 
+    // Start controller loop
     controller.start();
 
     return EXIT_SUCCESS;

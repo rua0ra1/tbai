@@ -13,6 +13,7 @@
   <depend>tbai_core</depend>
   <depend>tbai_config</depend>
   <depend>tbai_gazebo</depend>
+  <depend>tbai_static</depend>
 
   <export>
   </export>

@@ -14,13 +14,11 @@ namespace static_ {
 /*********************************************************************************************************************/
 /*********************************************************************************************************************/
 StaticController::StaticController(const std::string &configRosParam,
-                                   std::shared_ptr<tbai::core::StateSubscriber> stateSubscriberPtr,
-                                   scalar_t initialTime)
+                                   std::shared_ptr<tbai::core::StateSubscriber> stateSubscriberPtr)
     : stateSubscriberPtr_(stateSubscriberPtr),
-      lastTime_(initialTime),
       alpha_(-1.0),
       currentControllerType_("SIT"),
-      timeSinceLastUpdate_(100.0) {
+      timeSinceLastVisualizationUpdate_(100.0) {
     loadSettings(configRosParam);
 
     // Initialize robot state publisher
@@ -35,10 +33,8 @@ StaticController::StaticController(const std::string &configRosParam,
 /*********************************************************************************************************************/
 /*********************************************************************************************************************/
 /*********************************************************************************************************************/
-tbai_msgs::JointCommandArray StaticController::getCommandMessage(scalar_t currentTime) {
-    const scalar_t dt = currentTime - lastTime_;
-    lastTime_ = currentTime;
-    timeSinceLastUpdate_ += dt;
+tbai_msgs::JointCommandArray StaticController::getCommandMessage(scalar_t currentTime, scalar_t dt) {
+    timeSinceLastVisualizationUpdate_ += dt;
 
     if (alpha_ != -1.0) {
         return getInterpCommandMessage(dt);
@@ -59,12 +55,12 @@ tbai_msgs::JointCommandArray StaticController::getCommandMessage(scalar_t curren
 /*********************************************************************************************************************/
 /*********************************************************************************************************************/
 void StaticController::visualize() {
-    if (timeSinceLastUpdate_ >= 1.0 / 30.0) {
+    if (timeSinceLastVisualizationUpdate_ >= 1.0 / 30.0) {
         ros::Time currentTime = ros::Time::now();
         const vector_t &currentState = stateSubscriberPtr_->getLatestRbdState();
         publishOdomBaseTransforms(currentState, currentTime);
         publishJointAngles(currentState, currentTime);
-        timeSinceLastUpdate_ = 0.0;
+        timeSinceLastVisualizationUpdate_ = 0.0;
     }
 }
 
