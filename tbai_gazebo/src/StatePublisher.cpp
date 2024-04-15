@@ -6,27 +6,29 @@
 #include <Eigen/Geometry>
 #include <ocs2_robotic_tools/common/RotationTransforms.h>
 #include <tbai_msgs/RbdState.h>
+#include <tbai_config/YamlConfig.hpp>
 
 namespace gazebo {
 
 /*********************************************************************************************************************/
 /*********************************************************************************************************************/
 /*********************************************************************************************************************/
-void StateEstimator::Load(physics::ModelPtr robot, sdf::ElementPtr sdf) {
+void StatePublisher::Load(physics::ModelPtr robot, sdf::ElementPtr sdf) {
     // set Gazebo callback function
-    updateConnection_ = event::Events::ConnectWorldUpdateBegin(std::bind(&StateEstimator::OnUpdate, this));
+    updateConnection_ = event::Events::ConnectWorldUpdateBegin(std::bind(&StatePublisher::OnUpdate, this));
 
     this->robot_ = robot;
+    auto config = tbai::config::YamlConfig::fromRosParam("/tbai_config_path");
 
     ros::NodeHandle nh;
-    statePublisher_ = nh.advertise<tbai_msgs::RbdState>("anymal/state", 2);
+    auto stateTopic = config.get<std::string>("state_topic");
+    statePublisher_ = nh.advertise<tbai_msgs::RbdState>("anymal_d/state", 2);
 
-    std::string base = "base";
+    auto base = config.get<std::string>("base_name");
     baseLink_ = robot->GetChildLink(base);
 
     // get joints; ignore 'universe' and 'root_joint'
-    std::vector<std::string> jointNames = {"LF_HAA", "LF_HFE", "LF_KFE", "RF_HAA", "RF_HFE", "RF_KFE",
-                                           "LH_HAA", "LH_HFE", "LH_KFE", "RH_HAA", "RH_HFE", "RH_KFE"};
+    auto jointNames = config.get<std::vector<std::string>>("joint_names");
     for (int i = 0; i < jointNames.size(); ++i) {
         joints_.push_back(robot->GetJoint(jointNames[i]));
     }
@@ -36,14 +38,14 @@ void StateEstimator::Load(physics::ModelPtr robot, sdf::ElementPtr sdf) {
 
     lastYaw_ = 0.0;
 
-    rate_ = 400.0;
+    rate_ = config.get<double>("state_publisher/update_rate");
     period_ = 1.0 / rate_;
 }
 
 /*********************************************************************************************************************/
 /*********************************************************************************************************************/
 /*********************************************************************************************************************/
-void StateEstimator::OnUpdate() {
+void StatePublisher::OnUpdate() {
     // Get current time
     const common::Time currentTime = robot_->GetWorld()->SimTime();
     const double dt = (currentTime - lastPublishTime_).Double();
@@ -127,13 +129,13 @@ void StateEstimator::OnUpdate() {
 /*********************************************************************************************************************/
 /*********************************************************************************************************************/
 /*********************************************************************************************************************/
-Eigen::Vector3d eulerXYZFromRotationMatrix(const Eigen::Matrix3d &R, double lastYaw) {
+Eigen::Vector3d StatePublisher::eulerXYZFromRotationMatrix(const Eigen::Matrix3d &R, double lastYaw) {
     Eigen::Vector3d eulerXYZ = R.eulerAngles(0, 1, 2);
     ocs2::makeEulerAnglesUnique(eulerXYZ);
     eulerXYZ.z() = ocs2::moduloAngleWithReference(eulerXYZ.z(), lastYaw);
     return eulerXYZ;
 }
 
-GZ_REGISTER_MODEL_PLUGIN(StateEstimator);
+GZ_REGISTER_MODEL_PLUGIN(StatePublisher);
 
 }  // namespace gazebo

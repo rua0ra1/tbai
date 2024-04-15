@@ -8,7 +8,8 @@ namespace config {
 /**********************************************************************************************************************/
 /**********************************************************************************************************************/
 /**********************************************************************************************************************/
-YamlConfig::YamlConfig(const std::string &configPath, const char delim) : configPath_(configPath), delim_(delim) {}
+YamlConfig::YamlConfig(const std::string &configPath, const char delim, bool performChecks)
+    : configPath_(configPath), delim_(delim), performChecks_(performChecks) {}
 
 /**********************************************************************************************************************/
 /**********************************************************************************************************************/
@@ -30,6 +31,19 @@ std::vector<std::string> YamlConfig::split(const std::string &s) const {
         result.push_back(item);
     }
     return result;
+}
+
+/**********************************************************************************************************************/
+/**********************************************************************************************************************/
+/************************************************************`**********************************************************/
+void YamlConfig::checkExists(const YAML::Node &node, const std::string &key) const {
+    YAML::Node component(node);
+    for (auto &k : split(key)) {
+        if (!component[k]) {
+            throw std::runtime_error("Key '" + key + "' does not exist in config file.");
+        }
+        component = component[k];
+    }
 }
 
 }  // namespace config

@@ -12,12 +12,12 @@ namespace gazebo {
 /*********************************************************************************************************************/
 bool JointController::init(hardware_interface::EffortJointInterface *hw, ros::NodeHandle &n) {
     // Setup yaml config
-    const std::string configParam = "gazebo/joint_controller/config_path";
+    const std::string configParam = "tbai_config_path";
     auto config = tbai::config::YamlConfig::fromRosParam(configParam);
 
     // Load joint names
     auto jointNames = config.get<std::vector<std::string>>("joint_names");
-    ROS_INFO_STREAM("[JointController] Loading " << jointNames.size() << " joints");
+    ROS_INFO_STREAM("[JointController] Loading " << jointNames.size() << " joint controllers.");
     for (size_t i = 0; i < jointNames.size(); ++i) {
         ROS_INFO_STREAM("[JointController] Joint " << i + 1 << ": " << jointNames[i]);
     }
@@ -63,8 +63,9 @@ bool JointController::init(hardware_interface::EffortJointInterface *hw, ros::No
     ROS_INFO_STREAM("[JointController] Subscribing to " << commandTopic);
 
     // Subscribe to command topic
+    ros::NodeHandle nh;
     commandSubscriber_ =
-        n.subscribe<tbai_msgs::JointCommandArray>(commandTopic, 1, &JointController::jointCommandCallback, this);
+        nh.subscribe<tbai_msgs::JointCommandArray>(commandTopic, 1, &JointController::jointCommandCallback, this);
 
     // Initialize command buffer
     commandBuffer_.writeFromNonRT(tbai_msgs::JointCommandArray());

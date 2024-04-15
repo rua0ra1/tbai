@@ -13,6 +13,7 @@ find_package(yaml-cpp REQUIRED)
 
 catkin_package(
     INCLUDE_DIRS include
+    LIBRARIES ${PROJECT_NAME}
     CATKIN_DEPENDS roscpp tbai_core
     DEPENDS yaml-cpp
 )

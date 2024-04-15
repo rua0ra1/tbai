@@ -11,16 +11,16 @@
 #include <tf/transform_broadcaster.h>
 
 namespace tbai {
-namespace core {
+namespace static_ {
 
-class StaticController : public Controller {
+class StaticController : public tbai::core::Controller {
    public:
     /**
      * @brief Construct a new StaticController object
      *
      * @param configRosParam : ROS parameter name for controller configuration file
      */
-    StaticController(const std::string &configRosParam, std::shared_ptr<StateSubscriber> stateSubscriberPtr,
+    StaticController(const std::string &configRosParam, std::shared_ptr<tbai::core::StateSubscriber> stateSubscriberPtr,
                      scalar_t initialTime);
 
     tbai_msgs::JointCommandArray getCommandMessage(scalar_t currentTime) override;
@@ -56,10 +56,7 @@ class StaticController : public Controller {
     tbai_msgs::JointCommandArray packCommandMessage(const vector_t &jointAngles);
 
     /** State subscriber */
-    std::shared_ptr<StateSubscriber> stateSubscriberPtr_;
-
-    /** Controller type */
-    std::string controllerType_;
+    std::shared_ptr<tbai::core::StateSubscriber> stateSubscriberPtr_;
 
     /** Visualization */
     tf::TransformBroadcaster tfBroadcaster_;
@@ -67,6 +64,9 @@ class StaticController : public Controller {
 
     /** last time getCommandMessage() was called */
     scalar_t lastTime_;
+
+    /** Time since last visualization step */
+    scalar_t timeSinceLastUpdate_;
 
     /** PD constants */
     scalar_t kp_;

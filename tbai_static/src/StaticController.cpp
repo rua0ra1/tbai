@@ -8,14 +8,19 @@
 #include <urdf/model.h>
 
 namespace tbai {
-namespace core {
+namespace static_ {
 
 /*********************************************************************************************************************/
 /*********************************************************************************************************************/
 /*********************************************************************************************************************/
 StaticController::StaticController(const std::string &configRosParam,
-                                   std::shared_ptr<StateSubscriber> stateSubscriberPtr, scalar_t initialTime)
-    : stateSubscriberPtr_(stateSubscriberPtr), lastTime_(initialTime), alpha_(-1.0), currentControllerType_("SIT") {
+                                   std::shared_ptr<tbai::core::StateSubscriber> stateSubscriberPtr,
+                                   scalar_t initialTime)
+    : stateSubscriberPtr_(stateSubscriberPtr),
+      lastTime_(initialTime),
+      alpha_(-1.0),
+      currentControllerType_("SIT"),
+      timeSinceLastUpdate_(100.0) {
     loadSettings(configRosParam);
 
     // Initialize robot state publisher
@@ -24,22 +29,43 @@ StaticController::StaticController(const std::string &configRosParam,
     KDL::Tree kdlTree;
     kdl_parser::treeFromFile(urdfFile, kdlTree);
     robotStatePublisherPtr_.reset(new robot_state_publisher::RobotStatePublisher(kdlTree));
-    robotStatePublisherPtr_->publishFixedTransforms();
+    robotStatePublisherPtr_->publishFixedTransforms(true);
 }
 
 /*********************************************************************************************************************/
 /*********************************************************************************************************************/
 /*********************************************************************************************************************/
-tbai_msgs::JointCommandArray StaticController::getCommandMessage(scalar_t currentTime) {}
+tbai_msgs::JointCommandArray StaticController::getCommandMessage(scalar_t currentTime) {
+    const scalar_t dt = currentTime - lastTime_;
+    lastTime_ = currentTime;
+    timeSinceLastUpdate_ += dt;
+
+    if (alpha_ != -1.0) {
+        return getInterpCommandMessage(dt);
+    }
+
+    if (currentControllerType_ == "STAND") {
+        return getStandCommandMessage();
+    }
+
+    if (currentControllerType_ == "SIT") {
+        return getSitCommandMessage();
+    }
+
+    throw std::runtime_error("Unsupported controller type: " + currentControllerType_);
+}
 
 /*********************************************************************************************************************/
 /*********************************************************************************************************************/
 /*********************************************************************************************************************/
 void StaticController::visualize() {
-    ros::Time currentTime = ros::Time::now();
-    const vector_t &currentState = stateSubscriberPtr_->getLatestRbdState();
-    publishOdomBaseTransforms(currentState, currentTime);
-    publishJointAngles(currentState, currentTime);
+    if (timeSinceLastUpdate_ >= 1.0 / 30.0) {
+        ros::Time currentTime = ros::Time::now();
+        const vector_t &currentState = stateSubscriberPtr_->getLatestRbdState();
+        publishOdomBaseTransforms(currentState, currentTime);
+        publishJointAngles(currentState, currentTime);
+        timeSinceLastUpdate_ = 0.0;
+    }
 }
 
 /*********************************************************************************************************************/
@@ -83,6 +109,7 @@ void StaticController::loadSettings(const std::string &configRosParam) {
     kp_ = config.get<scalar_t>("static_controller/kp");
     kd_ = config.get<scalar_t>("static_controller/kd");
     rate_ = config.get<scalar_t>("static_controller/rate");
+    std::cout << "Current rate" << rate_ << std::endl;
 
     standJointAngles_ = config.get<vector_t>("static_controller/stand_controller/joint_angles");
     sitJointAngles_ = config.get<vector_t>("static_controller/sit_controller/joint_angles");
@@ -182,5 +209,5 @@ tbai_msgs::JointCommandArray StaticController::packCommandMessage(const vector_t
     return commandArray;
 }
 
-}  // namespace core
+}  // namespace static_
 }  // namespace tbai

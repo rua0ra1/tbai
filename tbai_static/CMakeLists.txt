@@ -39,7 +39,7 @@ add_executable(simple
     src/simple.cpp
 )
 target_link_libraries(simple
-    ${catkin_LIBRARIES} ${PROJECT_NAME}
+    ${catkin_LIBRARIES} ${PROJECT_NAME} yaml-cpp
 )
 
 install(

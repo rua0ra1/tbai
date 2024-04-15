@@ -69,6 +69,10 @@ matrix_t YamlConfig::parseNode(const YAML::Node &node) const {
 template <typename T>
 T YamlConfig::get(const std::string &path) const {
     YAML::Node config = YAML::LoadFile(configPath_);
+    if (performChecks_) {
+        YAML::Node configCheck = YAML::Clone(config);
+        checkExists(configCheck, path);
+    }
     return traverse<T>(config, path);
 }
 

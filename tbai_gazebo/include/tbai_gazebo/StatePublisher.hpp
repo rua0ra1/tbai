@@ -10,7 +10,7 @@
 #include <ros/ros.h>
 
 namespace gazebo {
-class StateEstimator : public ModelPlugin {
+class StatePublisher : public ModelPlugin {
    public:
     void Load(physics::ModelPtr _parent, sdf::ElementPtr sdf);
     void OnUpdate();

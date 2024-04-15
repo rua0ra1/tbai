@@ -14,7 +14,7 @@ StateSubscriber::StateSubscriber(ros::NodeHandle &nh, const std::string &stateTo
 /*********************************************************************************************************************/
 /*********************************************************************************************************************/
 void StateSubscriber::waitTillInitialized() {
-    while (!stateMessage_) {
+    while (!stateMessage_ && ros::ok()) {
         ros::spinOnce();
         ros::Duration(0.05).sleep();
         ROS_INFO_STREAM_THROTTLE(1, "[StateSubscriber] Waiting for state message...");

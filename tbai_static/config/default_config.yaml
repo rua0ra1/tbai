@@ -1,13 +1,13 @@
-robot_name: "anymal_c"
+robot_name: 'a'
 
 joint_names: &jn ["LF_HAA", "LF_HFE", "LF_KFE", "LH_HAA", "LH_HFE", "LH_KFE", "RF_HAA", "RF_HFE", "RF_KFE", "RH_HAA", "RH_HFE", "RH_KFE"]
 base_name: "base"
 
-state_topic: "anymal_c/state"
-command_topic: "anymal_c/command"
-change_controller_topic: "anymal_c/change_controller"
+state_topic: "anymal_d/state"
+command_topic: "anymal_d/command"
+change_controller_topic: "anymal_d/change_controller"
 
-state_estimator:
+state_publisher:
   update_rate: 400 # Hz
 
 static_controller:
@@ -20,7 +20,7 @@ static_controller:
   interpolation_time: 1.0 # s
   rate: 50 # Hz
 
-anymal_c:
+anymal_d:
   joint_controller:
-      type: bobnet_gazebo/JointController
+      type: tbai_gazebo/JointController
       joints: *jn

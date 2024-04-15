@@ -16,8 +16,9 @@ class YamlConfig {
      *
      * @param configPath : Path to yaml config file
      * @param delim  : config path delimiter
+     * @param performChecks : Perform checks (whether or not a key exists) when getting a value
      */
-    YamlConfig(const std::string &configPath, const char delim = '/');
+    YamlConfig(const std::string &configPath, const char delim = '/', bool performChecks = true);
 
     /**
      * @brief Construct YamlConfig with config path specified by a ROS parameter
@@ -42,6 +43,9 @@ class YamlConfig {
     /** Split config path: a.b.c -> {'a', 'b', 'c'} if delim_ == '.' */
     std::vector<std::string> split(const std::string &s) const;
 
+    /** Check if key exists */
+    void checkExists(const YAML::Node &node, const std::string &key) const;
+
     /** Get value from a YAML node */
     template <typename T>
     T parseNode(const YAML::Node &node) const;
@@ -52,6 +56,7 @@ class YamlConfig {
 
     std::string configPath_;
     char delim_;
+    bool performChecks_;
 };
 
 }  // namespace config
