@@ -2,36 +2,19 @@
 Towards better athletic intelligence
 
 
-## Project structure
+## Implemented controllers
 
-- [ ] tbai_core
-- [ ] tbai_utils -- simplegen here, joystick node here
-- [ ] tbai_wbc
-- [ ] tbai_mpc -- reference generator here
-- [ ] tbai_rl
-- [ ] tbai_msgs
-- [ ] tbai_gazebo
-- [ ] tbai_ocs2
-- [ ] tbai_perceptive_mpc
-- [ ] tbai_blind_mpc
-- [ ] tbai_perceptive_rl
-- [ ] tbai_blind_rl
-- [ ] tbai_dtc
-
-Mention that some of the code is part of the `ocs2` fork in branch tbai
-
-
-## Project linting
-```bash
-cpplint --recursive .
 ```
+📦tbai
+ ┣ 📂tbai_static               # Static (high gain PD) controller
+ ┣ 📂tbai_mpc_perceptive       # Perceptive NMPC controller [1]
+ ┣ 📂tbai_mpc_blind            # Blind NMPC controller [1]
+ ┣ 📂tbai_rl_perceptive        # Perceptive RL controller [2]
+ ┣ 📂tbai_rl_blind             # Blind RL controller [2]
+ ┣ 📂tbai_dtc_perceptive       # Perceptive DTC controller [3]
+ ┣ 📂tbai_dtc_blind            # Blind DTC controller [3]
 
-## Docs
-```bash
-google-chrome ./build/tbai_docs/output/doxygen/html/index.html
-```
-
-## Running tests
-```bash
-catkin test
+ [1] Perceptive Locomotion through Nonlinear Model Predictive Control - https://arxiv.org/abs/2208.08373
+ [2] Learning robust perceptive locomotion for quadrupedal robots in the wild - https://arxiv.org/abs/2201.08117
+ [3] DTC: Deep Tracking Control - https://arxiv.org/abs/2309.15462
 ```
