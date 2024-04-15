@@ -94,10 +94,11 @@ void CentralController::changeControllerCallback(const std_msgs::String::ConstPt
             activeController_ = controller.get();
             activeController_->changeController(controllerType, getCurrentTime());
             loopRate_ = ros::Rate(activeController_->getRate());
-            ROS_INFO_STREAM("Changed controller to " << controllerType);
+            ROS_INFO_STREAM("[CentralController] Controller changed to " << controllerType);
             return;
         }
     }
+    ROS_WARN_STREAM("[CentralController] Controller " << controllerType << " not supported");
 }
 
 }  // namespace core
