@@ -1,13 +1,18 @@
 cmake_minimum_required(VERSION 3.0.2)
-project(tbai_core)
+project(tbai_static)
 
 ## C++17 is a requirement
 add_compile_options(-std=c++17)
 
 find_package(catkin REQUIRED COMPONENTS
   tf
+  urdf
+  kdl_parser
+  robot_state_publisher
   tbai_msgs
-  std_msgs
+  tbai_config
+  tbai_core
+  geometry_msgs
 )
 
 catkin_package(
@@ -24,8 +29,17 @@ include_directories(
 )
 
 add_library(${PROJECT_NAME}
-  src/CentralController.cpp
-  src/StateSubscriber.cpp
+  src/StaticController.cpp
+)
+target_link_libraries(${PROJECT_NAME}
+    ${catkin_LIBRARIES}
+)
+
+add_executable(simple
+    src/simple.cpp
+)
+target_link_libraries(simple
+    ${catkin_LIBRARIES} ${PROJECT_NAME}
 )
 
 install(

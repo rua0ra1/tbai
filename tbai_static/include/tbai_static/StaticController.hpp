@@ -1,0 +1,103 @@
+#ifndef TBAI_STATIC_INCLUDE_TBAI_STATIC_STATICCONTROLLER_HPP_
+#define TBAI_STATIC_INCLUDE_TBAI_STATIC_STATICCONTROLLER_HPP_
+
+#include <memory>
+#include <string>
+#include <vector>
+
+#include "tbai_core/Controller.hpp"
+#include "tbai_core/StateSubscriber.hpp"
+#include <robot_state_publisher/robot_state_publisher.h>
+#include <tf/transform_broadcaster.h>
+
+namespace tbai {
+namespace core {
+
+class StaticController : public Controller {
+   public:
+    /**
+     * @brief Construct a new StaticController object
+     *
+     * @param configRosParam : ROS parameter name for controller configuration file
+     */
+    StaticController(const std::string &configRosParam, std::shared_ptr<StateSubscriber> stateSubscriberPtr,
+                     scalar_t initialTime);
+
+    tbai_msgs::JointCommandArray getCommandMessage(scalar_t currentTime) override;
+
+    void visualize() override;
+
+    void changeController(const std::string &controllerType, scalar_t currentTime) override;
+
+    bool isSupported(const std::string &controllerType) override;
+
+    scalar_t getRate() const override;
+
+   private:
+    /** Load settings from config file specified by ROS param*/
+    void loadSettings(const std::string &configRosParam);
+
+    /** Publish odom->base transforms */
+    void publishOdomBaseTransforms(const vector_t &currentState, const ros::Time &currentTime);
+
+    /** Publish joint angles */
+    void publishJointAngles(const vector_t &currentState, const ros::Time &currentTime);
+
+    /** Get command message during interpolation phase */
+    tbai_msgs::JointCommandArray getInterpCommandMessage(scalar_t dt);
+
+    /** Get command message when standing */
+    tbai_msgs::JointCommandArray getStandCommandMessage();
+
+    /** Get command message when sitting */
+    tbai_msgs::JointCommandArray getSitCommandMessage();
+
+    /** Pack desired joint angles into a command message */
+    tbai_msgs::JointCommandArray packCommandMessage(const vector_t &jointAngles);
+
+    /** State subscriber */
+    std::shared_ptr<StateSubscriber> stateSubscriberPtr_;
+
+    /** Controller type */
+    std::string controllerType_;
+
+    /** Visualization */
+    tf::TransformBroadcaster tfBroadcaster_;
+    std::unique_ptr<robot_state_publisher::RobotStatePublisher> robotStatePublisherPtr_;
+
+    /** last time getCommandMessage() was called */
+    scalar_t lastTime_;
+
+    /** PD constants */
+    scalar_t kp_;
+    scalar_t kd_;
+
+    /** Stand joint angles */
+    vector_t standJointAngles_;
+
+    /** Sit joint angles */
+    vector_t sitJointAngles_;
+
+    /** How long should interpolation take */
+    scalar_t interpolationTime_;
+
+    /** Interp from and to */
+    vector_t interpFrom_;
+    vector_t interpTo_;
+
+    /** Interpolation phase: -1 means interpolation has finished */
+    scalar_t alpha_;
+
+    scalar_t rate_;
+
+    /** Joint names */
+    std::vector<std::string> jointNames_;
+
+    /** Current controller type */
+    std::string currentControllerType_;
+};
+
+}  // namespace core
+}  // namespace tbai
+
+#endif  // TBAI_STATIC_INCLUDE_TBAI_STATIC_STATICCONTROLLER_HPP_

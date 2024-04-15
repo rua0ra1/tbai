@@ -1,8 +1,8 @@
 <?xml version="1.0"?>
 <package format="2">
-  <name>tbai_core</name>
+  <name>tbai_static</name>
   <version>0.0.0</version>
-  <description>The tbai_core package</description>
+  <description>The tbai_static package</description>
 
   <maintainer email="lnotspotl@gmail.com">lnotspotl</maintainer>
 
@@ -11,7 +11,13 @@
   <buildtool_depend>catkin</buildtool_depend>
   <depend>roscpp</depend>
   <depend>tbai_msgs</depend>
-  <depend>std_msgs</depend>
+  <depend>tbai_config</depend>
+  <depend>tbai_core</depend>
+  <depend>tf</depend>
+  <depend>urdf</depend>
+  <depend>kdl_parser</depend>
+  <depend>robot_state_publisher</depend>
+  <depend>geometry_msgs</depend>
 
   <export>
   </export>

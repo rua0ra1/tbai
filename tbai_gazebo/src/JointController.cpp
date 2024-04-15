@@ -7,6 +7,9 @@
 namespace tbai {
 namespace gazebo {
 
+/*********************************************************************************************************************/
+/*********************************************************************************************************************/
+/*********************************************************************************************************************/
 bool JointController::init(hardware_interface::EffortJointInterface *hw, ros::NodeHandle &n) {
     // Setup yaml config
     const std::string configParam = "gazebo/joint_controller/config_path";
@@ -72,6 +75,9 @@ bool JointController::init(hardware_interface::EffortJointInterface *hw, ros::No
     return true;
 }
 
+/*********************************************************************************************************************/
+/*********************************************************************************************************************/
+/*********************************************************************************************************************/
 void JointController::update(const ros::Time &time, const ros::Duration &period) {
     // Read command buffer
     tbai_msgs::JointCommandArray &commandArray = *commandBuffer_.readFromRT();
