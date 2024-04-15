@@ -1,4 +1,4 @@
-#include "tbai_core/StateSubscriber.hpp"
+#include "tbai_core/control/StateSubscriber.hpp"
 
 namespace tbai {
 namespace core {

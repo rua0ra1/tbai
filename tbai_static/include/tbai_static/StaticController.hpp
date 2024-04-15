@@ -5,8 +5,8 @@
 #include <string>
 #include <vector>
 
-#include "tbai_core/Controller.hpp"
-#include "tbai_core/StateSubscriber.hpp"
+#include "tbai_core/control/Controller.hpp"
+#include "tbai_core/control/StateSubscriber.hpp"
 #include <robot_state_publisher/robot_state_publisher.h>
 #include <tf/transform_broadcaster.h>
 

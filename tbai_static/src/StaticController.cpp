@@ -4,7 +4,7 @@
 #include <geometry_msgs/TransformStamped.h>
 #include <kdl_parser/kdl_parser.hpp>
 #include <ros/package.h>
-#include <tbai_config/YamlConfig.hpp>
+#include <tbai_core/config/YamlConfig.hpp>
 #include <urdf/model.h>
 
 namespace tbai {
@@ -101,7 +101,7 @@ scalar_t StaticController::getRate() const {
 /*********************************************************************************************************************/
 /*********************************************************************************************************************/
 void StaticController::loadSettings(const std::string &configRosParam) {
-    auto config = tbai::config::YamlConfig::fromRosParam(configRosParam, '/');
+    auto config = tbai::core::YamlConfig::fromRosParam(configRosParam, '/');
     kp_ = config.get<scalar_t>("static_controller/kp");
     kd_ = config.get<scalar_t>("static_controller/kd");
     rate_ = config.get<scalar_t>("static_controller/rate");

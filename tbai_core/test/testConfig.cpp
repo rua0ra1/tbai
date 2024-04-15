@@ -1,7 +1,7 @@
 #include <fstream>
 #include <string>
 
-#include "tbai_config/YamlConfig.hpp"
+#include "tbai_core/config/YamlConfig.hpp"
 #include <gtest/gtest.h>
 #include <tbai_core/Types.hpp>
 
@@ -27,7 +27,7 @@ class YamlConfigTest : public ::testing::Test {
 TEST_F(YamlConfigTest, delimDot) {
     const std::string configPath = DUMMY_CONFIG_PATH;
     const char delim = '.';
-    tbai::config::YamlConfig config(configPath, delim);
+    tbai::core::YamlConfig config(configPath, delim);
 
     ASSERT_EQ(config.get<std::string>("a.b"), "hello");
     ASSERT_EQ(config.get<int>("a.c"), 1);
@@ -38,7 +38,7 @@ TEST_F(YamlConfigTest, delimDot) {
 TEST_F(YamlConfigTest, delimForwardslash) {
     const std::string configPath = DUMMY_CONFIG_PATH;
     const char delim = '/';
-    tbai::config::YamlConfig config(configPath, delim);
+    tbai::core::YamlConfig config(configPath, delim);
 
     ASSERT_EQ(config.get<std::string>("a/b"), "hello");
     ASSERT_EQ(config.get<int>("a/c"), 1);
@@ -49,7 +49,7 @@ TEST_F(YamlConfigTest, delimForwardslash) {
 TEST_F(YamlConfigTest, listOfStrings) {
     const std::string configPath = DUMMY_CONFIG_PATH;
     const char delim = '/';
-    tbai::config::YamlConfig config(configPath, delim);
+    tbai::core::YamlConfig config(configPath, delim);
 
     std::vector<std::string> jointNames = config.get<std::vector<std::string>>("joint_names");
     ASSERT_EQ(jointNames.size(), 3);
@@ -61,7 +61,7 @@ TEST_F(YamlConfigTest, listOfStrings) {
 TEST_F(YamlConfigTest, vector) {
     const std::string configPath = DUMMY_CONFIG_PATH;
     const char delim = '/';
-    tbai::config::YamlConfig config(configPath, delim);
+    tbai::core::YamlConfig config(configPath, delim);
 
     tbai::vector_t vec = config.get<tbai::vector_t>("vec");
     ASSERT_EQ(vec.size(), 3);
@@ -73,7 +73,7 @@ TEST_F(YamlConfigTest, vector) {
 TEST_F(YamlConfigTest, matrix) {
     const std::string configPath = DUMMY_CONFIG_PATH;
     const char delim = '/';
-    tbai::config::YamlConfig config(configPath, delim);
+    tbai::core::YamlConfig config(configPath, delim);
 
     tbai::matrix_t mat = config.get<tbai::matrix_t>("mat");
     ASSERT_EQ(mat.rows(), 2);

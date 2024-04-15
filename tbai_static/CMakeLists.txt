@@ -10,7 +10,6 @@ find_package(catkin REQUIRED COMPONENTS
   kdl_parser
   robot_state_publisher
   tbai_msgs
-  tbai_config
   tbai_core
   geometry_msgs
 )

@@ -1,9 +1,9 @@
-#include "tbai_config/YamlConfig.hpp"
+#include "tbai_core/config/YamlConfig.hpp"
 
 #include <ros/ros.h>
 
 namespace tbai {
-namespace config {
+namespace core {
 
 /**********************************************************************************************************************/
 /**********************************************************************************************************************/
@@ -46,5 +46,5 @@ void YamlConfig::checkExists(const YAML::Node &node, const std::string &key) con
     }
 }
 
-}  // namespace config
+}  // namespace core
 }  // namespace tbai

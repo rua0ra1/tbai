@@ -1,13 +1,14 @@
-#ifndef TBAI_CORE_INCLUDE_TBAI_CORE_CENTRALCONTROLLER_HPP_
-#define TBAI_CORE_INCLUDE_TBAI_CORE_CENTRALCONTROLLER_HPP_
+#ifndef TBAI_CORE_INCLUDE_TBAI_CORE_CONTROL_CENTRALCONTROLLER_HPP_
+#define TBAI_CORE_INCLUDE_TBAI_CORE_CONTROL_CENTRALCONTROLLER_HPP_
 
 #include <memory>
 #include <string>
 #include <vector>
 
-#include "tbai_core/Controller.hpp"
-#include "tbai_core/StateSubscriber.hpp"
 #include "tbai_core/Types.hpp"
+#include "tbai_core/config/YamlConfig.hpp"
+#include "tbai_core/control/Controller.hpp"
+#include "tbai_core/control/StateSubscriber.hpp"
 #include <std_msgs/String.h>
 
 namespace tbai {
@@ -24,7 +25,21 @@ class CentralController {
      * @param changeControllerTopic : topic to subscribe to for changing controller
      */
     CentralController(ros::NodeHandle &nh, const std::string &stateTopic, const std::string &commandTopic,
-                      const std::string &changeControllerTopic);  // NOLINT
+                      const std::string &changeControllerTopic);
+
+    /**
+     * @brief Construct a new Central Controller object, load parameters from a config file
+     *
+     * Note that the reired config keys are:
+     *   - state_topic
+     *   - command_topic,
+     *   - change_controller_topic
+     *
+     * @param nh : ROS node handle
+     * @param configParam : ROS parameter containing config file path
+     *
+     */
+    CentralController(ros::NodeHandle &nh, const std::string &configParam);
 
     /**
      * @brief Start main control loop
@@ -83,4 +98,4 @@ class CentralController {
 }  // namespace core
 }  // namespace tbai
 
-#endif  // TBAI_CORE_INCLUDE_TBAI_CORE_CENTRALCONTROLLER_HPP_
+#endif  // TBAI_CORE_INCLUDE_TBAI_CORE_CONTROL_CENTRALCONTROLLER_HPP_

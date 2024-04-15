@@ -1,14 +1,14 @@
-#ifndef TBAI_CONFIG_INCLUDE_TBAI_CONFIG_IMPLEMENTATION_YAMLCONFIG_HPP_
-#define TBAI_CONFIG_INCLUDE_TBAI_CONFIG_IMPLEMENTATION_YAMLCONFIG_HPP_
+#ifndef TBAI_CORE_INCLUDE_TBAI_CORE_CONFIG_IMPLEMENTATION_YAMLCONFIG_HPP_
+#define TBAI_CORE_INCLUDE_TBAI_CORE_CONFIG_IMPLEMENTATION_YAMLCONFIG_HPP_
 
 #include <iostream>
 #include <string>
 
-#include <tbai_core/Types.hpp>
+#include "tbai_core/Types.hpp"
 
 namespace tbai {
 
-namespace config {
+namespace core {
 
 /**********************************************************************************************************************/
 /**********************************************************************************************************************/
@@ -76,7 +76,7 @@ T YamlConfig::get(const std::string &path) const {
     return traverse<T>(config, path);
 }
 
-}  // namespace config
+}  // namespace core
 }  // namespace tbai
 
-#endif  // TBAI_CONFIG_INCLUDE_TBAI_CONFIG_IMPLEMENTATION_YAMLCONFIG_HPP_
+#endif  // TBAI_CORE_INCLUDE_TBAI_CORE_CONFIG_IMPLEMENTATION_YAMLCONFIG_HPP_

@@ -5,8 +5,8 @@
 
 #include <Eigen/Geometry>
 #include <ocs2_robotic_tools/common/RotationTransforms.h>
+#include <tbai_core/config/YamlConfig.hpp>
 #include <tbai_msgs/RbdState.h>
-#include <tbai_config/YamlConfig.hpp>
 
 namespace gazebo {
 
@@ -18,7 +18,7 @@ void StatePublisher::Load(physics::ModelPtr robot, sdf::ElementPtr sdf) {
     updateConnection_ = event::Events::ConnectWorldUpdateBegin(std::bind(&StatePublisher::OnUpdate, this));
 
     this->robot_ = robot;
-    auto config = tbai::config::YamlConfig::fromRosParam("/tbai_config_path");
+    auto config = tbai::core::YamlConfig::fromRosParam("/tbai_config_path");
 
     ros::NodeHandle nh;
     auto stateTopic = config.get<std::string>("state_topic");

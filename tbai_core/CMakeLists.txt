@@ -9,26 +9,59 @@ find_package(catkin REQUIRED COMPONENTS
   tbai_msgs
   std_msgs
 )
+find_package(yaml-cpp REQUIRED)
 
 catkin_package(
   INCLUDE_DIRS include
-  LIBRARIES  ${PROJECT_NAME}
+  LIBRARIES  ${PROJECT_NAME} ${PROJECT_NAME}_config
   CATKIN_DEPENDS 
-  DEPENDS Eigen
+  DEPENDS yaml-cpp
 )
 
 ## Build
 include_directories(
     include
     ${catkin_INCLUDE_DIRS}
+    ${YAML_CPP_INCLUDE_DIR}
 )
 
 add_library(${PROJECT_NAME}
-  src/CentralController.cpp
-  src/StateSubscriber.cpp
+  src/control/CentralController.cpp
+  src/control/StateSubscriber.cpp
+)
+
+add_library(${PROJECT_NAME}_config
+  src/config/YamlConfig.cpp
+)
+target_link_libraries(${PROJECT_NAME}_config
+  ${YAML_CPP_LIBRARIES}
 )
 
 install(
-  DIRECTORY include/${PROJECT_NAME}/
+  TARGETS ${PROJECT_NAME}
+  ARCHIVE DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
+  LIBRARY DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
+  RUNTIME DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
+)
+
+install(
+  TARGETS ${PROJECT_NAME}_config
+  ARCHIVE DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
+  LIBRARY DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
+  RUNTIME DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
+)
+
+install(DIRECTORY include/${PROJECT_NAME}/
   DESTINATION ${CATKIN_PACKAGE_INCLUDE_DESTINATION}
+)
+
+## Testing
+catkin_add_gtest(test_config
+  test/testConfig.cpp
+)
+target_link_libraries(test_config
+  ${PROJECT_NAME}
+  ${PROJECT_NAME}_config
+  ${catkin_LIBRARIES}
+  ${YAML_CPP_LIBRARIES}
 )

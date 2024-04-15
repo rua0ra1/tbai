@@ -8,7 +8,7 @@
 #include <vector>
 
 // Config
-#include <tbai_config/YamlConfig.hpp>
+#include <tbai_core/config/YamlConfig.hpp>
 
 // Gazebo
 #include <controller_interface/controller.h>
@@ -28,7 +28,7 @@ namespace gazebo {
 class JointController : public controller_interface::Controller<hardware_interface::EffortJointInterface> {
    public:
     /** Initialize joint controller plugin */
-    bool init(hardware_interface::EffortJointInterface *hw, ros::NodeHandle &n);  // NOLINT
+    bool init(hardware_interface::EffortJointInterface *hw, ros::NodeHandle &n);
 
     /** Update joint controllers - called after every simulation tick */
     void update(const ros::Time &time, const ros::Duration &period);

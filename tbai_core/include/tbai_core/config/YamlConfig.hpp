@@ -1,5 +1,5 @@
-#ifndef TBAI_CONFIG_INCLUDE_TBAI_CONFIG_YAMLCONFIG_HPP_
-#define TBAI_CONFIG_INCLUDE_TBAI_CONFIG_YAMLCONFIG_HPP_
+#ifndef TBAI_CORE_INCLUDE_TBAI_CORE_CONFIG_YAMLCONFIG_HPP_
+#define TBAI_CORE_INCLUDE_TBAI_CORE_CONFIG_YAMLCONFIG_HPP_
 
 #include <string>
 #include <vector>
@@ -7,7 +7,7 @@
 #include <yaml-cpp/yaml.h>
 
 namespace tbai {
-namespace config {
+namespace core {
 
 class YamlConfig {
    public:
@@ -59,9 +59,9 @@ class YamlConfig {
     bool performChecks_;
 };
 
-}  // namespace config
+}  // namespace core
 }  // namespace tbai
 
-#include "tbai_config/implementation/YamlConfig.hpp"
+#include "tbai_core/config/implementation/YamlConfig.hpp"
 
-#endif  // TBAI_CONFIG_INCLUDE_TBAI_CONFIG_YAMLCONFIG_HPP_
+#endif  // TBAI_CORE_INCLUDE_TBAI_CORE_CONFIG_YAMLCONFIG_HPP_

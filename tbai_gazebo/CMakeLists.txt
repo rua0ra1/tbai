@@ -12,7 +12,6 @@ find_package(catkin REQUIRED COMPONENTS
   roscpp
   realtime_tools
   tbai_msgs
-  tbai_config
   tbai_core
   ocs2_robotic_tools
 )
@@ -20,7 +19,7 @@ find_package(catkin REQUIRED COMPONENTS
 find_package(gazebo REQUIRED)
 
 catkin_package(
- CATKIN_DEPENDS tbai_msgs tbai_config tbai_core
+ CATKIN_DEPENDS tbai_msgs tbai_core
  DEPENDS pinocchio
 )
 

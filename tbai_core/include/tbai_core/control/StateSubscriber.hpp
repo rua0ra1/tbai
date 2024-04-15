@@ -1,5 +1,5 @@
-#ifndef TBAI_CORE_INCLUDE_TBAI_CORE_STATESUBSCRIBER_HPP_
-#define TBAI_CORE_INCLUDE_TBAI_CORE_STATESUBSCRIBER_HPP_
+#ifndef TBAI_CORE_INCLUDE_TBAI_CORE_CONTROL_STATESUBSCRIBER_HPP_
+#define TBAI_CORE_INCLUDE_TBAI_CORE_CONTROL_STATESUBSCRIBER_HPP_
 
 #include <string>
 
@@ -18,7 +18,7 @@ class StateSubscriber {
      * @param nh : ROS node handle
      * @param stateTopic : ROS topic name for state messages
      */
-    StateSubscriber(ros::NodeHandle &nh, const std::string &stateTopic);  // NOLINT
+    StateSubscriber(ros::NodeHandle &nh, const std::string &stateTopic);
 
     /**
      * @brief Wait until the first state message is received
@@ -56,4 +56,4 @@ class StateSubscriber {
 }  // namespace core
 }  // namespace tbai
 
-#endif  // TBAI_CORE_INCLUDE_TBAI_CORE_STATESUBSCRIBER_HPP_
+#endif  // TBAI_CORE_INCLUDE_TBAI_CORE_CONTROL_STATESUBSCRIBER_HPP_

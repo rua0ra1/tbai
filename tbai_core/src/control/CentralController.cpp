@@ -1,4 +1,4 @@
-#include "tbai_core/CentralController.hpp"
+#include "tbai_core/control/CentralController.hpp"
 
 #include <ros/ros.h>
 #include <tbai_msgs/JointCommandArray.h>
@@ -12,6 +12,22 @@ namespace core {
 CentralController::CentralController(ros::NodeHandle &nh, const std::string &stateTopic,
                                      const std::string &commandTopic, const std::string &changeControllerTopic)
     : loopRate_(1), activeController_(nullptr) {
+    stateSubscriberPtr_ = std::make_shared<StateSubscriber>(nh, stateTopic);
+    commandPublisher_ = nh.advertise<tbai_msgs::JointCommandArray>(commandTopic, 1);
+    changeControllerSubscriber_ =
+        nh.subscribe(changeControllerTopic, 1, &CentralController::changeControllerCallback, this);
+}
+
+/*********************************************************************************************************************/
+/*********************************************************************************************************************/
+/*********************************************************************************************************************/
+CentralController::CentralController(ros::NodeHandle &nh, const std::string &configParam)
+    : loopRate_(1), activeController_(nullptr) {
+    auto config = YamlConfig::fromRosParam(configParam);
+    auto stateTopic = config.get<std::string>("state_topic");
+    auto commandTopic = config.get<std::string>("command_topic");
+    auto changeControllerTopic = config.get<std::string>("change_controller_topic");
+
     stateSubscriberPtr_ = std::make_shared<StateSubscriber>(nh, stateTopic);
     commandPublisher_ = nh.advertise<tbai_msgs::JointCommandArray>(commandTopic, 1);
     changeControllerSubscriber_ =

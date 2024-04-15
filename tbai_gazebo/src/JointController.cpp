@@ -13,7 +13,7 @@ namespace gazebo {
 bool JointController::init(hardware_interface::EffortJointInterface *hw, ros::NodeHandle &n) {
     // Setup yaml config
     const std::string configParam = "tbai_config_path";
-    auto config = tbai::config::YamlConfig::fromRosParam(configParam);
+    auto config = tbai::core::YamlConfig::fromRosParam(configParam);
 
     // Load joint names
     auto jointNames = config.get<std::vector<std::string>>("joint_names");
