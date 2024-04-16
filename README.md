@@ -1,7 +1,6 @@
 # tbai
 Towards better athletic intelligence
 
-
 ## Implemented controllers
 
 ```
@@ -49,3 +48,8 @@ https://github.com/lnotspotl/tbai/assets/82883398/43354e1b-b451-4fed-a09a-af8a49
 ## Perceptive DTC
 
 ## Blind DTC
+
+## System architecture
+
+![architecture](https://github.com/lnotspotl/tbai/assets/82883398/3a21ead9-75dd-4e27-9a8c-c59526a45ae5)
+
