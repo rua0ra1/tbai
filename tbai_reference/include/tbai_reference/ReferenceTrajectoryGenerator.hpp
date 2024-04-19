@@ -1,0 +1,11 @@
+#ifndef TBAI_REFERENCE_INCLUDE_TBAI_REFERENCE_REFERENCETRAJECTORYGENERATOR_HPP_
+#define TBAI_REFERENCE_INCLUDE_TBAI_REFERENCE_REFERENCETRAJECTORYGENERATOR_HPP_
+
+#include <ros/ros.h>
+#include <tbai_core/Types.hpp>
+
+namespace tbai {
+namespace reference {}  // namespace reference
+}  // namespace tbai
+
+#endif  // TBAI_REFERENCE_INCLUDE_TBAI_REFERENCE_REFERENCETRAJECTORYGENERATOR_HPP_
