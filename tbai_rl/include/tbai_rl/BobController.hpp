@@ -164,7 +164,7 @@ class BobController : public tbai::core::Controller {
     const Slice jointResidualsSlice_ = Slice(12, 24);
     const Slice jointVelocitiesSlice_ = Slice(24, 36);
     const Slice samplesGTSlice_ = Slice(136, None);
-    const Slice samplesReconstructedSlice_ = Slice(0, 4*52);
+    const Slice samplesReconstructedSlice_ = Slice(0, 4 * 52);
 
     void generateSamplingPositions();
 

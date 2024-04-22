@@ -40,7 +40,6 @@ struct State {
     Vector3 lhFootPositionWorld;
     Vector3 rfFootPositionWorld;
     Vector3 rhFootPositionWorld;
-
 };
 
 }  // namespace tbai

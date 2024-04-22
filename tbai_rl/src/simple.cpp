@@ -1,10 +1,10 @@
-#include "tbai_rl/BobController.hpp"
 #include <iostream>
 
-#include <tbai_static/StaticController.hpp>
+#include "tbai_rl/BobController.hpp"
 #include <ros/ros.h>
 #include <tbai_core/config/YamlConfig.hpp>
 #include <tbai_core/control/CentralController.hpp>
+#include <tbai_static/StaticController.hpp>
 
 int main(int argc, char *argv[]) {
     ros::init(argc, argv, "tbai_static");
@@ -21,9 +21,7 @@ int main(int argc, char *argv[]) {
     // Add static controller
     controller.addController(
         std::make_unique<tbai::static_::StaticController>(configParam, controller.getStateSubscriberPtr()));
-    controller.addController(
-        std::make_unique<tbai::rl::BobController>(controller.getStateSubscriberPtr())
-    );
+    controller.addController(std::make_unique<tbai::rl::BobController>(controller.getStateSubscriberPtr()));
 
     // Start controller loop
     controller.start();

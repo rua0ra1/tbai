@@ -8,7 +8,6 @@
 #include <gazebo/gazebo.hh>
 #include <gazebo/physics/physics.hh>
 #include <ros/ros.h>
-
 #include <tbai_core/Types.hpp>
 
 namespace gazebo {
@@ -20,7 +19,7 @@ class StatePublisher : public ModelPlugin {
    private:
     /* Convert a rotation matrix to its angle-axis representation */
     tbai::vector3_t mat2aa(const tbai::matrix3_t &R);
-    
+
     event::ConnectionPtr updateConnection_;
 
     /** RbdState message publisher */
