@@ -28,10 +28,16 @@
 namespace tbai {
 namespace rl {
 
+/***********************************************************************************************************************/
+/***********************************************************************************************************************/
+/***********************************************************************************************************************/
 inline int mod(int a, int b) {
     return (a % b + b) % b;
 }
 
+/***********************************************************************************************************************/
+/***********************************************************************************************************************/
+/***********************************************************************************************************************/
 BobController::BobController(const std::shared_ptr<tbai::core::StateSubscriber> &stateSubscriberPtr)
     : stateSubscriberPtr_(stateSubscriberPtr) {
     ros::NodeHandle nh;
@@ -47,7 +53,7 @@ BobController::BobController(const std::shared_ptr<tbai::core::StateSubscriber> 
     refVelGen_ = tbai::reference::getReferenceVelocityGeneratorUnique(nh);
 
     setupPinocchioModel();
-    // generateSamplingPositions();
+    generateSamplingPositions();
 
     auto modelPath = tbai::core::fromRosConfig<std::string>("bob_controller/model_path");
     ROS_INFO_STREAM("[BobController] Loading model from: " << modelPath);
@@ -69,6 +75,9 @@ BobController::BobController(const std::shared_ptr<tbai::core::StateSubscriber> 
     standJointAngles_ = tbai::core::fromRosConfig<vector_t>("static_controller/stand_controller/joint_angles");
 }
 
+/***********************************************************************************************************************/
+/***********************************************************************************************************************/
+/***********************************************************************************************************************/
 void BobController::setupPinocchioModel() {
     ros::NodeHandle nh;
     auto urdf = ros::param::param<std::string>("robot_description", "");
@@ -77,20 +86,25 @@ void BobController::setupPinocchioModel() {
     pinocchioData_ = pinocchio::Data(pinocchioModel_);
 }
 
+/***********************************************************************************************************************/
+/***********************************************************************************************************************/
+/***********************************************************************************************************************/
 void BobController::visualize() {
     auto state = getBobnetState();
     stateVisualizer_.visualize(state);
     heightsReconstructedVisualizer_.visualize(state, sampled_, hidden_);
-
-    std::cout << sampled_.cols() << std::endl;
-    std::cout << sampled_.rows() << std::endl;
-    std::cout << std::endl;
 }
 
+/***********************************************************************************************************************/
+/***********************************************************************************************************************/
+/***********************************************************************************************************************/
 void BobController::changeController(const std::string &controllerType, scalar_t currentTime) {
     gridmap_->waitTillInitialized();
 }
 
+/***********************************************************************************************************************/
+/***********************************************************************************************************************/
+/***********************************************************************************************************************/
 bool BobController::isSupported(const std::string &controllerType) {
     if (controllerType == "BOB" || controllerType == "RL") {
         return true;
@@ -98,6 +112,9 @@ bool BobController::isSupported(const std::string &controllerType) {
     return false;
 }
 
+/***********************************************************************************************************************/
+/***********************************************************************************************************************/
+/***********************************************************************************************************************/
 tbai_msgs::JointCommandArray BobController::getCommandMessage(scalar_t currentTime, scalar_t dt) {
     auto state = getBobnetState();
 
@@ -114,7 +131,6 @@ tbai_msgs::JointCommandArray BobController::getCommandMessage(scalar_t currentTi
         1.0, "NN input computation took: "
                  << std::chrono::duration_cast<std::chrono::microseconds>(t2 - ts1).count() / 1000.0 << " ms");
 
-    std::cout << nnInput.sizes() << std::endl;
     // perform forward pass
     auto ts3 = std::chrono::high_resolution_clock::now();
     at::Tensor out = model_.forward({nnInput.view({1, getNNInputSize()})}).toTensor().squeeze();
@@ -165,6 +181,9 @@ tbai_msgs::JointCommandArray BobController::getCommandMessage(scalar_t currentTi
     return ret;
 }
 
+/***********************************************************************************************************************/
+/***********************************************************************************************************************/
+/***********************************************************************************************************************/
 tbai_msgs::JointCommandArray BobController::getCommandMessage(const vector_t &jointAngles) {
     tbai_msgs::JointCommandArray commandArray;
     commandArray.joint_commands.resize(jointAngles.size());
@@ -180,6 +199,9 @@ tbai_msgs::JointCommandArray BobController::getCommandMessage(const vector_t &jo
     return commandArray;
 }
 
+/***********************************************************************************************************************/
+/***********************************************************************************************************************/
+/***********************************************************************************************************************/
 void BobController::resetHistory() {
     auto reset = [](auto &history, size_t history_size, size_t item_size) {
         history.clear();
@@ -192,6 +214,9 @@ void BobController::resetHistory() {
     reset(historyActions_, COMMAND_HISTORY_SIZE, COMMAND_SIZE);
 }
 
+/***********************************************************************************************************************/
+/***********************************************************************************************************************/
+/***********************************************************************************************************************/
 State BobController::getBobnetState() {
     const vector_t &stateSubscriberState = stateSubscriberPtr_->getLatestRbdState();
     State ret;
@@ -236,6 +261,9 @@ State BobController::getBobnetState() {
     return ret;
 }
 
+/***********************************************************************************************************************/
+/***********************************************************************************************************************/
+/***********************************************************************************************************************/
 at::Tensor BobController::getNNInput(const State &state, scalar_t currentTime, scalar_t dt) {
     at::Tensor input = at::empty(getNNInputSize());
 
@@ -345,7 +373,7 @@ void BobController::fillHeights(at::Tensor &input, const State &state) {
 
     // Rotate sampling points
     matrix3_t Ryaw = angleaxis_t(yaw, vector3_t::UnitZ()).toRotationMatrix();
-    matrix_t rotatedSamplingPoints = Ryaw * gridmap_->samplingPositions_;
+    matrix_t rotatedSamplingPoints = Ryaw * samplingPositions_;
 
     // Replicate sampling points
     sampled_ = rotatedSamplingPoints.replicate<1, 4>();
@@ -410,27 +438,9 @@ void BobController::fillHistoryActions(at::Tensor &input) {
     }
 }
 
-// void BobController::generateSamplingPositions() {
-//     std::vector<scalar_t> Ns = {6, 8, 10, 12, 16};
-//     std::vector<scalar_t> rs = {0.1, 0.3, 0.5, 0.7, 0.9};
-
-//     samplingPositions_ = matrix_t::Zero(3, std::accumulate(Ns.begin(), Ns.end(), 0));
-
-//     size_t idx = 0;
-//     for (int i = 0; i < Ns.size(); ++i) {
-//         scalar_t r = rs[i];
-//         scalar_t N = Ns[i];
-//         for (int j = 0; j < N; ++j) {
-//             scalar_t theta = 2 * M_PI * j / N;
-//             scalar_t x = r * std::cos(theta);
-//             scalar_t y = r * std::sin(theta);
-//             samplingPositions_(0, idx) = x;
-//             samplingPositions_(1, idx) = y;
-//             ++idx;
-//         }
-//     }
-// }
-
+/***********************************************************************************************************************/
+/***********************************************************************************************************************/
+/***********************************************************************************************************************/
 void BobController::updateHistory(const at::Tensor &input, const at::Tensor &action, const State &state) {
     // update position history
     for (int i = 0; i < 12; ++i) {
@@ -447,6 +457,33 @@ void BobController::updateHistory(const at::Tensor &input, const at::Tensor &act
     historyActionsIndex_ = (historyActionsIndex_ + 1) % COMMAND_HISTORY_SIZE;
 }
 
+/***********************************************************************************************************************/
+/***********************************************************************************************************************/
+/***********************************************************************************************************************/
+void BobController::generateSamplingPositions() {
+    std::vector<scalar_t> Ns = {6, 8, 10, 12, 16};
+    std::vector<scalar_t> rs = {0.1, 0.3, 0.5, 0.7, 0.9};
+
+    samplingPositions_ = matrix_t::Zero(3, std::accumulate(Ns.begin(), Ns.end(), 0));
+
+    size_t idx = 0;
+    for (int i = 0; i < Ns.size(); ++i) {
+        scalar_t r = rs[i];
+        scalar_t N = Ns[i];
+        for (int j = 0; j < N; ++j) {
+            scalar_t theta = 2 * M_PI * j / N;
+            scalar_t x = r * std::cos(theta);
+            scalar_t y = r * std::sin(theta);
+            samplingPositions_(0, idx) = x;
+            samplingPositions_(1, idx) = y;
+            ++idx;
+        }
+    }
+}
+
+/***********************************************************************************************************************/
+/***********************************************************************************************************************/
+/***********************************************************************************************************************/
 StateVisualizer::StateVisualizer() {
     // Load odom frame name
     odomFrame_ = tbai::core::fromRosConfig<std::string>("odom_frame");
@@ -471,12 +508,18 @@ StateVisualizer::StateVisualizer() {
     ROS_INFO("StateVisualizer initialized");
 }
 
+/***********************************************************************************************************************/
+/***********************************************************************************************************************/
+/***********************************************************************************************************************/
 void StateVisualizer::visualize(const State &state) {
     ros::Time timeStamp = ros::Time::now();
     publishOdomTransform(timeStamp, state);
     publishJointAngles(timeStamp, state);
 }
 
+/***********************************************************************************************************************/
+/***********************************************************************************************************************/
+/***********************************************************************************************************************/
 void StateVisualizer::publishOdomTransform(const ros::Time &timeStamp, const State &state) {
     geometry_msgs::TransformStamped baseToWorldTransform;
     baseToWorldTransform.header.stamp = timeStamp;
@@ -495,6 +538,9 @@ void StateVisualizer::publishOdomTransform(const ros::Time &timeStamp, const Sta
     tfBroadcaster_.sendTransform(baseToWorldTransform);
 }
 
+/***********************************************************************************************************************/
+/***********************************************************************************************************************/
+/***********************************************************************************************************************/
 void StateVisualizer::publishJointAngles(const ros::Time &timeStamp, const State &state) {
     std::map<std::string, double> positions;
     for (int i = 0; i < jointNames_.size(); ++i) {
@@ -503,6 +549,9 @@ void StateVisualizer::publishJointAngles(const ros::Time &timeStamp, const State
     robotStatePublisherPtr_->publishTransforms(positions, timeStamp);
 }
 
+/***********************************************************************************************************************/
+/***********************************************************************************************************************/
+/***********************************************************************************************************************/
 HeightsReconstructedVisualizer::HeightsReconstructedVisualizer() {
     ros::NodeHandle nh;
     std::string markerTopic = tbai::core::fromRosConfig<std::string>("marker_topic");
@@ -511,6 +560,9 @@ HeightsReconstructedVisualizer::HeightsReconstructedVisualizer() {
     odomFrame_ = tbai::core::fromRosConfig<std::string>("odom_frame");
 }
 
+/***********************************************************************************************************************/
+/***********************************************************************************************************************/
+/***********************************************************************************************************************/
 void HeightsReconstructedVisualizer::visualize(const State &state, const matrix_t &sampled,
                                                const at::Tensor &nnPointsReconstructed) {
     ros::Time timeStamp = ros::Time::now();
@@ -524,6 +576,9 @@ void HeightsReconstructedVisualizer::visualize(const State &state, const matrix_
     });
 }
 
+/***********************************************************************************************************************/
+/***********************************************************************************************************************/
+/***********************************************************************************************************************/
 void HeightsReconstructedVisualizer::publishMarkers(const ros::Time &timeStamp, const matrix_t &sampled,
                                                     const std::array<float, 3> &rgb,
                                                     const std::string &markerNamePrefix,

@@ -166,6 +166,8 @@ class BobController : public tbai::core::Controller {
     const Slice samplesGTSlice_ = Slice(136, None);
     const Slice samplesReconstructedSlice_ = Slice(0, 4*52);
 
+    void generateSamplingPositions();
+
     std::vector<at::Tensor> historyResiduals_;
     int historyResidualsIndex_ = 0;
     std::vector<at::Tensor> historyVelocities_;
@@ -179,6 +181,8 @@ class BobController : public tbai::core::Controller {
     vector_t jointAngles2_;
 
     vector_t standJointAngles_;
+
+    matrix_t samplingPositions_;
 
     matrix_t sampled_;
 

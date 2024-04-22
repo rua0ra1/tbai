@@ -23,15 +23,14 @@ class GridmapInterface {
         if (!(mapPtr_->isInside(position))) {
             return 0.0;
         }
-        auto a = mapPtr_->atPosition("elevation_inpainted", position);
-        if (std::isnan(a) || std::isinf(a)) {
-            std::cerr << "NAN or inf at position " << x << " " << y << " " << a << std::endl;
+        auto height = mapPtr_->atPosition("elevation_inpainted", position);
+        if (std::isnan(height) || std::isinf(height)) {
+            std::cerr << "NAN or inf at position " << x << " " << y << " " << height << std::endl;
         }
-        return a;
+        return height;
     }
 
     void atPositions(matrix_t &sampled);
-    matrix_t samplingPositions_;
 
    private:
     void callback(const grid_map_msgs::GridMap &msg);
@@ -39,7 +38,6 @@ class GridmapInterface {
     ros::Subscriber subscriber_;
     std::unique_ptr<grid_map::GridMap> mapPtr_;
     bool initialized_ = false;
-    void generateSamplingPositions();
 };
 
 std::unique_ptr<GridmapInterface> getGridmapInterfaceUnique();
