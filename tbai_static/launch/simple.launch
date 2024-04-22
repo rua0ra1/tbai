@@ -3,7 +3,7 @@
     <!-- Required arguments -->
     <arg name="controllers_ns"      default="anymal_d"/>
     <arg name="controllers_args"    default="joint_controller"/>
-    <arg name="config_file"         default="$(find tbai_static)/config/default_config.yaml"/>
+    <arg name="tbai_config_path"    default="$(find tbai_static)/config/default_config.yaml"/>
     <arg name="description_name"    default="robot_description"/>
     <arg name="description_file"    default="$(find tbai_description)/urdf/anymal_d_gazebo.urdf.xacro"/>
 
@@ -15,11 +15,14 @@
     <arg name="y" default="0.0"/>
     <arg name="z" default="3.0"/>
 
+    <!-- Upload config path to ROS param server -->
+    <param name="tbai_config_path" type="string" value="$(arg tbai_config_path)"/>
+
     <!-- Launch gazebo -->
     <include file="$(find tbai_gazebo)/launch/world.launch">
         <arg name="controllers_ns" value="$(arg controllers_ns)"/>
         <arg name="controllers_args" value="$(arg controllers_args)"/>
-        <arg name="config_file" value="$(arg config_file)"/>
+        <arg name="config_file" value="$(arg tbai_config_path)"/>
         <arg name="description_name" value="$(arg description_name)"/>
         <arg name="description_file" value="$(arg description_file)"/>
         <arg name="gui" value="$(arg gui)"/>

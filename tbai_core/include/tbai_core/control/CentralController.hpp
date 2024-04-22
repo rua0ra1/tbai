@@ -60,7 +60,7 @@ class CentralController {
      *
      * @return std::shared_ptr<StateSubscriber> : state subscriber pointer
      */
-    std::shared_ptr<StateSubscriber> getStateSubscriberPtr();
+    const std::shared_ptr<StateSubscriber> &getStateSubscriberPtr();
 
     /**
      * @brief Get current time in seconds

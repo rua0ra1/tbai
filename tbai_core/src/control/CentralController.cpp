@@ -96,7 +96,7 @@ void CentralController::step(scalar_t currentTime, scalar_t dt) {
 /*********************************************************************************************************************/
 /*********************************************************************************************************************/
 /*********************************************************************************************************************/
-std::shared_ptr<StateSubscriber> CentralController::getStateSubscriberPtr() {
+const std::shared_ptr<StateSubscriber> &CentralController::getStateSubscriberPtr() {
     return stateSubscriberPtr_;
 }
 

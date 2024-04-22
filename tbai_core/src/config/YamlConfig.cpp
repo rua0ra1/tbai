@@ -14,10 +14,10 @@ YamlConfig::YamlConfig(const std::string &configPath, const char delim, bool per
 /**********************************************************************************************************************/
 /**********************************************************************************************************************/
 /**********************************************************************************************************************/
-YamlConfig YamlConfig::fromRosParam(const std::string &pathParam, const char delim) {
+YamlConfig YamlConfig::fromRosParam(const std::string &pathParam, const char delim, bool performChecks) {
     std::string configPath;
     ros::param::get(pathParam, configPath);
-    return YamlConfig(configPath, delim);
+    return YamlConfig(configPath, delim, performChecks);
 }
 
 /**********************************************************************************************************************/

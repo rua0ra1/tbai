@@ -25,9 +25,11 @@ class YamlConfig {
      *
      * @param pathParam : ROS parameter name containing config's path
      * @param delim : config path delimiter
+     * @param performChecks : Perform checks (whether or not a key exists) when getting a value
+     *
      * @return YamlConfig object
      */
-    static YamlConfig fromRosParam(const std::string &pathParam, const char delim = '/');
+    static YamlConfig fromRosParam(const std::string &pathParam, const char delim = '/', bool performChecks = true);
 
     /**
      * @brief Get value from config
@@ -58,6 +60,19 @@ class YamlConfig {
     char delim_;
     bool performChecks_;
 };
+
+/** Retrieve parameter from tbai yaml config file
+ *
+ * Note: 'tbai_config_path' parameter must be set in ROS parameter server
+ *
+ * @tparam T : Type of value to get
+ * @param path : Path to value in config
+ * @param delim : config path delimiter
+ * @param configParam : ROS parameter name containing config's path
+ *
+ */
+template <typename T>
+T fromRosConfig(const std::string &path, const char delim = '/', const std::string &configParam = "tbai_config_path");
 
 }  // namespace core
 }  // namespace tbai

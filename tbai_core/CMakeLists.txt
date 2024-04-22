@@ -8,6 +8,7 @@ find_package(catkin REQUIRED COMPONENTS
   tf
   tbai_msgs
   std_msgs
+  roscpp
 )
 find_package(yaml-cpp REQUIRED)
 

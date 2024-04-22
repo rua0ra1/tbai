@@ -14,16 +14,32 @@ using vector_t = Eigen::Matrix<scalar_t, Eigen::Dynamic, 1>;
 /** Matrix type */
 using matrix_t = Eigen::Matrix<scalar_t, Eigen::Dynamic, Eigen::Dynamic>;
 
-/** Velocity command */
-struct VelocityCommand {
-    /** Velocity in the x direction, [m/s] */
-    scalar_t velocity_x = 0.0;
+/** 3 vector */
+using vector3_t = Eigen::Matrix<scalar_t, 3, 1>;
 
-    /** Velocity in the y direction, [m/s] */
-    scalar_t velocity_y = 0.0;
+/** 3x3 matrix */
+using matrix3_t = Eigen::Matrix<scalar_t, 3, 3>;
 
-    /** Angular velocity around the z axis, [rad/s] */
-    scalar_t yaw_rate = 0.0;
+using angleaxis_t = Eigen::AngleAxis<scalar_t>;
+
+using quaternion_t = Eigen::Quaternion<scalar_t>;
+
+struct State {
+    using Vector3 = Eigen::Matrix<scalar_t, 3, 1>;
+    using Vector4 = Eigen::Matrix<scalar_t, 4, 1>;
+    using Vector12 = Eigen::Matrix<scalar_t, 12, 1>;
+
+    Vector3 basePositionWorld;
+    Vector4 baseOrientationWorld;  // quaternion, xyzw
+    Vector3 baseLinearVelocityBase;
+    Vector3 baseAngularVelocityBase;
+    Vector3 normalizedGravityBase;
+    Vector12 jointPositions;
+    Vector12 jointVelocities;
+    Vector3 lfFootPositionWorld;
+    Vector3 lhFootPositionWorld;
+    Vector3 rfFootPositionWorld;
+    Vector3 rhFootPositionWorld;
 };
 
 }  // namespace tbai

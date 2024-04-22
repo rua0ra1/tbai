@@ -8,6 +8,7 @@
 #include <gazebo/gazebo.hh>
 #include <gazebo/physics/physics.hh>
 #include <ros/ros.h>
+#include <tbai_core/Types.hpp>
 
 namespace gazebo {
 class StatePublisher : public ModelPlugin {
@@ -16,8 +17,8 @@ class StatePublisher : public ModelPlugin {
     void OnUpdate();
 
    private:
-    /** Convert rotation matrix to ZYX euler angles - output {roll, pitch, yaw}*/
-    Eigen::Vector3d eulerXYZFromRotationMatrix(const Eigen::Matrix3d &R, double lastYaw);
+    /* Convert a rotation matrix to its angle-axis representation */
+    tbai::vector3_t mat2aa(const tbai::matrix3_t &R);
 
     event::ConnectionPtr updateConnection_;
 
@@ -28,20 +29,21 @@ class StatePublisher : public ModelPlugin {
     physics::ModelPtr robot_;
 
     /** Base link */
-    physics::LinkPtr baseLink_;
+    physics::LinkPtr baseLinkPtr_;
 
-    /** Joints */
     std::vector<physics::JointPtr> joints_;
 
     /** State publish rate */
     double rate_;
     double period_;
 
-    /** Last time a state message was published */
-    common::Time lastPublishTime_;
+    bool firstUpdate_ = true;
 
-    /** Last yaw euler angle */
-    double lastYaw_;
+    // last yaw angle
+    std::vector<tbai::scalar_t> lastJointAngles_;
+    tbai::matrix3_t lastBaseOrientationMat_;
+    tbai::vector3_t lastBasePosition_;
+    common::Time lastSimTime_;
 };
 
 }  // namespace gazebo

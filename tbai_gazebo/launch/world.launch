@@ -17,7 +17,6 @@
     <arg name="use_sim_time"             default="true"/>
 
     <!-- Upload some data to ROS param server -->
-    <param name="tbai_config_path" type="string" value="$(arg config_file)"/>
     <rosparam file="$(arg config_file)" command="load"/>
 
 	<!-- Empty World -->
