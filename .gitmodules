@@ -4,3 +4,15 @@
 [submodule "dependencies/ocs2_robotic_assets"]
 	path = dependencies/ocs2_robotic_assets
 	url = git@github.com:projectatctu/ocs2_robotic_assets.git
+[submodule "dependencies/elevation_mapping"]
+	path = dependencies/elevation_mapping
+	url = https://github.com/ANYbotics/elevation_mapping.git
+[submodule "dependencies/kindr"]
+	path = dependencies/kindr
+	url = https://github.com/ANYbotics/kindr.git
+[submodule "dependencies/kindr_ros"]
+	path = dependencies/kindr_ros
+	url = https://github.com/ANYbotics/kindr_ros.git
+[submodule "message_logger"]
+	path = message_logger
+	url = https://github.com/ANYbotics/message_logger.git

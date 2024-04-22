@@ -1,6 +1,9 @@
 #ifndef TBAI_GRIDMAP_INCLUDE_TBAI_GRIDMAP_GRIDMAPINTERFACE_HPP_
 #define TBAI_GRIDMAP_INCLUDE_TBAI_GRIDMAP_GRIDMAPINTERFACE_HPP_
 
+#include <memory>
+#include <string>
+
 #include <grid_map_core/GridMap.hpp>
 #include <grid_map_ros/grid_map_ros.hpp>
 #include <ros/callback_queue.h>
@@ -11,36 +14,37 @@ namespace gridmap {
 
 class GridmapInterface {
    public:
-    GridmapInterface(ros::NodeHandle &nh, const std::string &topic, const std::string &layer);
+    GridmapInterface(ros::NodeHandle &nh, const std::string &topic);
     inline bool isInitialized() { return initialized_; }
     void waitTillInitialized();
 
     inline scalar_t atPosition(scalar_t x, scalar_t y) {
         grid_map::Position position(x, y);
-        if (!map_.isInside(position)) {
+        if (!(mapPtr_->isInside(position))) {
             return 0.0;
         }
-        return map_.atPosition(layer_, position);
+        auto a = mapPtr_->atPosition("elevation_inpainted", position);
+        if (std::isnan(a) || std::isinf(a)) {
+            std::cerr << "NAN or inf at position " << x << " " << y << " " << a << std::endl;
+        }
+        return a;
     }
 
-    const grid_map::GridMap &getMap() { return map_; }
-
     void atPositions(matrix_t &sampled);
+    matrix_t samplingPositions_;
 
    private:
     void callback(const grid_map_msgs::GridMap &msg);
 
-    inline void spinOnce() { callbackQueueInterfaceRawPtr_->callAvailable(ros::WallDuration()); }
-
-    ros::CallbackQueue *callbackQueueInterfaceRawPtr_;
-
     ros::Subscriber subscriber_;
-    grid_map::GridMap map_;
-    std::string layer_;
+    std::unique_ptr<grid_map::GridMap> mapPtr_;
     bool initialized_ = false;
-
     void generateSamplingPositions();
 };
+
+std::unique_ptr<GridmapInterface> getGridmapInterfaceUnique();
+
+std::shared_ptr<GridmapInterface> getGridmapInterfaceShared();
 
 }  // namespace gridmap
 }  // namespace tbai

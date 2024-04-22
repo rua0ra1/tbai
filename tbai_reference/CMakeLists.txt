@@ -25,7 +25,6 @@ include_directories(
 
 add_library(tbai_reference
     src/ReferenceVelocityGenerator.cpp
-    src/ReferenceTrajectoryGenerator.cpp
 )
 target_link_libraries(tbai_reference ${catkin_LIBRARIES})
 

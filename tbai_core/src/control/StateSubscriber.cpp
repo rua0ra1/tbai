@@ -25,7 +25,7 @@ void StateSubscriber::waitTillInitialized() {
 /*********************************************************************************************************************/
 /*********************************************************************************************************************/
 void StateSubscriber::updateLatestRbdState() {
-    latestRbdState_ = Eigen::Map<vector_t>(stateMessage_->rbd_state.data(), stateMessage_->rbd_state.size());
+    latestRbdState_ = vector_t(Eigen::Map<vector_t>(stateMessage_->rbd_state.data(), stateMessage_->rbd_state.size()));
 }
 
 /*********************************************************************************************************************/

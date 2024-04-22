@@ -1,15 +1,18 @@
 #include "tbai_gridmap/GridmapInterface.hpp"
 
+#include <tbai_core/config/YamlConfig.hpp>
+
+#include <numeric>
+
 namespace tbai {
 namespace gridmap {
 
 /**********************************************************************************************************************/
 /**********************************************************************************************************************/
 /**********************************************************************************************************************/
-GridmapInterface::GridmapInterface(ros::NodeHandle &nh, const std::string &topic, const std::string &layer)
-    : initialized_(false), layer_(layer) {
+GridmapInterface::GridmapInterface(ros::NodeHandle &nh, const std::string &topic) : initialized_(false) {
     subscriber_ = nh.subscribe(topic, 1, &GridmapInterface::callback, this);
-    callbackQueueInterfaceRawPtr_ = dynamic_cast<ros::CallbackQueue *>(nh.getCallbackQueue());
+    generateSamplingPositions();
 }
 
 /**********************************************************************************************************************/
@@ -27,7 +30,13 @@ void GridmapInterface::atPositions(matrix_t &sampled) {
 /**********************************************************************************************************************/
 /**********************************************************************************************************************/
 void GridmapInterface::callback(const grid_map_msgs::GridMap &msg) {
-    grid_map::GridMapRosConverter::fromMessage(msg, map_);
+    // Convert ROS message to grid map
+    std::unique_ptr<grid_map::GridMap> mapPtr(new grid_map::GridMap);
+    std::vector<std::string> layers = {"elevation_inpainted"};
+    grid_map::GridMapRosConverter::fromMessage(msg, *mapPtr, layers, false, false);
+
+    // Swap terrain map pointers
+    mapPtr_.swap(mapPtr);
     initialized_ = true;
 }
 
@@ -36,10 +45,51 @@ void GridmapInterface::callback(const grid_map_msgs::GridMap &msg) {
 /**********************************************************************************************************************/
 void GridmapInterface::waitTillInitialized() {
     while (!initialized_) {
-        ROS_INFO("[GridmapInterface] Waiting for gridmap to be initialized.");
-        ros::Duration(0.2).sleep();
-        spinOnce();
+        ROS_INFO("[Bobnet gridmap] Waiting for gridmap to be initialized.");
+        ros::Duration(0.5).sleep();
+        ros::spinOnce();
     }
+}
+
+/**********************************************************************************************************************/
+/**********************************************************************************************************************/
+/**********************************************************************************************************************/
+void GridmapInterface::generateSamplingPositions() {
+    std::vector<scalar_t> Ns = {6, 8, 10, 12, 16};
+    std::vector<scalar_t> rs = {0.1, 0.3, 0.5, 0.7, 0.9};
+
+    samplingPositions_ = matrix_t::Zero(3, std::accumulate(Ns.begin(), Ns.end(), 0));
+
+    size_t idx = 0;
+    for (int i = 0; i < Ns.size(); ++i) {
+        scalar_t r = rs[i];
+        scalar_t N = Ns[i];
+        for (int j = 0; j < N; ++j) {
+            scalar_t theta = 2 * M_PI * j / N;
+            scalar_t x = r * std::cos(theta);
+            scalar_t y = r * std::sin(theta);
+            samplingPositions_(0, idx) = x;
+            samplingPositions_(1, idx) = y;
+            ++idx;
+        }
+    }
+}
+
+/**********************************************************************************************************************/
+/**********************************************************************************************************************/
+/**********************************************************************************************************************/
+std::unique_ptr<GridmapInterface> getGridmapInterfaceUnique() {
+    ros::NodeHandle nh;
+    auto topic = tbai::core::fromRosConfig<std::string>("gridmap_topic");
+
+    return std::unique_ptr<GridmapInterface>(new GridmapInterface(nh, topic));
+}
+
+/**********************************************************************************************************************/
+/**********************************************************************************************************************/
+/**********************************************************************************************************************/
+std::shared_ptr<GridmapInterface> getGridmapInterfaceShared() {
+    return std::shared_ptr<GridmapInterface>(getGridmapInterfaceUnique().release());
 }
 
 }  // namespace gridmap

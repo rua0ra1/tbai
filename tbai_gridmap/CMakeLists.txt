@@ -10,11 +10,13 @@ find_package(catkin REQUIRED COMPONENTS
     grid_map_ros
     grid_map_core
 )
+find_package(OpenCV REQUIRED)
 
 catkin_package(
   INCLUDE_DIRS include
   LIBRARIES tbai_gridmap 
  CATKIN_DEPENDS  
+ DEPENDS OpenCV
 )
 
 include_directories(

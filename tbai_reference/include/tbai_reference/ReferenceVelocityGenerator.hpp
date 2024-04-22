@@ -86,11 +86,9 @@ class TwistReferenceVelocityGenerator final : public RosVelocityReferenceGenerat
     void callback(const geometry_msgs::Twist &msg) override;
 };
 
-std::unique_ptr<ReferenceVelocityGenerator> createReferenceVelocityGeneratorFromRosConfigUnique(
-    const std::string &rosConfigParam);
-    
-std::shared_ptr<ReferenceVelocityGenerator> createReferenceVelocityGeneratorFromRosConfigShared(
-    const std::string &rosConfigParam);
+std::unique_ptr<ReferenceVelocityGenerator> getReferenceVelocityGeneratorUnique(ros::NodeHandle &nh);
+
+std::shared_ptr<ReferenceVelocityGenerator> getReferenceVelocityGeneratorShared(ros::NodeHandle &nh);
 
 }  // namespace reference
 }  // namespace tbai

@@ -70,7 +70,7 @@ void StaticController::visualize() {
 void StaticController::changeController(const std::string &controllerType, scalar_t currentTime) {
     currentControllerType_ = controllerType;
     alpha_ = 0.0;
-    interpFrom_ = stateSubscriberPtr_->getLatestRbdState().segment<12>(6);
+    interpFrom_ = stateSubscriberPtr_->getLatestRbdState().segment<12>(7);
     if (currentControllerType_ == "STAND") {
         interpTo_ = standJointAngles_;
     } else if (currentControllerType_ == "SIT") {
@@ -125,19 +125,15 @@ void StaticController::publishOdomBaseTransforms(const vector_t &currentState, c
     odomBaseTransform.child_frame_id = "base";
 
     // Position
-    odomBaseTransform.transform.translation.x = currentState(3);
-    odomBaseTransform.transform.translation.y = currentState(4);
-    odomBaseTransform.transform.translation.z = currentState(5);
+    odomBaseTransform.transform.translation.x = currentState(0);
+    odomBaseTransform.transform.translation.y = currentState(1);
+    odomBaseTransform.transform.translation.z = currentState(2);
 
     // Orientation
-    Eigen::Quaternion<scalar_t> quaternion =
-        (Eigen::AngleAxis<scalar_t>(currentState(0), Eigen::Matrix<scalar_t, 3, 1>::UnitZ()) *
-         Eigen::AngleAxis<scalar_t>(currentState(1), Eigen::Matrix<scalar_t, 3, 1>::UnitY()) *
-         Eigen::AngleAxis<scalar_t>(currentState(2), Eigen::Matrix<scalar_t, 3, 1>::UnitX()));
-    odomBaseTransform.transform.rotation.x = quaternion.x();
-    odomBaseTransform.transform.rotation.y = quaternion.y();
-    odomBaseTransform.transform.rotation.z = quaternion.z();
-    odomBaseTransform.transform.rotation.w = quaternion.w();
+    odomBaseTransform.transform.rotation.x = currentState(3);
+    odomBaseTransform.transform.rotation.y = currentState(4);
+    odomBaseTransform.transform.rotation.z = currentState(5);
+    odomBaseTransform.transform.rotation.w = currentState(6);
 
     // Publish
     tfBroadcaster_.sendTransform(odomBaseTransform);
@@ -149,7 +145,7 @@ void StaticController::publishOdomBaseTransforms(const vector_t &currentState, c
 void StaticController::publishJointAngles(const vector_t &currentState, const ros::Time &currentTime) {
     std::map<std::string, scalar_t> jointPositionMap;
     for (size_t i = 0; i < jointNames_.size(); ++i) {
-        jointPositionMap[jointNames_[i]] = currentState(i + 6);
+        jointPositionMap[jointNames_[i]] = currentState(i + 7);
     }
     robotStatePublisherPtr_->publishTransforms(jointPositionMap, currentTime);
 }
