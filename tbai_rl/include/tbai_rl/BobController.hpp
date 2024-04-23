@@ -78,6 +78,7 @@ class HeightsReconstructedVisualizer {
 
     std::string odomFrame_;
     ros::Publisher markerPublisher_;
+    bool blind_;
 };
 
 using namespace tbai;
@@ -190,6 +191,8 @@ class BobController : public tbai::core::Controller {
 
     StateVisualizer stateVisualizer_;
     HeightsReconstructedVisualizer heightsReconstructedVisualizer_;
+
+    bool blind_;
 };
 
 }  // namespace rl

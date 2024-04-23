@@ -25,10 +25,11 @@ static_controller:
   rate: 50 # Hz
 
 bob_controller:
+  blind: true
   kp: 80.0
   kd: 2.0
   # model_path: "package://tbai_rl/models/anymal_model_action12.pt"
-  model_path: "package://tbai_rl/models/anymal_model_action12_anymal_d_perceptive.pt"
+  model_path: "package://tbai_rl/models/anymal_model_action12_anymal_d_blind.pt"
 
   default_stance: [
     [ 0.00790786,  0.05720384, -0.573],

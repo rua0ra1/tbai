@@ -45,11 +45,15 @@ BobController::BobController(const std::shared_ptr<tbai::core::StateSubscriber> 
     // Load PD
     kp_ = tbai::core::fromRosConfig<scalar_t>("bob_controller/kp");
     kd_ = tbai::core::fromRosConfig<scalar_t>("bob_controller/kd");
+    blind_ = tbai::core::fromRosConfig<bool>("bob_controller/blind");
     jointNames_ = tbai::core::fromRosConfig<std::vector<std::string>>("joint_names");
 
     ik_ = getInverseKinematicsUnique();
     cpg_ = getCentralPatternGeneratorUnique();
-    gridmap_ = tbai::gridmap::getGridmapInterfaceUnique();
+
+    if(!blind_) {
+        gridmap_ = tbai::gridmap::getGridmapInterfaceUnique();
+    }
     refVelGen_ = tbai::reference::getReferenceVelocityGeneratorUnique(nh);
 
     setupPinocchioModel();
@@ -99,7 +103,9 @@ void BobController::visualize() {
 /***********************************************************************************************************************/
 /***********************************************************************************************************************/
 void BobController::changeController(const std::string &controllerType, scalar_t currentTime) {
-    gridmap_->waitTillInitialized();
+    if(!blind_) {
+        gridmap_->waitTillInitialized();
+    }
 }
 
 /***********************************************************************************************************************/
@@ -388,17 +394,21 @@ void BobController::fillHeights(at::Tensor &input, const State &state) {
     addOffset(state.rfFootPositionWorld[0], state.rfFootPositionWorld[1], 2);
     addOffset(state.rhFootPositionWorld[0], state.rhFootPositionWorld[1], 3);
 
-    // sample heights
-    gridmap_->atPositions(sampled_);
+    // If blind, height samples are not used, garbage values are fine
+    // sampled_ is updated for visualization purposes
+    if(!blind_) {
+        // sample heights
+        gridmap_->atPositions(sampled_);
 
-    // clamp third row between -1 and 1
-    sampled_.row(2) = (state.basePositionWorld[2] - sampled_.row(2).array()).array() - 0.5;
-    sampled_.row(2) = sampled_.row(2).cwiseMax(-1.0).cwiseMin(1.0) * HEIGHT_MEASUREMENTS_SCALE;
+        // clamp third row between -1 and 1
+        sampled_.row(2) = (state.basePositionWorld[2] - sampled_.row(2).array()).array() - 0.5;
+        sampled_.row(2) = sampled_.row(2).cwiseMax(-1.0).cwiseMin(1.0) * HEIGHT_MEASUREMENTS_SCALE;
 
-    // Eigen -> torch: https://discuss.pytorch.org/t/data-transfer-between-libtorch-c-and-eigen/54156/6
-    float *torchPtr = input.index({Slice(startIdx, None)}).data_ptr<float>();
-    Eigen::Map<Eigen::VectorXf> ef(torchPtr, 4 * 52, 1);
-    ef = sampled_.row(2).cast<float>();
+        // Eigen -> torch: https://discuss.pytorch.org/t/data-transfer-between-libtorch-c-and-eigen/54156/6
+        float *torchPtr = input.index({Slice(startIdx, None)}).data_ptr<float>();
+        Eigen::Map<Eigen::VectorXf> ef(torchPtr, 4 * 52, 1);
+        ef = sampled_.row(2).cast<float>();
+    }
 }
 
 /***********************************************************************************************************************/
@@ -558,6 +568,7 @@ HeightsReconstructedVisualizer::HeightsReconstructedVisualizer() {
     markerPublisher_ = nh.advertise<visualization_msgs::MarkerArray>(markerTopic, 1);
 
     odomFrame_ = tbai::core::fromRosConfig<std::string>("odom_frame");
+    blind_ = tbai::core::fromRosConfig<bool>("bob_controller/blind");
 }
 
 /***********************************************************************************************************************/
@@ -567,9 +578,11 @@ void HeightsReconstructedVisualizer::visualize(const State &state, const matrix_
                                                const at::Tensor &nnPointsReconstructed) {
     ros::Time timeStamp = ros::Time::now();
 
-    publishMarkers(timeStamp, sampled, {1.0, 0.0, 0.0}, "ground_truth",
-                   [&](size_t id) { return -(sampled(2, id) / 1.0 + 0.5 - state.basePositionWorld[2]); });
 
+    if(!blind_) {
+        publishMarkers(timeStamp, sampled, {1.0, 0.0, 0.0}, "ground_truth",
+                    [&](size_t id) { return -(sampled(2, id) / 1.0 + 0.5 - state.basePositionWorld[2]); });
+    }
     publishMarkers(timeStamp, sampled, {0.0, 0.0, 1.0}, "nn_reconstructed", [&](size_t id) {
         float out = -(nnPointsReconstructed[id].item<float>() / 1.0 + 0.5 - state.basePositionWorld[2]);
         return static_cast<scalar_t>(out);
