@@ -17,9 +17,6 @@ class StatePublisher : public ModelPlugin {
     void OnUpdate();
 
    private:
-    /* Convert a rotation matrix to its angle-axis representation */
-    tbai::vector3_t mat2aa(const tbai::matrix3_t &R);
-
     event::ConnectionPtr updateConnection_;
 
     /** RbdState message publisher */
@@ -41,8 +38,8 @@ class StatePublisher : public ModelPlugin {
 
     // last yaw angle
     std::vector<tbai::scalar_t> lastJointAngles_;
-    tbai::matrix3_t lastBaseOrientationMat_;
-    tbai::vector3_t lastBasePosition_;
+    tbai::matrix3_t lastOrientationBase2World_;
+    tbai::vector3_t lastPositionBase_;
     common::Time lastSimTime_;
 };
 

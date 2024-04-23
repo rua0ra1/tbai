@@ -5,6 +5,7 @@
 #include <vector>
 
 #include <tbai_core/config/YamlConfig.hpp>
+#include <tbai_core/Rotations.hpp>
 
 #include "tbai_rl/BobController.hpp"
 
@@ -228,32 +229,34 @@ State BobController::getBobnetState() {
     State ret;
 
     // Base position
-    ret.basePositionWorld = stateSubscriberState.segment<3>(0);
+    ret.basePositionWorld = stateSubscriberState.segment<3>(3);
 
     // Base orientation
-    Eigen::Quaternion q(stateSubscriberState[6], stateSubscriberState[3], stateSubscriberState[4],
-                        stateSubscriberState[5]);
+    tbai::quaternion_t q = tbai::core::rpy2quat(stateSubscriberState.segment<3>(0));
     auto Rwb = q.toRotationMatrix();
-    auto Rbw = Rwb.transpose();
     ret.baseOrientationWorld = (State::Vector4() << q.x(), q.y(), q.z(), q.w()).finished();
 
-    // Base linear velocity
-    ret.baseLinearVelocityBase = Rbw * stateSubscriberState.segment<3>(19);
-
     // Base angular velocity
-    ret.baseAngularVelocityBase = Rbw * stateSubscriberState.segment<3>(22);
+    ret.baseAngularVelocityBase = stateSubscriberState.segment<3>(6);
+
+    // Base linear velocity
+    ret.baseLinearVelocityBase = stateSubscriberState.segment<3>(9);
 
     // Normalized gravity vector
-    ret.normalizedGravityBase = Rbw * (vector3_t() << 0, 0, -1).finished();
+    ret.normalizedGravityBase = Rwb.transpose() * (vector3_t() << 0, 0, -1).finished();
 
     // Joint positions
-    ret.jointPositions = stateSubscriberState.segment<12>(7);
+    ret.jointPositions = stateSubscriberState.segment<12>(12);
 
     // Joint velocities
-    ret.jointVelocities = stateSubscriberState.segment<12>(3 + 4 + 12 + 3 + 3);
+    ret.jointVelocities = stateSubscriberState.segment<12>(12+12);
 
     // pinocchio state vector
-    vector_t pinocchioStateVector = stateSubscriberState.head<19>();
+
+    vector_t pinocchioStateVector(19);
+    pinocchioStateVector.segment<3>(0) = ret.basePositionWorld;
+    pinocchioStateVector.segment<4>(3) = ret.baseOrientationWorld;
+    pinocchioStateVector.segment<12>(7) = ret.jointPositions;
 
     // Update kinematics
     pinocchio::forwardKinematics(pinocchioModel_, pinocchioData_, pinocchioStateVector);
