@@ -6,6 +6,10 @@ add_compile_options(-std=c++17)
 
 find_package(catkin REQUIRED COMPONENTS
     roscpp
+    ocs2_core
+    ocs2_mpc
+    ocs2_msgs
+    ocs2_ros_interfaces
 )
 
 catkin_package(
