@@ -6,10 +6,15 @@ add_compile_options(-std=c++17)
 
 find_package(catkin REQUIRED COMPONENTS
     roscpp
+    tbai_core
+    tbai_msgs
     ocs2_core
     ocs2_mpc
     ocs2_msgs
     ocs2_ros_interfaces
+    ocs2_anymal_commands
+    grid_map_core
+    grid_map_ros
 )
 
 catkin_package(
@@ -22,3 +27,8 @@ include_directories(
  include
  ${catkin_INCLUDE_DIRS}
 )
+
+add_library(tbai_mpc
+  src/reference/ReferenceTrajectoryGenerator.cpp
+)
+target_link_libraries(tbai_mpc ${catkin_LIBRARIES})

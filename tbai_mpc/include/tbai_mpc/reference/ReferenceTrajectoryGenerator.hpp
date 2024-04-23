@@ -19,6 +19,8 @@ namespace tbai {
 namespace mpc {
 namespace reference {
 
+using namespace switched_model;
+
 using ocs2::scalar_t;
 using ocs2::SystemObservation;
 
@@ -53,7 +55,6 @@ class ReferenceTrajectoryGenerator {
     size_t trajKnots_;     // number of timesteps in reference horizon
     std::mutex observationMutex_;
     std::mutex terrainMutex_;
-    std::unique_ptr<CommandController> commandControllerPtr_;
     std::unique_ptr<grid_map::GridMap> terrainMapPtr_;
     SystemObservation latestObservation_;
 

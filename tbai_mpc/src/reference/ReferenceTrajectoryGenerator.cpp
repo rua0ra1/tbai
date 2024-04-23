@@ -1,9 +1,15 @@
 #include "tbai_mpc/reference/ReferenceTrajectoryGenerator.hpp"
 
 #include <tbai_core/config/YamlConfig.hpp>
+#include <ocs2_msgs/mpc_target_trajectories.h>
+#include "ocs2_switched_model_interface/core/SwitchedModel.h"
+#include <ocs2_switched_model_interface/core/Rotations.h>
+
+#include <grid_map_ros/grid_map_ros.hpp>
 namespace tbai {
 namespace mpc {
 namespace reference {
+
 
 /*********************************************************************************************************************/
 /*********************************************************************************************************************/
@@ -43,7 +49,7 @@ void ReferenceTrajectoryGenerator::publishReferenceTrajectory() {
     }
 
     // Generate reference trajectory
-    ocs2::TargetTrajectories referenceTrajectory = generateReferenceTrajectory(ros::Time::now().toSec());
+    ocs2::TargetTrajectories referenceTrajectory = generateReferenceTrajectory(ros::Time::now().toSec(), 0.0);
 
     // Publish reference trajectory
     referencePublisher_.publish(ocs2::ros_msg_conversions::createTargetTrajectoriesMsg(referenceTrajectory));
@@ -60,8 +66,8 @@ BaseReferenceHorizon ReferenceTrajectoryGenerator::getBaseReferenceHorizon() {
 /*********************************************************************************************************************/
 /*********************************************************************************************************************/
 BaseReferenceCommand ReferenceTrajectoryGenerator::getBaseReferenceCommand(scalar_t time) {
-    const auto velocityCommand = commandControllerPtr_->getVelocityCommand(time);
-    return {velocityCommand.velocity_x, velocityCommand.velocity_y, velocityCommand.yaw_rate, comHeight_};
+    // return {velocityCommand.velocity_x, velocityCommand.velocity_y, velocityCommand.yaw_rate, comHeight_};
+    return {0.0, 0.0, 0.0, comHeight_};
 }
 
 /*********************************************************************************************************************/

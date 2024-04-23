@@ -16,3 +16,6 @@
 [submodule "message_logger"]
 	path = dependencies/message_logger
 	url = https://github.com/ANYbotics/message_logger.git
+[submodule "dependencies/elevation_mapping_cupy"]
+	path = dependencies/elevation_mapping_cupy
+	url = git@github.com:leggedrobotics/elevation_mapping_cupy.git
