@@ -13,6 +13,3 @@
 [submodule "dependencies/kindr_ros"]
 	path = dependencies/kindr_ros
 	url = https://github.com/ANYbotics/kindr_ros.git
-[submodule "message_logger"]
-	path = message_logger
-	url = https://github.com/ANYbotics/message_logger.git
