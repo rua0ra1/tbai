@@ -1,4 +1,7 @@
+// clang-format off
 #include <pinocchio/fwd.hpp>
+// clang-format on
+
 #include "tbai_gazebo/StatePublisher.hpp"
 
 #include <functional>
@@ -103,7 +106,7 @@ void StatePublisher::OnUpdate() {
     // Get joint velocities
     std::vector<double> jointVelocities(joints_.size());
     for (int i = 0; i < joints_.size(); ++i) {
-        jointVelocities[i] = (jointAngles[i] - lastJointAngles_[i]) / dt;;
+        jointVelocities[i] = (jointAngles[i] - lastJointAngles_[i]) / dt;
         lastJointAngles_[i] = jointAngles[i];
     }
 
@@ -139,6 +142,9 @@ void StatePublisher::OnUpdate() {
     for (int i = 0; i < jointVelocities.size(); ++i) {
         message.rbd_state[12 + 12 + i] = jointVelocities[i];
     }
+
+    // Observation time
+    message.stamp = ros::Time::now();
 
     lastOrientationBase2World_ = R_base_world;
     lastPositionBase_ = basePosition;

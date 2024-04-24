@@ -51,8 +51,8 @@ class ReferenceTrajectoryGenerator {
     TerrainPlane localTerrain_;
     bool firstObservationReceived_;
     scalar_t comHeight_;
-    scalar_t trajdt_;  // timestep
-    size_t trajKnots_;     // number of timesteps in reference horizon
+    scalar_t trajdt_;   // timestep
+    size_t trajKnots_;  // number of timesteps in reference horizon
     std::mutex observationMutex_;
     std::mutex terrainMutex_;
     std::unique_ptr<grid_map::GridMap> terrainMapPtr_;

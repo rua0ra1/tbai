@@ -1,14 +1,11 @@
 #pragma once
 
-#include <ocs2_core/Types.h>
-
-#include <tbai_mpc/wbc/SqpSolver.h>
-#include <tbai_mpc/wbc/WbcBase.h>
-
 #include <ocs2_anymal_models/QuadrupedCom.h>
 #include <ocs2_anymal_models/QuadrupedKinematics.h>
+#include <ocs2_core/Types.h>
 #include <ocs2_switched_model_interface/core/SwitchedModel.h>
-
+#include <tbai_mpc/wbc/SqpSolver.hpp>
+#include <tbai_mpc/wbc/WbcBase.hpp>
 #include <tbai_msgs/JointCommandArray.h>
 
 namespace switched_model {
@@ -23,10 +20,9 @@ class SqpWbc : public WbcBase {
     }
 
     tbai_msgs::JointCommandArray getCommandMessage(scalar_t currentTime, const vector_t &currentState,
-                                                     const vector_t &currentInput, const size_t currentMode,
-                                                     const vector_t &desiredState, const vector_t &desiredInput,
-                                                     const size_t desiredMode,
-                                                     const vector_t &desiredJointAcceleration);
+                                                   const vector_t &currentInput, const size_t currentMode,
+                                                   const vector_t &desiredState, const vector_t &desiredInput,
+                                                   const size_t desiredMode, const vector_t &desiredJointAcceleration);
 
    private:
     void loadSettings(const std::string &configFile);

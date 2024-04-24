@@ -1,9 +1,8 @@
 #pragma once
 
-#include <tbai_mpc/wbc/Task.hpp>
-
 #include <ocs2_anymal_models/QuadrupedCom.h>
 #include <ocs2_anymal_models/QuadrupedKinematics.h>
+#include <tbai_mpc/wbc/Task.hpp>
 
 namespace switched_model {
 

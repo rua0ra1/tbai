@@ -52,7 +52,7 @@ BobController::BobController(const std::shared_ptr<tbai::core::StateSubscriber> 
     ik_ = getInverseKinematicsUnique();
     cpg_ = getCentralPatternGeneratorUnique();
 
-    if(!blind_) {
+    if (!blind_) {
         gridmap_ = tbai::gridmap::getGridmapInterfaceUnique();
     }
     refVelGen_ = tbai::reference::getReferenceVelocityGeneratorUnique(nh);
@@ -104,7 +104,7 @@ void BobController::visualize() {
 /***********************************************************************************************************************/
 /***********************************************************************************************************************/
 void BobController::changeController(const std::string &controllerType, scalar_t currentTime) {
-    if(!blind_) {
+    if (!blind_) {
         gridmap_->waitTillInitialized();
     }
 }
@@ -249,7 +249,7 @@ State BobController::getBobnetState() {
     ret.jointPositions = stateSubscriberState.segment<12>(12);
 
     // Joint velocities
-    ret.jointVelocities = stateSubscriberState.segment<12>(12+12);
+    ret.jointVelocities = stateSubscriberState.segment<12>(12 + 12);
 
     // pinocchio state vector
 
@@ -399,7 +399,7 @@ void BobController::fillHeights(at::Tensor &input, const State &state) {
 
     // If blind, height samples are not used, garbage values are fine
     // sampled_ is updated for visualization purposes
-    if(!blind_) {
+    if (!blind_) {
         // sample heights
         gridmap_->atPositions(sampled_);
 
@@ -581,10 +581,9 @@ void HeightsReconstructedVisualizer::visualize(const State &state, const matrix_
                                                const at::Tensor &nnPointsReconstructed) {
     ros::Time timeStamp = ros::Time::now();
 
-
-    if(!blind_) {
+    if (!blind_) {
         publishMarkers(timeStamp, sampled, {1.0, 0.0, 0.0}, "ground_truth",
-                    [&](size_t id) { return -(sampled(2, id) / 1.0 + 0.5 - state.basePositionWorld[2]); });
+                       [&](size_t id) { return -(sampled(2, id) / 1.0 + 0.5 - state.basePositionWorld[2]); });
     }
     publishMarkers(timeStamp, sampled, {0.0, 0.0, 1.0}, "nn_reconstructed", [&](size_t id) {
         float out = -(nnPointsReconstructed[id].item<float>() / 1.0 + 0.5 - state.basePositionWorld[2]);

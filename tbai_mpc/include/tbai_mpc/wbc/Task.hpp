@@ -1,3 +1,4 @@
+#pragma once
 #include <ocs2_core/Types.h>
 
 namespace switched_model {

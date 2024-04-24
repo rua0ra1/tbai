@@ -15,6 +15,18 @@ find_package(catkin REQUIRED COMPONENTS
     ocs2_anymal_commands
     grid_map_core
     grid_map_ros
+    tbai_static
+
+    roscpp
+    std_msgs
+    qpoases_catkin
+    ocs2_mpc
+    ocs2_core
+    ocs2_anymal_mpc
+    ocs2_ros_interfaces
+    ocs2_pinocchio_interface
+    ocs2_quadruped_interface
+    ocs2_switched_model_interface
 )
 
 catkin_package(
@@ -26,9 +38,35 @@ catkin_package(
 include_directories(
  include
  ${catkin_INCLUDE_DIRS}
+ ${pinocchio_INCLUDE_DIRS}
 )
 
-add_library(tbai_mpc
-  src/reference/ReferenceTrajectoryGenerator.cpp
+add_library(${PROJECT_NAME}
+    src/reference/ReferenceTrajectoryGenerator.cpp
+    src/wbc/Task.cpp
+    src/wbc/SqpSolver.cpp
+    src/wbc/SqpWbc.cpp
+    src/wbc/WbcBase.cpp
+    src/utils/LoadConfig.cpp
+    src/MpcController.cpp
 )
-target_link_libraries(tbai_mpc ${catkin_LIBRARIES})
+target_link_libraries(${PROJECT_NAME}
+    ${catkin_LIBRARIES}
+    ${pinocchio_LIBRARIES}
+)
+target_compile_options(${PROJECT_NAME} PUBLIC ${OCS2_CXX_FLAGS})
+
+add_executable(simple
+    src/simple.cpp
+)
+target_link_libraries(simple
+    ${catkin_LIBRARIES} ${PROJECT_NAME} yaml-cpp
+)
+
+add_executable(anymal_mpc_node
+  src/MpcNode.cpp
+)
+target_link_libraries(anymal_mpc_node
+  ${catkin_LIBRARIES}
+)
+target_compile_options(anymal_mpc_node PRIVATE ${OCS2_CXX_FLAGS})

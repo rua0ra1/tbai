@@ -10,4 +10,5 @@
 #
 # In total, there are (3+3+3+3+12+12) = 36 values in the message.
 
+time stamp
 float64[36] rbd_state

@@ -1,15 +1,17 @@
+// clang-format off
 #include <pinocchio/fwd.hpp>
+// clang-format on
+
 #include "tbai_static/StaticController.hpp"
 
 #include <Eigen/Core>
 #include <geometry_msgs/TransformStamped.h>
 #include <kdl_parser/kdl_parser.hpp>
 #include <ros/package.h>
+#include <tbai_core/Rotations.hpp>
+#include <tbai_core/Types.hpp>
 #include <tbai_core/config/YamlConfig.hpp>
 #include <urdf/model.h>
-
-#include <tbai_core/Types.hpp>
-#include <tbai_core/Rotations.hpp>
 
 namespace tbai {
 namespace static_ {

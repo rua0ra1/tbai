@@ -1,15 +1,13 @@
 #include "tbai_mpc/reference/ReferenceTrajectoryGenerator.hpp"
 
-#include <tbai_core/config/YamlConfig.hpp>
-#include <ocs2_msgs/mpc_target_trajectories.h>
 #include "ocs2_switched_model_interface/core/SwitchedModel.h"
-#include <ocs2_switched_model_interface/core/Rotations.h>
-
 #include <grid_map_ros/grid_map_ros.hpp>
+#include <ocs2_msgs/mpc_target_trajectories.h>
+#include <ocs2_switched_model_interface/core/Rotations.h>
+#include <tbai_core/config/YamlConfig.hpp>
 namespace tbai {
 namespace mpc {
 namespace reference {
-
 
 /*********************************************************************************************************************/
 /*********************************************************************************************************************/
