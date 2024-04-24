@@ -13,3 +13,15 @@
 [submodule "dependencies/kindr_ros"]
 	path = dependencies/kindr_ros
 	url = https://github.com/ANYbotics/kindr_ros.git
+[submodule "message_logger"]
+	path = dependencies/message_logger
+	url = https://github.com/ANYbotics/message_logger.git
+[submodule "dependencies/elevation_mapping_cupy"]
+	path = dependencies/elevation_mapping_cupy
+	url = git@github.com:leggedrobotics/elevation_mapping_cupy.git
+[submodule "dependencies/grid_map"]
+	path = dependencies/grid_map
+	url = git@github.com:ANYbotics/grid_map.git
+[submodule "dependencies/qpoases_catkin"]
+	path = dependencies/qpoases_catkin
+	url = git@github.com:wxmerkt/qpoases_catkin.git

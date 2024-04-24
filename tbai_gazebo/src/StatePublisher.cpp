@@ -1,10 +1,14 @@
+// clang-format off
+#include <pinocchio/fwd.hpp>
+// clang-format on
+
 #include "tbai_gazebo/StatePublisher.hpp"
 
 #include <functional>
 #include <string>
 
 #include <Eigen/Geometry>
-#include <ocs2_robotic_tools/common/RotationTransforms.h>
+#include <tbai_core/Rotations.hpp>
 #include <tbai_core/config/YamlConfig.hpp>
 #include <tbai_msgs/RbdState.h>
 
@@ -56,31 +60,40 @@ void StatePublisher::OnUpdate() {
         return;
     }
 
-    // Base orientation - ZYX Euler angles
-    const ignition::math::Pose3d &basePose = baseLinkPtr_->WorldPose();
-    Eigen::Quaternion<double> baseQuaternion(basePose.Rot().W(), basePose.Rot().X(), basePose.Rot().Y(),
-                                             basePose.Rot().Z());
+    // Unpack base pose
+    const ignition::math::Pose3d &basePoseIgn = baseLinkPtr_->WorldPose();
+    const auto &basePositionIgn = basePoseIgn.Pos();
+    const auto &baseOrientationIgn = basePoseIgn.Rot();
 
-    // Base position - XYZ world coordinates
-    const Eigen::Vector3d basePosition(basePose.Pos().X(), basePose.Pos().Y(), basePose.Pos().Z());
+    // Base orientation - Euler zyx
+    const Eigen::Quaternion<double> baseQuaternion(baseOrientationIgn.W(), baseOrientationIgn.X(),
+                                                   baseOrientationIgn.Y(), baseOrientationIgn.Z());
+    const tbai::matrix3_t R_world_base = baseQuaternion.toRotationMatrix();
+    const tbai::matrix3_t R_base_world = R_world_base.transpose();
+    const tbai::vector_t rpy = tbai::core::mat2rpy(R_world_base);
 
-    auto baseOrientationMat = baseQuaternion.toRotationMatrix();
+    // Base position in world frame
+    const Eigen::Vector3d basePosition(basePositionIgn.X(), basePositionIgn.Y(), basePositionIgn.Z());
+
     if (firstUpdate_) {
-        lastBaseOrientationMat_ = baseOrientationMat;
-        lastBasePosition_ = basePosition;
+        lastOrientationBase2World_ = R_base_world;
+        lastPositionBase_ = basePosition;
         firstUpdate_ = false;
     }
+
+    // Base angular velocity in base frame
+    const Eigen::Vector3d angularVelocityWorld = tbai::core::mat2aa(R_world_base * lastOrientationBase2World_) / dt;
+    const Eigen::Vector3d angularVelocityBase = R_base_world * angularVelocityWorld;
+
+    // Base linear velocity in base frame
+    const Eigen::Vector3d linearVelocityWorld = (basePosition - lastPositionBase_) / dt;
+    const Eigen::Vector3d linearVelocityBase = R_base_world * linearVelocityWorld;
+
     // Joint angles
     std::vector<double> jointAngles(joints_.size());
     for (int i = 0; i < joints_.size(); ++i) {
         jointAngles[i] = joints_[i]->Position(0);
     }
-
-    // Base angular velocity expressed in world frame
-    const Eigen::Vector3d angularVelocityWorld = mat2aa(baseOrientationMat * lastBaseOrientationMat_.transpose()) / dt;
-
-    // Base linear velocity expressed in world frame
-    const Eigen::Vector3d linearVelocityWorld = (basePosition - lastBasePosition_) / dt;
 
     // Joint velocities
     if (lastJointAngles_.size() != joints_.size()) {
@@ -93,60 +106,53 @@ void StatePublisher::OnUpdate() {
     // Get joint velocities
     std::vector<double> jointVelocities(joints_.size());
     for (int i = 0; i < joints_.size(); ++i) {
-        tbai::scalar_t current_angle = jointAngles[i];
-        tbai::scalar_t last_angle = lastJointAngles_[i];
-        tbai::scalar_t velocity = (current_angle - last_angle) / dt;
-        jointVelocities[i] = velocity;
-        lastJointAngles_[i] = current_angle;
+        jointVelocities[i] = (jointAngles[i] - lastJointAngles_[i]) / dt;
+        lastJointAngles_[i] = jointAngles[i];
     }
 
     // Put everything into an RbdState message
     tbai_msgs::RbdState message;  // TODO(lnotspotl): Room for optimization here
 
+    // Base orientation - Euler zyx as {roll, pitch, yaw}
+    message.rbd_state[0] = rpy[0];
+    message.rbd_state[1] = rpy[1];
+    message.rbd_state[2] = rpy[2];
+
     // Base position
-    message.rbd_state[0] = basePosition[0];
-    message.rbd_state[1] = basePosition[1];
-    message.rbd_state[2] = basePosition[2];
-
-    // Base orientation
-    message.rbd_state[3] = baseQuaternion.x();
-    message.rbd_state[4] = baseQuaternion.y();
-    message.rbd_state[5] = baseQuaternion.z();
-    message.rbd_state[6] = baseQuaternion.w();
-
-    // Joint angles
-    for (int i = 0; i < jointAngles.size(); ++i) {
-        message.rbd_state[7 + i] = jointAngles[i];
-    }
-
-    // Base linear velocity
-    message.rbd_state[19] = linearVelocityWorld[0];
-    message.rbd_state[20] = linearVelocityWorld[1];
-    message.rbd_state[21] = linearVelocityWorld[2];
+    message.rbd_state[3] = basePosition[0];
+    message.rbd_state[4] = basePosition[1];
+    message.rbd_state[5] = basePosition[2];
 
     // Base angular velocity
-    message.rbd_state[22] = angularVelocityWorld[0];
-    message.rbd_state[23] = angularVelocityWorld[1];
-    message.rbd_state[24] = angularVelocityWorld[2];
+    message.rbd_state[6] = angularVelocityBase[0];
+    message.rbd_state[7] = angularVelocityBase[1];
+    message.rbd_state[8] = angularVelocityBase[2];
+
+    // Base linear velocity
+    message.rbd_state[9] = linearVelocityBase[0];
+    message.rbd_state[10] = linearVelocityBase[1];
+    message.rbd_state[11] = linearVelocityBase[2];
+
+    // Joint positions
+    for (int i = 0; i < jointAngles.size(); ++i) {
+        message.rbd_state[12 + i] = jointAngles[i];
+    }
 
     // Joint velocities
     for (int i = 0; i < jointVelocities.size(); ++i) {
-        message.rbd_state[25 + i] = jointVelocities[i];
+        message.rbd_state[12 + 12 + i] = jointVelocities[i];
     }
+
+    // Observation time
+    message.stamp = ros::Time::now();
+
+    lastOrientationBase2World_ = R_base_world;
+    lastPositionBase_ = basePosition;
 
     // Publish message
     statePublisher_.publish(message);
 
-    // Update last publish time
     lastSimTime_ = currentTime;
-
-    lastBaseOrientationMat_ = baseOrientationMat;
-    lastBasePosition_ = basePosition;
-}
-
-tbai::vector3_t StatePublisher::mat2aa(const tbai::matrix3_t &R) {
-    tbai::angleaxis_t aa(R);
-    return aa.axis() * aa.angle();
 }
 
 GZ_REGISTER_MODEL_PLUGIN(StatePublisher);
