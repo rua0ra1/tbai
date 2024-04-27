@@ -277,7 +277,7 @@ void DtcController::fillObsTensor(torch::Tensor &tensor) {
     }
     startIdx += 3;
 
-    TBAI_ASSERT(startIdx == MODEL_INPUT_SIZE);
+    TBAI_ASSERT(startIdx == MODEL_INPUT_SIZE, "Invalid tensor size");
 }
 
 void DtcController::visualize() {
@@ -315,13 +315,13 @@ ocs2::SystemObservation DtcController::generateSystemObservation() const {
     state.segment<3>(9) = rpy.reverse();               // ypr
     state.segment<12>(12) = rbdState.segment<12>(12);  // joint angles
 
-    TBAI_ASSERT(state.segment<3>(3).norm() < 1e5);
+    TBAI_ASSERT(state.segment<3>(3).norm() < 1e5, "COM position is too large");
 
     vector_t input = vector_t().setZero(24);
     //input.segment<12>(0) = vector_t().setZero(12);     // ground reaction forces
     input.segment<12>(12) = rbdState.segment<12>(24);  // joint velocities
 
-    TBAI_ASSERT(input.segment<12>(0).norm() < 1e5);
+    TBAI_ASSERT(input.segment<12>(0).norm() < 1e5, "GRF is too large");
 
     observation.state = std::move(state);
     observation.input = std::move(input);
@@ -430,7 +430,7 @@ void DtcController::computeDesiredContacts(scalar_t time) {
     size_t mode = modeSchedule.modeAtTime(time);
     auto contactFlags = ocs2::legged_robot::modeNumber2StanceLeg(mode);
     std::swap(contactFlags[1], contactFlags[2]);  
-    TBAI_ASSERT(contactFlags.size() == 4);
+    TBAI_ASSERT(contactFlags.size() == 4, "Contact flags must have size 4");
     for (int i = 0; i < 4; ++i) {
         obsDesiredContacts_(i) = contactFlags[i];  // Assume LF, LH, RF, RH ordering
     }
@@ -444,8 +444,8 @@ void DtcController::computeTimeLeftInPhases(scalar_t time) {
     auto contactPhases = ocs2::legged_robot::getContactPhasePerLeg(time, modeSchedule);
     auto swingPhases = ocs2::legged_robot::getSwingPhasePerLeg(time, modeSchedule);
 
-    TBAI_ASSERT(contactPhases.size() == 4);
-    TBAI_ASSERT(swingPhases.size() == 4);
+    TBAI_ASSERT(contactPhases.size() == 4, "Contact phases must have size 4");
+    TBAI_ASSERT(swingPhases.size() == 4, "Swing phases must have size 4");
 
     for (int i = 0; i < 4; ++i) {
         if (currentContacts(i)) {

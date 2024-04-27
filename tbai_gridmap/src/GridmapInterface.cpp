@@ -2,6 +2,7 @@
 
 #include <numeric>
 
+#include <tbai_core/Asserts.hpp>
 #include <tbai_core/config/YamlConfig.hpp>
 
 namespace tbai {
@@ -10,7 +11,7 @@ namespace gridmap {
 /**********************************************************************************************************************/
 /**********************************************************************************************************************/
 /**********************************************************************************************************************/
-GridmapInterface::GridmapInterface(ros::NodeHandle &nh, const std::string &topic) : initialized_(false) {
+GridmapInterface::GridmapInterface(ros::NodeHandle &nh, const std::string &topic) {
     subscriber_ = nh.subscribe(topic, 1, &GridmapInterface::callback, this);
 }
 
@@ -18,6 +19,8 @@ GridmapInterface::GridmapInterface(ros::NodeHandle &nh, const std::string &topic
 /**********************************************************************************************************************/
 /**********************************************************************************************************************/
 void GridmapInterface::atPositions(matrix_t &sampled) {
+    TBAI_ASSERT(isInitialized(), "Gridmap interface must be initialized. Call waitTillInitialized() first.");
+    TBAI_ASSERT(sampled.rows() == 3, "Sampled matrix must have 3 rows.");
     for (int i = 0; i < sampled.cols(); ++i) {
         scalar_t x = sampled(0, i);
         scalar_t y = sampled(1, i);
@@ -36,17 +39,17 @@ void GridmapInterface::callback(const grid_map_msgs::GridMap &msg) {
 
     // Swap terrain map pointers
     mapPtr_.swap(mapPtr);
-    initialized_ = true;
 }
 
 /**********************************************************************************************************************/
 /**********************************************************************************************************************/
 /**********************************************************************************************************************/
 void GridmapInterface::waitTillInitialized() {
-    while (!initialized_) {
-        ROS_INFO("[Bobnet gridmap] Waiting for gridmap to be initialized.");
-        ros::Duration(0.5).sleep();
+    while (true) {
         ros::spinOnce();
+        if (isInitialized()) break;
+        ROS_INFO("[GridmapInterface] Waiting for gridmap to be initialized.");
+        ros::Duration(0.05).sleep();
     }
 }
 
