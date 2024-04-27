@@ -12,10 +12,6 @@ namespace mpc {
 
 MpcController::MpcController(const std::shared_ptr<tbai::core::StateSubscriber> &stateSubscriberPtr)
     : stateSubscriberPtr_(stateSubscriberPtr), mrt_("anymal"), stopReferenceThread_(false) {
-    if (!tbai::core::isEpochStartSet()) {
-        throw std::runtime_error("Epoch start time not set. Use setEpochStart() to set the epoch start time.");
-    }
-
     initTime_ = tbai::core::getEpochStart();
 
     const std::string robotName = "anymal";

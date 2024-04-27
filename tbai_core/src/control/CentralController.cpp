@@ -13,10 +13,6 @@ namespace core {
 CentralController::CentralController(ros::NodeHandle &nh, const std::string &stateTopic,
                                      const std::string &commandTopic, const std::string &changeControllerTopic)
     : loopRate_(1), activeController_(nullptr) {
-    if (!tbai::core::isEpochStartSet()) {
-        throw std::runtime_error(
-            "Epoch start not set. Call tbai::core::setEpochStart() before creating CentralController");
-    }
     initTime_ = tbai::core::getEpochStart();
 
     stateSubscriberPtr_ = std::make_shared<StateSubscriber>(nh, stateTopic);

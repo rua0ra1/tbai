@@ -35,10 +35,6 @@ namespace dtc {
 DtcController::DtcController(const std::shared_ptr<tbai::core::StateSubscriber> &stateSubscriber)
     : stateSubscriberPtr_(stateSubscriber), mrt_("legged_robot") {
     
-    
-    if(!tbai::core::isEpochStartSet()) {
-        throw std::runtime_error("Epoch start time not set. Use setEpochStart() to set the epoch start time.");
-    }
     initTime_ = tbai::core::getEpochStart();
 
     ros::NodeHandle nh;
@@ -386,7 +382,7 @@ ocs2::SystemObservation DtcController::generateSystemObservation() const {
 
     // Set observation time
     ocs2::SystemObservation observation;
-    observation.time = ros::Time::now().toSec() - initTime_;  // TODO: Replace with actual observation stamp
+    observation.time = stateSubscriberPtr_->getLatestRbdStamp().toSec() - initTime_;  // TODO: Replace with actual observation stamp
 
     // Set mode
     observation.mode = 14;  // This is not important
@@ -455,7 +451,6 @@ void DtcController::resetMpc() {
         ros::spinOnce();
         mrt_.spinMRT();
         initialObservation = generateSystemObservation();
-        initTime_ = ros::Time::now().toSec();
         mrt_.setCurrentObservation(initialObservation);
         ros::Duration(0.1).sleep();
     }

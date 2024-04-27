@@ -15,15 +15,13 @@ inline bool isEpochStartSet() {
 }
 
 inline scalar_t getEpochStart() {
-    double epochStart;
-    while (ros::ok()) {
-        if (ros::param::get("epoch_start", epochStart)) {
-            return static_cast<scalar_t>(epochStart);
-        }
-        ros::Duration(0.05).sleep();
+    if (!isEpochStartSet()) {
+        ROS_ERROR("Epoch start time not set. Use setEpochStart() to set the epoch start time.");
+        throw std::runtime_error("Epoch start time not set");
     }
-    ROS_ERROR("Failed to get epoch start time");
-    return static_cast<scalar_t>(-1.0);
+    double epochStart;
+    ros::param::get("epoch_start", epochStart);
+    return static_cast<scalar_t>(epochStart);
 }
 
 }  // namespace core
