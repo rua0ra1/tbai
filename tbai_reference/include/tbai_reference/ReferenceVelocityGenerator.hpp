@@ -4,7 +4,7 @@
 #include <memory>
 #include <string>
 
-#include "tbai_reference/Types.hpp"
+#include "tbai_reference/ReferenceVelocity.hpp"
 #include <geometry_msgs/Twist.h>
 #include <ros/ros.h>
 #include <sensor_msgs/Joy.h>
@@ -41,8 +41,10 @@ class RosVelocityReferenceGenerator : public ReferenceVelocityGenerator {
     ReferenceVelocity reference_;
 
    private:
+    /** ROS message callback */
     virtual void callback(const T &msg) = 0;
 
+    /** ROS subscriber to topic */
     ros::Subscriber subscriber_;
 };
 
@@ -86,8 +88,20 @@ class TwistReferenceVelocityGenerator final : public RosVelocityReferenceGenerat
     void callback(const geometry_msgs::Twist &msg) override;
 };
 
+/**
+ * @brief Get the ReferenceVelocityGenerator unique pointer, initialized with the parameters from a config file
+ *
+ * @param nh : ROS node handle
+ * @return std::unique_ptr<ReferenceVelocityGenerator> : unique pointer to ReferenceVelocityGenerator
+ */
 std::unique_ptr<ReferenceVelocityGenerator> getReferenceVelocityGeneratorUnique(ros::NodeHandle &nh);
 
+/**
+ * @brief Get the ReferenceVelocityGenerator shared pointer, initialized with the parameters from a config file
+ *
+ * @param nh : ROS node handle
+ * @return std::shared_ptr<ReferenceVelocityGenerator> : shared pointer to ReferenceVelocityGenerator
+ */
 std::shared_ptr<ReferenceVelocityGenerator> getReferenceVelocityGeneratorShared(ros::NodeHandle &nh);
 
 }  // namespace reference
