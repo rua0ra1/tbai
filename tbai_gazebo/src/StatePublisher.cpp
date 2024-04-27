@@ -70,7 +70,8 @@ void StatePublisher::OnUpdate() {
                                                    baseOrientationIgn.Y(), baseOrientationIgn.Z());
     const tbai::matrix3_t R_world_base = baseQuaternion.toRotationMatrix();
     const tbai::matrix3_t R_base_world = R_world_base.transpose();
-    const tbai::vector_t rpy = tbai::core::mat2rpy(R_world_base);
+    const tbai::vector_t rpy = tbai::core::mat2oc2rpy(R_world_base, lastYaw_);
+    lastYaw_ = rpy[2];
 
     // Base position in world frame
     const Eigen::Vector3d basePosition(basePositionIgn.X(), basePositionIgn.Y(), basePositionIgn.Z());

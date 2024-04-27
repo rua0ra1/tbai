@@ -1,3 +1,6 @@
+#pragma once
+
+#include <ocs2_robotic_tools/common/RotationTransforms.h>
 #include <pinocchio/fwd.hpp>
 #include <pinocchio/math/rpy.hpp>
 #include <tbai_core/Types.hpp>
@@ -34,6 +37,33 @@ inline matrix3_t quat2mat(const quaternion_t &q) {
  */
 inline vector3_t mat2rpy(const matrix3_t &R) {
     return pinocchio::rpy::matrixToRpy(R);
+}
+
+/**
+ * @brief Convert a 3x3 rotation matrix to ocs2-style rpy euler angles, assume last yaw angle
+ *
+ * @param R : rotation matrix
+ * @param lastYaw : previous yaw angle
+ * @return vector3_t : roll-pitch-yaw euler angles
+ */
+inline vector3_t mat2oc2rpy(const matrix3_t &R, const scalar_t lastYaw) {
+    // Taken from OCS2, see:
+    // https://github.com/leggedrobotics/ocs2/blob/164c26b46bed5d24cd03d90588db8980d03a4951/ocs2_robotic_examples/ocs2_perceptive_anymal/ocs2_anymal_commands/src/TerrainAdaptation.cpp#L19
+    vector3_t eulerXYZ = R.eulerAngles(0,1,2);
+    ocs2::makeEulerAnglesUnique(eulerXYZ);
+    eulerXYZ.z() = ocs2::moduloAngleWithReference(eulerXYZ.z(), lastYaw);
+    return eulerXYZ;
+}
+
+/**
+ * @brief Convert ocs2-style rpy angles to quaternion
+ * 
+ * @param rpy : ocs2-style rpy angles
+ * @return quaternion_t : quaternion
+ */
+inline quaternion_t ocs2rpy2quat(const vector3_t &rpy) {
+    return angleaxis_t(rpy(0), vector3_t::UnitX()) * angleaxis_t(rpy(1), vector3_t::UnitY()) *
+           angleaxis_t(rpy(2), vector3_t::UnitZ());
 }
 
 /**

@@ -10,13 +10,14 @@ find_package(catkin REQUIRED COMPONENTS
   std_msgs
   roscpp
   roslib
+  ocs2_robotic_tools
 )
 find_package(yaml-cpp REQUIRED)
 
 catkin_package(
   INCLUDE_DIRS include
-  LIBRARIES  ${PROJECT_NAME} ${PROJECT_NAME}_config
-  CATKIN_DEPENDS roscpp roslib tbai_msgs
+  LIBRARIES  ${PROJECT_NAME} ${PROJECT_NAME}_config 
+  CATKIN_DEPENDS roscpp roslib tbai_msgs ocs2_robotic_tools
   DEPENDS yaml-cpp
 )
 

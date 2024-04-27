@@ -13,6 +13,7 @@
   <depend>roslib</depend>
   <depend>tbai_msgs</depend>
   <depend>ocs2_robotic_assets</depend>
+  <depend>ocs2_robotic_tools</depend>
   <depend>std_msgs</depend>
 
   <export>

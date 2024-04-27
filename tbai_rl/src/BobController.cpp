@@ -225,7 +225,11 @@ State BobController::getBobnetState() {
     ret.basePositionWorld = stateSubscriberState.segment<3>(3);
 
     // Base orientation
-    tbai::quaternion_t q = tbai::core::rpy2quat(stateSubscriberState.segment<3>(0));
+    // Pinocchio and ocs2 both use a different euler angle logic
+    // https://github.com/stack-of-tasks/pinocchio/blob/ac0b1aa6b18931bed60d0657de3c7680a4037dd3/include/pinocchio/math/rpy.hxx#L51
+    // https://github.com/leggedrobotics/ocs2/blob/164c26b46bed5d24cd03d90588db8980d03a4951/ocs2_robotic_examples/ocs2_perceptive_anymal/ocs2_anymal_commands/src/TerrainAdaptation.cpp#L20
+    vector3_t ocs2rpy = stateSubscriberState.segment<3>(0);
+    tbai::quaternion_t q = tbai::core::ocs2rpy2quat(ocs2rpy);
     auto Rwb = q.toRotationMatrix();
     ret.baseOrientationWorld = (State::Vector4() << q.x(), q.y(), q.z(), q.w()).finished();
 

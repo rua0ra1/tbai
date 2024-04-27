@@ -36,6 +36,8 @@ class StatePublisher : public ModelPlugin {
 
     bool firstUpdate_ = true;
 
+    double lastYaw_ = 0.0;
+
     // last yaw angle
     std::vector<tbai::scalar_t> lastJointAngles_;
     tbai::matrix3_t lastOrientationBase2World_;
