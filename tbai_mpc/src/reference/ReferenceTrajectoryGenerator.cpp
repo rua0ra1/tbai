@@ -14,26 +14,28 @@ namespace reference {
 /*********************************************************************************************************************/
 ReferenceTrajectoryGenerator::ReferenceTrajectoryGenerator(const std::string &targetCommandFile, ros::NodeHandle &nh)
     : firstObservationReceived_(false) {
+    using tbai::core::fromRosConfig;
+
     defaultJointState_.setZero(12);
     loadSettings(targetCommandFile);
 
-    trajdt_ = tbai::core::fromRosConfig<scalar_t>("mpc_controller/reference_trajectory/traj_dt");
-    trajKnots_ = tbai::core::fromRosConfig<size_t>("mpc_controller/reference_trajectory/traj_knots");
+    trajdt_ = fromRosConfig<scalar_t>("mpc_controller/reference_trajectory/traj_dt");
+    trajKnots_ = fromRosConfig<size_t>("mpc_controller/reference_trajectory/traj_knots");
 
     // Setup ROS subscribers
     auto observationTopic =
-        tbai::core::fromRosConfig<std::string>("mpc_controller/reference_trajectory/observation_topic");
+        fromRosConfig<std::string>("mpc_controller/reference_trajectory/observation_topic");
     observationSubscriber_ =
         nh.subscribe(observationTopic, 1, &ReferenceTrajectoryGenerator::observationCallback, this);
 
-    auto terrainTopic = tbai::core::fromRosConfig<std::string>("mpc_controller/reference_trajectory/terrain_topic");
+    auto terrainTopic = fromRosConfig<std::string>("mpc_controller/reference_trajectory/terrain_topic");
     terrainSubscriber_ = nh.subscribe(terrainTopic, 1, &ReferenceTrajectoryGenerator::terrainCallback, this);
 
     // Setup ROS publishers
-    auto referenceTopic = tbai::core::fromRosConfig<std::string>("mpc_controller/reference_trajectory/reference_topic");
+    auto referenceTopic = fromRosConfig<std::string>("mpc_controller/reference_trajectory/reference_topic");
     referencePublisher_ = nh.advertise<ocs2_msgs::mpc_target_trajectories>(referenceTopic, 1, false);
 
-    blind_ = tbai::core::fromRosConfig<bool>("mpc_controller/reference_trajectory/blind");
+    blind_ = fromRosConfig<bool>("mpc_controller/reference_trajectory/blind");
 }
 
 /*********************************************************************************************************************/
