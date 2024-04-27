@@ -23,8 +23,7 @@ ReferenceTrajectoryGenerator::ReferenceTrajectoryGenerator(const std::string &ta
     trajKnots_ = fromRosConfig<size_t>("mpc_controller/reference_trajectory/traj_knots");
 
     // Setup ROS subscribers
-    auto observationTopic =
-        fromRosConfig<std::string>("mpc_controller/reference_trajectory/observation_topic");
+    auto observationTopic = fromRosConfig<std::string>("mpc_controller/reference_trajectory/observation_topic");
     observationSubscriber_ =
         nh.subscribe(observationTopic, 1, &ReferenceTrajectoryGenerator::observationCallback, this);
 

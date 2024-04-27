@@ -15,7 +15,6 @@
 #include <ocs2_centroidal_model/ModelHelperFunctions.h>
 #include <ocs2_centroidal_model/PinocchioCentroidalDynamics.h>
 
-
 #include <ocs2_msgs/mpc_target_trajectories.h>
 #include "ocs2_ros_interfaces/common/RosMsgConversions.h"
 #include <ocs2_legged_robot/gait/MotionPhaseDefinition.h>
@@ -73,16 +72,18 @@ DtcController::DtcController(const std::shared_ptr<tbai::core::StateSubscriber> 
     defaultDofPositions_ = (vector_t(12) << 0.0, 0.4, -0.8, 0.0, -0.4, 0.8, 0.0, 0.4, -0.8, 0.0, -0.4, 0.8).finished();
     ROS_INFO_STREAM("[DtcController] Setup done");
 
-
     refVelGen_ = tbai::reference::getReferenceVelocityGeneratorUnique(nh);
     refPub_ = nh.advertise<ocs2_msgs::mpc_target_trajectories>("legged_robot_mpc_target", 1, false);
 
     ocs2::CentroidalModelPinocchioMapping pinocchioMapping(leggedInterface_->getCentroidalModelInfo());
-    ocs2::PinocchioEndEffectorKinematics endEffectorKinematics(leggedInterface_->getPinocchioInterface(), pinocchioMapping,
-                                                       leggedInterface_->modelSettings().contactNames3DoF);
-    //auto leggedRobotVisualizer = std::make_shared<LeggedRobotVisualizer>(
+    ocs2::PinocchioEndEffectorKinematics endEffectorKinematics(leggedInterface_->getPinocchioInterface(),
+                                                               pinocchioMapping,
+                                                               leggedInterface_->modelSettings().contactNames3DoF);
+    // auto leggedRobotVisualizer = std::make_shared<LeggedRobotVisualizer>(
     //    interface.getPinocchioInterface(), interface.getCentroidalModelInfo(), endEffectorKinematics, nodeHandle);
-    visualizer_ = std::make_unique<ocs2::legged_robot::LeggedRobotVisualizer>(leggedInterface_->getPinocchioInterface(), leggedInterface_->getCentroidalModelInfo(), endEffectorKinematics, nh);
+    visualizer_ = std::make_unique<ocs2::legged_robot::LeggedRobotVisualizer>(
+        leggedInterface_->getPinocchioInterface(), leggedInterface_->getCentroidalModelInfo(), endEffectorKinematics,
+        nh);
 
     initializeObservations();
 
@@ -108,9 +109,10 @@ void DtcController::publishReference(scalar_t currentTime, scalar_t dt) {
     constexpr scalar_t horizon = 1.0;
     const scalar_t finalTime = currentTime + horizon;
 
-    std::cout << "Publishing reference..." << "vx: " << x_vel << " vy: " << y_vel << " yaw_rate: " << yaw_rate << std::endl;
+    std::cout << "Publishing reference..."
+              << "vx: " << x_vel << " vy: " << y_vel << " yaw_rate: " << yaw_rate << std::endl;
 
-    if(dt == 0) {
+    if (dt == 0) {
         dt = 0.1;
     }
 
@@ -139,11 +141,11 @@ void DtcController::publishReference(scalar_t currentTime, scalar_t dt) {
     nextState.tail<12>() = defaultDofPositions_;
     nextState.segment<6>(0) = currentState.segment<6>(0);
     nextState.segment<6>(6) = currentState.segment<6>(6);
-    nextState(8) = 0.54; // z position
-    nextState(10) = 0.0; // roll
-    nextState(11) = 0.0; // pitch
-    nextState(2) = 0.0; // z velocity
-    while(time < finalTime) {
+    nextState(8) = 0.54;  // z position
+    nextState(10) = 0.0;  // roll
+    nextState(11) = 0.0;  // pitch
+    nextState(2) = 0.0;   // z velocity
+    while (time < finalTime) {
         time += dt;
 
         const scalar_t yaw = nextState(9);
@@ -154,8 +156,8 @@ void DtcController::publishReference(scalar_t currentTime, scalar_t dt) {
         const scalar_t dy = (sy * v_x + cy * v_y) * dt;
         const scalar_t dw = w_z * dt;
 
-        nextState(0) = dx/dt;
-        nextState(1) = dy/dt;
+        nextState(0) = dx / dt;
+        nextState(1) = dy / dt;
 
         nextState(6) += dx;
         nextState(7) += dy;
@@ -165,7 +167,6 @@ void DtcController::publishReference(scalar_t currentTime, scalar_t dt) {
         stateTrajectory.push_back(nextState);
         inputTrajectory.push_back(vector_t().setZero(24));
     }
-
 
     ocs2::TargetTrajectories t(timeTrajectory, stateTrajectory, inputTrajectory);
     const auto mpcTargetTrajectoriesMsg = ocs2::ros_msg_conversions::createTargetTrajectoriesMsg(t);
@@ -202,7 +203,7 @@ tbai_msgs::JointCommandArray DtcController::getCommandMessage(scalar_t currentTi
 
     timeSinceLastMpcUpdate_ += dt;
     if (timeSinceLastMpcUpdate_ >= 1.0 / mpcRate_) {
-        //resetMpc();
+        // resetMpc();
         publishReference(currentTime, dt);
         setObservation();
         timeSinceLastMpcUpdate_ = 0.0;
@@ -221,20 +222,20 @@ tbai_msgs::JointCommandArray DtcController::getCommandMessage(scalar_t currentTi
     auto t_end = std::chrono::high_resolution_clock::now();
     auto duration_ms = std::chrono::duration_cast<std::chrono::microseconds>(t_end - t_start).count() / 1e3;
 
-    //ROS_INFO_STREAM("[DtcController] Forward pass duration: " << duration_ms << " ms");
+    // ROS_INFO_STREAM("[DtcController] Forward pass duration: " << duration_ms << " ms");
     action_ = output;
 
     // Unpack actions
     vector_t action = vector_t().setZero(12);
     for (int i = 0; i < 12; ++i) {
         action(i) = output[i].item<float>() * ACTION_SCALE + kk_(i);
-        //action(i) = kk_(i);
+        // action(i) = kk_(i);
     }
 
     for (int i = 0; i < 12; ++i) {
         scalar_t angle = action(i);
         auto &jointName = jointNames[i];
-        //ROS_INFO_STREAM("[DtcController] Joint " << jointName << " angle: " << angle);
+        // ROS_INFO_STREAM("[DtcController] Joint " << jointName << " angle: " << angle);
     }
 
     for (int i = 0; i < 12; ++i) {
@@ -246,8 +247,6 @@ tbai_msgs::JointCommandArray DtcController::getCommandMessage(scalar_t currentTi
         command.kp = 80;
         command.kd = 2;
     }
-
-    
 
     return jointCommandArray;
 }
@@ -391,7 +390,7 @@ ocs2::SystemObservation DtcController::generateSystemObservation() const {
 
     vector_t state = vector_t().setZero(24);
 
-    //state.segment<3>(0) = R_world_base * rbdState.segment<3>(9);  // v_com in world frame
+    // state.segment<3>(0) = R_world_base * rbdState.segment<3>(9);  // v_com in world frame
     // state.segment<3>(3) = vector_t().setZero(3);                  // normalized angular momentum
     state.segment<3>(6) = rbdState.segment<3>(3);      // com position
     state.segment<3>(9) = rpy.reverse();               // ypr
@@ -400,7 +399,7 @@ ocs2::SystemObservation DtcController::generateSystemObservation() const {
     TBAI_ASSERT(state.segment<3>(3).norm() < 1e5, "COM position is too large");
 
     vector_t input = vector_t().setZero(24);
-    //input.segment<12>(0) = vector_t().setZero(12);     // ground reaction forces
+    // input.segment<12>(0) = vector_t().setZero(12);     // ground reaction forces
     input.segment<12>(12) = rbdState.segment<12>(24);  // joint velocities
 
     TBAI_ASSERT(input.segment<12>(0).norm() < 1e5, "GRF is too large");
@@ -432,9 +431,9 @@ void DtcController::resetMpc() {
     // Generate initial observation
     stateSubscriberPtr_->waitTillInitialized();
     auto initialObservation = generateSystemObservation();
-    //initialObservation.state.segment<3>(0) = vector_t::Zero(3);
+    // initialObservation.state.segment<3>(0) = vector_t::Zero(3);
     initialObservation.state.segment<3>(3) = vector_t::Zero(3);
-    initialObservation.state(6+2) = 0.54;
+    initialObservation.state(6 + 2) = 0.54;
     initialObservation.state.segment<12>(12) = defaultDofPositions_;
     initialObservation.input.segment<24>(0) = vector_t::Zero(24);
 
@@ -496,8 +495,8 @@ void DtcController::computeObservation(const ocs2::PrimalSolution &policy, scala
     // Compute desired footholds
     computeDesiredFootholds(time);
 
-    computeCurrentDesiredJointAngles(time + 1/getRate());  // TODO: time + some time delta
-    computeBaseObservation(time + 1/getRate());            // TODO: time + some time delta ?????
+    computeCurrentDesiredJointAngles(time + 1 / getRate());  // TODO: time + some time delta
+    computeBaseObservation(time + 1 / getRate());            // TODO: time + some time delta ?????
 }
 
 void DtcController::computeCommandObservation(scalar_t time) {
@@ -514,7 +513,7 @@ void DtcController::computeDesiredContacts(scalar_t time) {
     auto &modeSchedule = solution.modeSchedule_;
     size_t mode = modeSchedule.modeAtTime(time);
     auto contactFlags = ocs2::legged_robot::modeNumber2StanceLeg(mode);
-    std::swap(contactFlags[1], contactFlags[2]);  
+    std::swap(contactFlags[1], contactFlags[2]);
     TBAI_ASSERT(contactFlags.size() == 4, "Contact flags must have size 4");
     for (int i = 0; i < 4; ++i) {
         obsDesiredContacts_(i) = contactFlags[i];  // Assume LF, LH, RF, RH ordering

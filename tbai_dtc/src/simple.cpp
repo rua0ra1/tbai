@@ -23,7 +23,8 @@ int main(int argc, char *argv[]) {
     // Add static controller
     controller.addController(
         std::make_unique<tbai::static_::StaticController>(configParam, controller.getStateSubscriberPtr()));
-    controller.addController(std::make_unique<tbai::dtc::DtcController>(controller.getStateSubscriberPtr(), controller.initTime_.toSec()));
+    controller.addController(
+        std::make_unique<tbai::dtc::DtcController>(controller.getStateSubscriberPtr(), controller.initTime_.toSec()));
 
     // Start controller loop
     controller.start();

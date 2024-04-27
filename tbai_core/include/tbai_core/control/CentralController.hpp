@@ -70,6 +70,7 @@ class CentralController {
     inline scalar_t getCurrentTime() const { return (ros::Time::now() - initTime_).toSec(); }
 
     ros::Time initTime_;
+
    private:
     /** Perform controller step */
     void step(scalar_t currentTime, scalar_t dt);

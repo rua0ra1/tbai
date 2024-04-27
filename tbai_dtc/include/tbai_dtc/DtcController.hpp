@@ -2,6 +2,7 @@
 
 #include <memory>
 
+#include "ocs2_legged_robot_ros/visualization/LeggedRobotVisualizer.h"
 #include <ocs2_centroidal_model/CentroidalModelPinocchioMapping.h>
 #include <ocs2_centroidal_model/PinocchioCentroidalDynamics.h>
 #include <ocs2_core/reference/TargetTrajectories.h>
@@ -16,11 +17,7 @@
 #include <pinocchio/multibody/model.hpp>
 #include <tbai_core/control/Controller.hpp>
 #include <tbai_core/control/StateSubscriber.hpp>
-
-
 #include <tbai_reference/ReferenceVelocityGenerator.hpp>
-#include "ocs2_legged_robot_ros/visualization/LeggedRobotVisualizer.h"
-
 #include <torch/script.h>
 
 namespace tbai {
@@ -41,7 +38,6 @@ class DtcController final : public tbai::core::Controller {
     scalar_t getRate() const override { return 50.0; }
 
    private:
-
     // Torchscript model
     torch::jit::script::Module dtcModel_;
 
@@ -51,7 +47,6 @@ class DtcController final : public tbai::core::Controller {
     void setObservation();
 
     std::shared_ptr<tbai::core::StateSubscriber> stateSubscriberPtr_;
-
 
     const scalar_t LIN_VEL_SCALE = 2.0;
     const scalar_t ANG_VEL_SCALE = 0.25;

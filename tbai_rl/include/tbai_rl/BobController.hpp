@@ -30,7 +30,6 @@
 namespace tbai {
 namespace rl {
 
-
 using namespace tbai;
 using namespace torch::indexing;
 using torch::jit::script::Module;
