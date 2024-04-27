@@ -1,4 +1,4 @@
-# tbai_rl_percpetive package
+# tbai_rl_perceptive package
 
 ## Example
 ```bash
