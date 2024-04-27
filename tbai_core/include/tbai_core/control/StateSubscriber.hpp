@@ -33,6 +33,13 @@ class StateSubscriber {
      */
     const vector_t &getLatestRbdState();
 
+    /**
+     * @brief Get the Latest Rbd Stamp
+     *
+     * @return const ros::Time& : latest rbd stamp
+     */
+    inline const ros::Time &getLatestRbdStamp() { return stateMessage_->stamp; }
+
    private:
     /** State message callback */
     void stateMessageCallback(const tbai_msgs::RbdState::Ptr &msg);

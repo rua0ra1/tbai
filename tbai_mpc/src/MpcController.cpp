@@ -95,7 +95,7 @@ tbai_msgs::JointCommandArray MpcController::getCommandMessage(scalar_t currentTi
     mrt_.spinMRT();
     mrt_.updatePolicy();
 
-    tNow_ += dt;
+    tNow_ = ros::Time::now().toSec() - initTime_;
 
     auto observation = generateSystemObservation();
 
@@ -209,7 +209,7 @@ ocs2::SystemObservation MpcController::generateSystemObservation() const {
 
     // Set observation time
     ocs2::SystemObservation observation;
-    observation.time = ros::Time::now().toSec() - initTime_;  // TODO: Replace with actual observation stamp
+    observation.time = stateSubscriberPtr_->getLatestRbdStamp().toSec() - initTime_;  // TODO: Replace with actual observation stamp
 
     // Set mode
     std::array<bool, 4> contacts = {false, false, false, false};
