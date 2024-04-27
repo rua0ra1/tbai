@@ -27,8 +27,8 @@ find_package(Torch REQUIRED)
 catkin_package(
   INCLUDE_DIRS include
   LIBRARIES  ${PROJECT_NAME}
-  CATKIN_DEPENDS 
-  DEPENDS 
+  CATKIN_DEPENDS tbai_reference tbai_gridmap
+  DEPENDS Torch
 )
 
 ## Build

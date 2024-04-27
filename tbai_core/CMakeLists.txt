@@ -16,7 +16,7 @@ find_package(yaml-cpp REQUIRED)
 catkin_package(
   INCLUDE_DIRS include
   LIBRARIES  ${PROJECT_NAME} ${PROJECT_NAME}_config
-  CATKIN_DEPENDS roscpp roslib
+  CATKIN_DEPENDS roscpp roslib tbai_msgs
   DEPENDS yaml-cpp
 )
 
