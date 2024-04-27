@@ -17,6 +17,8 @@
 #include <tbai_msgs/JointCommandArray.h>
 #include <ros/callback_queue.h>
 
+#include <ocs2_quadruped_interface/QuadrupedVisualizer.h>
+
 
 namespace tbai {
 
@@ -41,7 +43,7 @@ class MpcController final : public tbai::core::Controller {
     std::shared_ptr<tbai::core::StateSubscriber> stateSubscriberPtr_;
 
     std::unique_ptr<switched_model::QuadrupedInterface> quadrupedInterfacePtr_;
-    std::shared_ptr<switched_model::QuadrupedVisualizer> visualizerPtr_;
+    std::unique_ptr<switched_model::QuadrupedVisualizer> visualizerPtr_;
 std::unique_ptr<switched_model::SqpWbc> wbcPtr_;
     std::unique_ptr<reference::ReferenceTrajectoryGenerator> referenceTrajectoryGeneratorPtr_;
 
@@ -69,6 +71,7 @@ std::unique_ptr<switched_model::SqpWbc> wbcPtr_;
 
     scalar_t mpcRate_ = 30.0;
     scalar_t timeSinceLastMpcUpdate_ = 1e5;
+    scalar_t timeSinceLastVisualizationUpdate_ = 1e5;
 
 
 };

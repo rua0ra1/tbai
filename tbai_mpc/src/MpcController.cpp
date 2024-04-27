@@ -1,20 +1,18 @@
 
 #include "tbai_mpc/MpcController.hpp"
 
-#include <tbai_core/Utils.hpp>
-
 #include <string>
 #include <vector>
 
 #include <ocs2_switched_model_interface/core/MotionPhaseDefinition.h>
+#include <tbai_core/Utils.hpp>
 
 namespace tbai {
 namespace mpc {
 
 MpcController::MpcController(const std::shared_ptr<tbai::core::StateSubscriber> &stateSubscriberPtr)
     : stateSubscriberPtr_(stateSubscriberPtr), mrt_("anymal"), stopReferenceThread_(false) {
-
-    if(!tbai::core::isEpochStartSet()) {
+    if (!tbai::core::isEpochStartSet()) {
         throw std::runtime_error("Epoch start time not set. Use setEpochStart() to set the epoch start time.");
     }
 
@@ -51,7 +49,7 @@ MpcController::MpcController(const std::shared_ptr<tbai::core::StateSubscriber> 
         anymal::getAnymalInterface(urdfString, switched_model::loadQuadrupedSettings(taskSettingsFile),
                                    anymal::frameDeclarationFromFile(frameDeclarationFile));
 
-    visualizerPtr_ = std::make_shared<switched_model::QuadrupedVisualizer>(quadrupedInterfacePtr_->getKinematicModel(),
+    visualizerPtr_ = std::make_unique<switched_model::QuadrupedVisualizer>(quadrupedInterfacePtr_->getKinematicModel(),
                                                                            quadrupedInterfacePtr_->getJointNames(),
                                                                            quadrupedInterfacePtr_->getBaseName(), nh);
 
@@ -118,6 +116,7 @@ tbai_msgs::JointCommandArray MpcController::getCommandMessage(scalar_t currentTi
                                                      desiredState, desiredInput, desiredMode, joint_accelerations);
 
     timeSinceLastMpcUpdate_ += dt;
+    timeSinceLastVisualizationUpdate_ += dt;
     if (timeSinceLastMpcUpdate_ >= 1.0 / mpcRate_) {
         setObservation();
     }
@@ -145,7 +144,12 @@ void MpcController::referenceThread() {
     }
 }
 
-void MpcController::visualize() {}
+void MpcController::visualize() {
+    if (timeSinceLastVisualizationUpdate_ >= 1.0 / 15.0) {
+        visualizerPtr_->update(generateSystemObservation(), mrt_.getPolicy(), mrt_.getCommand());
+        timeSinceLastVisualizationUpdate_ = 0.0;
+    }
+}
 
 void MpcController::changeController(const std::string &controllerType, scalar_t currentTime) {
     if (!mrt_initialized_ || currentTime + 0.1 > mrt_.getPolicy().timeTrajectory_.back()) {
@@ -224,6 +228,7 @@ ocs2::SystemObservation MpcController::generateSystemObservation() const {
     observation.input.setZero(24);
     observation.input.tail<12>() = rbdState.tail<12>();
 
+    // Swap LH and RF
     std::swap(observation.input(12 + 3), observation.input(12 + 6));
     std::swap(observation.input(12 + 4), observation.input(12 + 7));
     std::swap(observation.input(12 + 5), observation.input(12 + 8));
