@@ -67,9 +67,7 @@ class CentralController {
      *
      * @return scalar_t : current time in seconds
      */
-    inline scalar_t getCurrentTime() const { return (ros::Time::now() - initTime_).toSec(); }
-
-    ros::Time initTime_;
+    inline scalar_t getCurrentTime() const { return (ros::Time::now().toSec() - initTime_); }
 
    private:
     /** Perform controller step */
@@ -94,6 +92,8 @@ class CentralController {
     ros::Rate loopRate_;
     ros::Publisher commandPublisher_;
     ros::Subscriber changeControllerSubscriber_;
+
+    scalar_t initTime_;
 };
 
 }  // namespace core

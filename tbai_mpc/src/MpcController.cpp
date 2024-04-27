@@ -1,6 +1,8 @@
 
 #include "tbai_mpc/MpcController.hpp"
 
+#include <tbai_core/Utils.hpp>
+
 #include <string>
 #include <vector>
 
@@ -10,8 +12,13 @@ namespace tbai {
 namespace mpc {
 
 MpcController::MpcController(const std::shared_ptr<tbai::core::StateSubscriber> &stateSubscriberPtr)
-    : stateSubscriberPtr_(stateSubscriberPtr), mrt_("anymal") {
-    initTime_ = ros::Time::now().toSec();
+    : stateSubscriberPtr_(stateSubscriberPtr), mrt_("anymal"), stopReferenceThread_(false) {
+
+    if(!tbai::core::isEpochStartSet()) {
+        throw std::runtime_error("Epoch start time not set. Use setEpochStart() to set the epoch start time.");
+    }
+
+    initTime_ = tbai::core::getEpochStart();
 
     const std::string robotName = "anymal";
     ros::NodeHandle nh;
@@ -52,8 +59,15 @@ MpcController::MpcController(const std::shared_ptr<tbai::core::StateSubscriber> 
         controllerConfigFile, urdfString, quadrupedInterfacePtr_->getComModel(),
         quadrupedInterfacePtr_->getKinematicModel(), quadrupedInterfacePtr_->getJointNames());
 
+    referenceThreadNodeHandle_.setCallbackQueue(&referenceThreadCallbackQueue_);
+    referenceTrajectoryGeneratorPtr_ = reference::getReferenceTrajectoryGeneratorUnique(referenceThreadNodeHandle_);
+
     mrt_.launchNodes(nh);
     tNow_ = 0.0;
+}
+
+void MpcController::spinOnceReferenceThread() {
+    referenceThreadCallbackQueue_.callAvailable(ros::WallDuration(0.0));
 }
 
 tbai_msgs::JointCommandArray MpcController::getCommandMessage(scalar_t currentTime, scalar_t dt) {
@@ -111,6 +125,26 @@ tbai_msgs::JointCommandArray MpcController::getCommandMessage(scalar_t currentTi
     return commandMessage;
 }
 
+void MpcController::referenceThread() {
+    referenceTrajectoryGeneratorPtr_->reset();
+
+    // Wait for initial mpc observation
+    while (ros::ok() && !stopReferenceThread_) {
+        spinOnceReferenceThread();
+        if (referenceTrajectoryGeneratorPtr_->isInitialized()) break;
+        ros::Duration(0.02).sleep();
+    }
+
+    // Start reference thread
+    ros::Rate rate(5.0);
+    while (ros::ok() && !stopReferenceThread_) {
+        spinOnceReferenceThread();
+        ROS_INFO_STREAM_THROTTLE(5.0, "[MpcController] Publishing reference");
+        referenceTrajectoryGeneratorPtr_->publishReferenceTrajectory();
+        rate.sleep();
+    }
+}
+
 void MpcController::visualize() {}
 
 void MpcController::changeController(const std::string &controllerType, scalar_t currentTime) {
@@ -119,6 +153,22 @@ void MpcController::changeController(const std::string &controllerType, scalar_t
         mrt_initialized_ = true;
     }
     tNow_ = currentTime;
+
+    // Start reference thread
+    startReferenceThread();
+}
+
+void MpcController::startReferenceThread() {
+    // Start reference thread
+    if (referenceThread_.joinable()) {
+        referenceThread_.join();
+    }
+    stopReferenceThread_ = false;
+    referenceThread_ = std::thread(&MpcController::referenceThread, this);
+}
+
+void MpcController::stopReferenceThread() {
+    stopReferenceThread_ = true;
 }
 
 bool MpcController::isSupported(const std::string &controllerType) {

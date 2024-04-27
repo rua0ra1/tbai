@@ -27,6 +27,7 @@
   <depend>ocs2_switched_model_interface</depend>
   <depend>std_msgs</depend>
   <depend>tbai_static</depend>
+  <depend>tbai_reference</depend>
   <depend>qpoases_catkin</depend>
 
   <export>

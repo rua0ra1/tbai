@@ -1,5 +1,7 @@
 
+#include <atomic>
 #include <memory>
+#include <thread>
 
 #include "ocs2_anymal_mpc/AnymalInterface.h"
 #include <ocs2_mpc/MPC_Settings.h>
@@ -10,8 +12,12 @@
 #include <tbai_core/Types.hpp>
 #include <tbai_core/control/Controller.hpp>
 #include <tbai_core/control/StateSubscriber.hpp>
+#include <tbai_mpc/reference/ReferenceTrajectoryGenerator.hpp>
 #include <tbai_mpc/wbc/SqpWbc.hpp>
 #include <tbai_msgs/JointCommandArray.h>
+#include <ros/callback_queue.h>
+
+
 namespace tbai {
 
 namespace mpc {
@@ -27,6 +33,8 @@ class MpcController final : public tbai::core::Controller {
 
     bool isSupported(const std::string &controllerType) override;
 
+    void stopController() override { stopReferenceThread(); }
+
     scalar_t getRate() const override { return 200.0; }
 
    private:
@@ -34,7 +42,18 @@ class MpcController final : public tbai::core::Controller {
 
     std::unique_ptr<switched_model::QuadrupedInterface> quadrupedInterfacePtr_;
     std::shared_ptr<switched_model::QuadrupedVisualizer> visualizerPtr_;
-    std::unique_ptr<switched_model::SqpWbc> wbcPtr_;
+std::unique_ptr<switched_model::SqpWbc> wbcPtr_;
+    std::unique_ptr<reference::ReferenceTrajectoryGenerator> referenceTrajectoryGeneratorPtr_;
+
+    void referenceThread();
+    void spinOnceReferenceThread();
+    ros::NodeHandle referenceThreadNodeHandle_;
+    ros::CallbackQueue referenceThreadCallbackQueue_;
+    void startReferenceThread();
+    void stopReferenceThread();
+
+    std::atomic<bool> stopReferenceThread_;
+    std::thread referenceThread_;
 
     void resetMpc();
 
@@ -50,6 +69,8 @@ class MpcController final : public tbai::core::Controller {
 
     scalar_t mpcRate_ = 30.0;
     scalar_t timeSinceLastMpcUpdate_ = 1e5;
+
+
 };
 
 }  // namespace mpc

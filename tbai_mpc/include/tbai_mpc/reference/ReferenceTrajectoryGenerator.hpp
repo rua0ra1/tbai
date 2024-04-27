@@ -15,6 +15,8 @@
 #include <ocs2_ros_interfaces/common/RosMsgConversions.h>
 #include <ros/ros.h>
 
+#include <tbai_reference/ReferenceVelocityGenerator.hpp>
+
 namespace tbai {
 namespace mpc {
 namespace reference {
@@ -28,6 +30,11 @@ class ReferenceTrajectoryGenerator {
    public:
     ReferenceTrajectoryGenerator(const std::string &targetCommandFile, ros::NodeHandle &nh);
     void publishReferenceTrajectory();
+    void reset() {
+        firstObservationReceived_ = false;
+    }
+
+    bool isInitialized() const { return firstObservationReceived_; }
 
    private:
     BaseReferenceHorizon getBaseReferenceHorizon();
@@ -37,6 +44,8 @@ class ReferenceTrajectoryGenerator {
     ocs2::TargetTrajectories generateReferenceTrajectory(scalar_t time, scalar_t dt);
 
     void loadSettings(const std::string &targetCommandFile);
+
+    std::unique_ptr<tbai::reference::ReferenceVelocityGenerator> velocityGeneratorPtr_;
 
     // ROS callbacks
     ros::Subscriber observationSubscriber_;
@@ -60,6 +69,10 @@ class ReferenceTrajectoryGenerator {
 
     bool blind_;
 };
+
+std::unique_ptr<ReferenceTrajectoryGenerator> getReferenceTrajectoryGeneratorUnique(ros::NodeHandle &nh);
+
+std::shared_ptr<ReferenceTrajectoryGenerator> getReferenceTrajectoryGeneratorShared(ros::NodeHandle &nh);
 
 }  // namespace reference
 }  // namespace mpc

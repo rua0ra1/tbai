@@ -1,6 +1,7 @@
 #include "tbai_core/control/CentralController.hpp"
 
 #include <ros/ros.h>
+#include <tbai_core/Utils.hpp>
 #include <tbai_msgs/JointCommandArray.h>
 
 namespace tbai {
@@ -12,6 +13,12 @@ namespace core {
 CentralController::CentralController(ros::NodeHandle &nh, const std::string &stateTopic,
                                      const std::string &commandTopic, const std::string &changeControllerTopic)
     : loopRate_(1), activeController_(nullptr) {
+    if (!tbai::core::isEpochStartSet()) {
+        throw std::runtime_error(
+            "Epoch start not set. Call tbai::core::setEpochStart() before creating CentralController");
+    }
+    initTime_ = tbai::core::getEpochStart();
+
     stateSubscriberPtr_ = std::make_shared<StateSubscriber>(nh, stateTopic);
     commandPublisher_ = nh.advertise<tbai_msgs::JointCommandArray>(commandTopic, 1);
     changeControllerSubscriber_ =
@@ -50,12 +57,9 @@ void CentralController::start() {
     if (ros::ok()) {
         // Main loop rate
         loopRate_ = ros::Rate(activeController_->getRate());
-
-        // Start of epoch
-        initTime_ = ros::Time::now();
     }
 
-    scalar_t lastTime = 0.0;
+    scalar_t lastTime = getCurrentTime();
     while (ros::ok()) {
         // Spin once to allow ROS run callbacks
         ros::spinOnce();
@@ -107,7 +111,10 @@ void CentralController::changeControllerCallback(const std_msgs::String::ConstPt
     const std::string controllerType = msg->data;
     for (auto &controller : controllers_) {
         if (controller->isSupported(controllerType)) {
-            activeController_ = controller.get();
+            if (activeController_ != controller.get()) {
+                activeController_->stopController();  // Stop current controller
+            }
+            activeController_ = controller.get();  // Set new active controller
             activeController_->changeController(controllerType, getCurrentTime());
             loopRate_ = ros::Rate(activeController_->getRate());
             ROS_INFO_STREAM("[CentralController] Controller changed to " << controllerType);

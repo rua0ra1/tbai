@@ -31,6 +31,8 @@ class StaticController : public tbai::core::Controller {
 
     bool isSupported(const std::string &controllerType) override;
 
+    void stopController() override {}
+
     scalar_t getRate() const override;
 
    private:

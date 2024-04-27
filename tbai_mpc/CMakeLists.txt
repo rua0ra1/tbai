@@ -16,6 +16,7 @@ find_package(catkin REQUIRED COMPONENTS
     grid_map_core
     grid_map_ros
     tbai_static
+    tbai_reference
 
     roscpp
     std_msgs

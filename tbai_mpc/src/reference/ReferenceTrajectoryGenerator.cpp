@@ -35,6 +35,8 @@ ReferenceTrajectoryGenerator::ReferenceTrajectoryGenerator(const std::string &ta
     referencePublisher_ = nh.advertise<ocs2_msgs::mpc_target_trajectories>(referenceTopic, 1, false);
 
     blind_ = fromRosConfig<bool>("mpc_controller/reference_trajectory/blind");
+
+    velocityGeneratorPtr_ = tbai::reference::getReferenceVelocityGeneratorUnique(nh);
 }
 
 /*********************************************************************************************************************/
@@ -65,8 +67,8 @@ BaseReferenceHorizon ReferenceTrajectoryGenerator::getBaseReferenceHorizon() {
 /*********************************************************************************************************************/
 /*********************************************************************************************************************/
 BaseReferenceCommand ReferenceTrajectoryGenerator::getBaseReferenceCommand(scalar_t time) {
-    // return {velocityCommand.velocity_x, velocityCommand.velocity_y, velocityCommand.yaw_rate, comHeight_};
-    return {0.0, 0.0, 0.0, comHeight_};
+    auto velocityCommand = velocityGeneratorPtr_->getReferenceVelocity(time, trajdt_);
+    return {velocityCommand.velocity_x, velocityCommand.velocity_y, velocityCommand.yaw_rate, comHeight_};
 }
 
 /*********************************************************************************************************************/
@@ -168,6 +170,16 @@ void ReferenceTrajectoryGenerator::terrainCallback(const grid_map_msgs::GridMap 
         // Swap terrain map pointers
         terrainMapPtr_.swap(mapPtr);
     }
+}
+
+std::unique_ptr<ReferenceTrajectoryGenerator> getReferenceTrajectoryGeneratorUnique(ros::NodeHandle &nh) {
+    const std::string configPath =
+        "/home/kuba/fun/ocs2_project/src/ocs2_fun/ocs2_anymal_robot/config/targetCommand.info";
+    return std::make_unique<ReferenceTrajectoryGenerator>(configPath, nh);
+}
+
+std::shared_ptr<ReferenceTrajectoryGenerator> getReferenceTrajectoryGeneratorShared(ros::NodeHandle &nh) {
+    return std::shared_ptr<ReferenceTrajectoryGenerator>(getReferenceTrajectoryGeneratorUnique(nh).release());
 }
 
 }  // namespace reference

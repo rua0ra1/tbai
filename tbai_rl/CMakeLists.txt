@@ -50,10 +50,3 @@ target_link_libraries(${PROJECT_NAME}
     ${TORCH_LIBRARIES}
     ${pinocchio_LIBRARIES}
 )
-
-add_executable(simple
-    src/simple.cpp
-)
-target_link_libraries(simple
-    ${catkin_LIBRARIES} ${PROJECT_NAME} yaml-cpp
-)

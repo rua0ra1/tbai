@@ -26,13 +26,20 @@
 #include <tbai_core/Asserts.hpp>
 #include <vector>
 
+#include <tbai_core/Utils.hpp>
+
 namespace tbai {
 
 namespace dtc {
 
-DtcController::DtcController(const std::shared_ptr<tbai::core::StateSubscriber> &stateSubscriber, scalar_t initTime)
+DtcController::DtcController(const std::shared_ptr<tbai::core::StateSubscriber> &stateSubscriber)
     : stateSubscriberPtr_(stateSubscriber), mrt_("legged_robot") {
-    initTime_ = initTime;
+    
+    
+    if(!tbai::core::isEpochStartSet()) {
+        throw std::runtime_error("Epoch start time not set. Use setEpochStart() to set the epoch start time.");
+    }
+    initTime_ = tbai::core::getEpochStart();
 
     ros::NodeHandle nh;
     mrt_.launchNodes(nh);

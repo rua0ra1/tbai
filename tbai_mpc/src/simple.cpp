@@ -1,5 +1,6 @@
 #include <iostream>
 
+#include <tbai_core/Utils.hpp>
 #include "tbai_mpc/MpcController.hpp"
 #include "tbai_static/StaticController.hpp"
 #include <ros/ros.h>
@@ -9,6 +10,8 @@
 int main(int argc, char *argv[]) {
     ros::init(argc, argv, "tbai_static");
     const std::string configParam = "/tbai_config_path";
+
+    tbai::core::setEpochStart();
 
     auto config = tbai::core::YamlConfig::fromRosParam(configParam);
     auto stateTopic = config.get<std::string>("state_topic");
@@ -24,7 +27,9 @@ int main(int argc, char *argv[]) {
     controller.addController(std::make_unique<tbai::mpc::MpcController>(controller.getStateSubscriberPtr()));
 
     // Start controller loop
+
     controller.start();
+
 
     return EXIT_SUCCESS;
 }

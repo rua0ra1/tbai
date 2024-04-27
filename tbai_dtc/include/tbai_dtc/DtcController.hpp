@@ -25,7 +25,7 @@ namespace dtc {
 
 class DtcController final : public tbai::core::Controller {
    public:
-    DtcController(const std::shared_ptr<tbai::core::StateSubscriber> &stateSubscriber, scalar_t initTime);
+    DtcController(const std::shared_ptr<tbai::core::StateSubscriber> &stateSubscriber);
 
     tbai_msgs::JointCommandArray getCommandMessage(scalar_t currentTime, scalar_t dt) override;
 
@@ -34,6 +34,8 @@ class DtcController final : public tbai::core::Controller {
     void changeController(const std::string &controllerType, scalar_t currentTime) override;
 
     bool isSupported(const std::string &controllerType) override;
+
+    void stopController() override {}
 
     scalar_t getRate() const override { return 50.0; }
 

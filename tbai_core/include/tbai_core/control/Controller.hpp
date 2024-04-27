@@ -39,6 +39,12 @@ class Controller {
     virtual void changeController(const std::string &controllerType, scalar_t currentTime) = 0;
 
     /**
+     * @brief Stop controller
+     *
+     */
+    virtual void stopController() = 0;
+
+    /**
      * @brief Check if specified controller is supported by this controller
      *
      * @param controllerType : controller type to check

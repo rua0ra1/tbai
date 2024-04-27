@@ -46,6 +46,8 @@ class BobController : public tbai::core::Controller {
 
     bool isSupported(const std::string &controllerType) override;
 
+    void stopController() override {}
+
     scalar_t getRate() const override { return 50.0; }
 
    private:

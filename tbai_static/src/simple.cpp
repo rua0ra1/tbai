@@ -1,5 +1,6 @@
 #include <iostream>
 
+#include <tbai_core/Utils.hpp>
 #include "tbai_static/StaticController.hpp"
 #include <ros/ros.h>
 #include <tbai_core/config/YamlConfig.hpp>
@@ -8,6 +9,8 @@
 int main(int argc, char *argv[]) {
     ros::init(argc, argv, "tbai_static");
     const std::string configParam = "/tbai_config_path";
+
+    tbai::core::setEpochStart();
 
     auto config = tbai::core::YamlConfig::fromRosParam(configParam);
     auto stateTopic = config.get<std::string>("state_topic");
