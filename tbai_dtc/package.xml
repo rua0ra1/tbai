@@ -12,8 +12,10 @@
   <depend>roscpp</depend>
   <depend>tbai_core</depend>
   <depend>tbai_msgs</depend>
+  <depend>tbai_reference</depend>
   <depend>tbai_static</depend>
   <depend>ocs2_core</depend>
+  <depend>ocs2_msgs</depend>
   <depend>ocs2_mpc</depend>
   <depend>ocs2_ros_interfaces</depend>
   <depend>ocs2_robotic_tools</depend>

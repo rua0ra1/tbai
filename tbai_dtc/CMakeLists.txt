@@ -13,12 +13,14 @@ find_package(catkin REQUIRED COMPONENTS
   tbai_static
   ocs2_core
   ocs2_mpc
-  ocs2_ros_interfaces
   ocs2_robotic_tools
   ocs2_pinocchio_interface
   ocs2_centroidal_model
   ocs2_legged_robot
   ocs2_legged_robot_ros
+  ocs2_msgs
+  ocs2_ros_interfaces
+  tbai_reference
 )
 set(Torch_DIR /home/kuba/Downloads/libtorch/share/cmake/Torch)
 find_package(Torch REQUIRED)

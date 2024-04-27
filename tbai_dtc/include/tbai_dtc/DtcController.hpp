@@ -17,6 +17,8 @@
 #include <tbai_core/control/Controller.hpp>
 #include <tbai_core/control/StateSubscriber.hpp>
 
+
+#include <tbai_reference/ReferenceVelocityGenerator.hpp>
 #include "ocs2_legged_robot_ros/visualization/LeggedRobotVisualizer.h"
 
 #include <torch/script.h>
@@ -78,6 +80,10 @@ class DtcController final : public tbai::core::Controller {
     std::unique_ptr<ocs2::CentroidalModelPinocchioMapping> centroidalModelMapping_;
     std::unique_ptr<ocs2::PinocchioEndEffectorKinematics> endEffectorKinematics_;
     std::unique_ptr<ocs2::legged_robot::LeggedRobotVisualizer> visualizer_;
+
+    std::unique_ptr<tbai::reference::ReferenceVelocityGenerator> refVelGen_;
+    void publishReference(scalar_t currentTime, scalar_t dt);
+    ros::Publisher refPub_;
 
     vector_t defaultDofPositions_;
 

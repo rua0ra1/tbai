@@ -37,8 +37,18 @@ class AnymalDInverseKinematics : public InverseKinematics {
     scalar_t a4_;
 };
 
+/**
+ * @brief Get the InverseKinematics unique pointer, initialize with values from config
+ *
+ * @return std::unique_ptr<InverseKinematics>
+ */
 std::unique_ptr<InverseKinematics> getInverseKinematicsUnique();
 
+/**
+ * @brief Get the InverseKinematics shared pointer, initialize with values from config
+ *
+ * @return std::shared_ptr<InverseKinematics>
+ */
 std::shared_ptr<InverseKinematics> getInverseKinematicsShared();
 
 }  // namespace rl

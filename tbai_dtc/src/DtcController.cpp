@@ -15,7 +15,12 @@
 #include <ocs2_centroidal_model/ModelHelperFunctions.h>
 #include <ocs2_centroidal_model/PinocchioCentroidalDynamics.h>
 
+
+#include <ocs2_msgs/mpc_target_trajectories.h>
+#include "ocs2_ros_interfaces/common/RosMsgConversions.h"
 #include <ocs2_legged_robot/gait/MotionPhaseDefinition.h>
+
+#include <ocs2_core/reference/TargetTrajectories.h>
 
 #include <pinocchio/algorithm/centroidal.hpp>
 #include <string>
@@ -69,6 +74,9 @@ DtcController::DtcController(const std::shared_ptr<tbai::core::StateSubscriber> 
     ROS_INFO_STREAM("[DtcController] Setup done");
 
 
+    refVelGen_ = tbai::reference::getReferenceVelocityGeneratorUnique(nh);
+    refPub_ = nh.advertise<ocs2_msgs::mpc_target_trajectories>("legged_robot_mpc_target", 1, false);
+
     ocs2::CentroidalModelPinocchioMapping pinocchioMapping(leggedInterface_->getCentroidalModelInfo());
     ocs2::PinocchioEndEffectorKinematics endEffectorKinematics(leggedInterface_->getPinocchioInterface(), pinocchioMapping,
                                                        leggedInterface_->modelSettings().contactNames3DoF);
@@ -89,6 +97,79 @@ DtcController::DtcController(const std::shared_ptr<tbai::core::StateSubscriber> 
     }
 
     action_ = torch::zeros({12});
+}
+
+void DtcController::publishReference(scalar_t currentTime, scalar_t dt) {
+    dt = 0.1;
+    auto refVel = refVelGen_->getReferenceVelocity(currentTime, 0.1);
+    auto x_vel = refVel.velocity_x;
+    auto y_vel = refVel.velocity_y;
+    auto yaw_rate = refVel.yaw_rate;
+    constexpr scalar_t horizon = 1.0;
+    const scalar_t finalTime = currentTime + horizon;
+
+    std::cout << "Publishing reference..." << "vx: " << x_vel << " vy: " << y_vel << " yaw_rate: " << yaw_rate << std::endl;
+
+    if(dt == 0) {
+        dt = 0.1;
+    }
+
+    auto currentObservation = generateSystemObservation();
+
+    // auto initState = initialState_;
+    auto currentState = currentObservation.state;
+    auto initState = currentState;
+
+    const scalar_t v_x = x_vel;
+    const scalar_t v_y = y_vel;
+    const scalar_t w_z = yaw_rate;
+
+    ocs2::scalar_array_t timeTrajectory;
+    ocs2::vector_array_t stateTrajectory;
+    ocs2::vector_array_t inputTrajectory;
+
+    // Insert initial time, state and input
+    timeTrajectory.push_back(currentTime);
+    stateTrajectory.push_back(initState);
+    inputTrajectory.push_back(vector_t().setZero(24));
+
+    // Complete the rest of the trajectory
+    scalar_t time = currentTime;
+    vector_t nextState = initState;
+    nextState.tail<12>() = defaultDofPositions_;
+    nextState.segment<6>(0) = currentState.segment<6>(0);
+    nextState.segment<6>(6) = currentState.segment<6>(6);
+    nextState(8) = 0.54; // z position
+    nextState(10) = 0.0; // roll
+    nextState(11) = 0.0; // pitch
+    nextState(2) = 0.0; // z velocity
+    while(time < finalTime) {
+        time += dt;
+
+        const scalar_t yaw = nextState(9);
+        const scalar_t cy = std::cos(yaw);
+        const scalar_t sy = std::sin(yaw);
+
+        const scalar_t dx = (cy * v_x - sy * v_y) * dt;
+        const scalar_t dy = (sy * v_x + cy * v_y) * dt;
+        const scalar_t dw = w_z * dt;
+
+        nextState(0) = dx/dt;
+        nextState(1) = dy/dt;
+
+        nextState(6) += dx;
+        nextState(7) += dy;
+        nextState(9) += dw;
+
+        timeTrajectory.push_back(time);
+        stateTrajectory.push_back(nextState);
+        inputTrajectory.push_back(vector_t().setZero(24));
+    }
+
+
+    ocs2::TargetTrajectories t(timeTrajectory, stateTrajectory, inputTrajectory);
+    const auto mpcTargetTrajectoriesMsg = ocs2::ros_msg_conversions::createTargetTrajectoriesMsg(t);
+    refPub_.publish(mpcTargetTrajectoriesMsg);
 }
 
 tbai_msgs::JointCommandArray DtcController::getCommandMessage(scalar_t currentTime, scalar_t dt) {
@@ -122,6 +203,7 @@ tbai_msgs::JointCommandArray DtcController::getCommandMessage(scalar_t currentTi
     timeSinceLastMpcUpdate_ += dt;
     if (timeSinceLastMpcUpdate_ >= 1.0 / mpcRate_) {
         //resetMpc();
+        publishReference(currentTime, dt);
         setObservation();
         timeSinceLastMpcUpdate_ = 0.0;
     }
@@ -132,9 +214,9 @@ tbai_msgs::JointCommandArray DtcController::getCommandMessage(scalar_t currentTi
 
     // Perform forward pass
     auto t_start = std::chrono::high_resolution_clock::now();
-    std::cout << "========================== START ===========================" << std::endl;
-    std::cout << input << std::endl;
-    std::cout << "========================== STOP ===========================" << std::endl;
+    // std::cout << "========================== START ===========================" << std::endl;
+    // std::cout << input << std::endl;
+    // std::cout << "========================== STOP ===========================" << std::endl;
     auto output = dtcModel_.forward({input.view({1, MODEL_INPUT_SIZE})}).toTensor().squeeze();
     auto t_end = std::chrono::high_resolution_clock::now();
     auto duration_ms = std::chrono::duration_cast<std::chrono::microseconds>(t_end - t_start).count() / 1e3;
@@ -419,9 +501,12 @@ void DtcController::computeObservation(const ocs2::PrimalSolution &policy, scala
 }
 
 void DtcController::computeCommandObservation(scalar_t time) {
-    obsCommand_(0) = 0.0;
-    obsCommand_(1) = 0.0;
-    obsCommand_(2) = 0.0;
+    auto refvel = refVelGen_->getReferenceVelocity(time, 0.1);
+    obsCommand_(0) = refvel.velocity_x;
+    obsCommand_(1) = refvel.velocity_y;
+    obsCommand_(2) = refvel.yaw_rate;
+
+    std::cout << "Command: " << obsCommand_.transpose() << std::endl;
 }
 
 void DtcController::computeDesiredContacts(scalar_t time) {
@@ -508,13 +593,14 @@ void DtcController::computeDesiredFootholds(scalar_t time) {
 void DtcController::computeCurrentDesiredJointAngles(scalar_t time) {
     // Compute desired joint angles
     auto &solution = mrt_.getPolicy();
-    std::cout << "Current time: " << time << std::endl;
-    std::cout << "Solution time: " << solution.timeTrajectory_.front() << std::endl;
-    std::cout << std::endl;
+    // std::cout << "Current time: " << time << std::endl;
+    // std::cout << "Solution time: " << solution.timeTrajectory_.front() << std::endl;
+    // std::cout << std::endl;
     auto state = ocs2::LinearInterpolation::interpolate(time, solution.timeTrajectory_, solution.stateTrajectory_);
     auto jointAngles = state.segment<12>(12);
     obsCurrentDesiredJointAngles_ = jointAngles - defaultDofPositions_;
     kk_ = defaultDofPositions_;
+    kk_ = jointAngles;
 }
 
 void DtcController::computeBaseObservation(scalar_t time) {

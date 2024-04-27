@@ -24,62 +24,12 @@
 
 #include <functional>
 
-#include <robot_state_publisher/robot_state_publisher.h>
-#include <tf/transform_broadcaster.h>
+#include <tbai_rl/State.hpp>
+#include <tbai_rl/Visualizers.hpp>
 
 namespace tbai {
 namespace rl {
 
-using tbai::scalar_t;
-using tbai::vector_t;
-
-struct State {
-    using Vector3 = Eigen::Matrix<scalar_t, 3, 1>;
-    using Vector4 = Eigen::Matrix<scalar_t, 4, 1>;
-    using Vector12 = Eigen::Matrix<scalar_t, 12, 1>;
-
-    Vector3 basePositionWorld;
-    Vector4 baseOrientationWorld;  // quaternion, xyzw
-    Vector3 baseLinearVelocityBase;
-    Vector3 baseAngularVelocityBase;
-    Vector3 normalizedGravityBase;
-    Vector12 jointPositions;
-    Vector12 jointVelocities;
-    Vector3 lfFootPositionWorld;
-    Vector3 lhFootPositionWorld;
-    Vector3 rfFootPositionWorld;
-    Vector3 rhFootPositionWorld;
-};
-
-class StateVisualizer {
-   public:
-    StateVisualizer();
-    void visualize(const State &state);
-
-   private:
-    void publishOdomTransform(const ros::Time &timeStamp, const State &state);
-    void publishJointAngles(const ros::Time &timeStamp, const State &state);
-
-    std::string odomFrame_;
-    std::string baseFrame_;
-    std::unique_ptr<robot_state_publisher::RobotStatePublisher> robotStatePublisherPtr_;
-    tf::TransformBroadcaster tfBroadcaster_;
-    std::vector<std::string> jointNames_;
-};
-
-class HeightsReconstructedVisualizer {
-   public:
-    HeightsReconstructedVisualizer();
-    void visualize(const State &state, const matrix_t &sampled, const at::Tensor &nnPointsReconstructed);
-
-   private:
-    void publishMarkers(const ros::Time &timeStamp, const matrix_t &sampled, const std::array<float, 3> &rgb,
-                        const std::string &markerNamePrefix, std::function<scalar_t(size_t)> heightFunction);
-
-    std::string odomFrame_;
-    ros::Publisher markerPublisher_;
-    bool blind_;
-};
 
 using namespace tbai;
 using namespace torch::indexing;

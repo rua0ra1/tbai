@@ -43,6 +43,7 @@ add_library(${PROJECT_NAME}
   src/BobController.cpp
   src/InverseKinematics.cpp
   src/CentralPatternGenerator.cpp
+  src/Visualizers.cpp
 )
 target_link_libraries(${PROJECT_NAME}
     ${catkin_LIBRARIES}
