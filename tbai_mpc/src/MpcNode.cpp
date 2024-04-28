@@ -1,10 +1,3 @@
-/*
- * AnymalMPC.cpp
- *
- *  Created on: Apr 15, 2018
- *      Author: farbod
- */
-
 #include <ocs2_anymal_mpc/AnymalInterface.h>
 #include <ocs2_ddp/DDP_Settings.h>
 #include <ocs2_mpc/MPC_Settings.h>
@@ -39,13 +32,19 @@ int main(int argc, char *argv[]) {
                                    anymal::frameDeclarationFromFile(frameDeclarationFile));
     const auto mpcSettings = ocs2::mpc::loadSettings(taskSettingsFile);
 
-    if (anymalInterface->modelSettings().algorithm_ != switched_model::Algorithm::SQP) {
-        throw std::runtime_error("Only SQP is supported. Aborting.");
+    if (anymalInterface->modelSettings().algorithm_ == switched_model::Algorithm::SQP) {
+        ROS_INFO_STREAM("[MpcNode] Using SQP MPC");
+        const auto sqpSettings = ocs2::sqp::loadSettings(sqpSettingsFile);
+        auto mpcPtr = switched_model::getSqpMpc(*anymalInterface, mpcSettings, sqpSettings);
+        switched_model::quadrupedMpcNode(nodeHandle, *anymalInterface, std::move(mpcPtr));
     }
 
-    const auto sqpSettings = ocs2::sqp::loadSettings(sqpSettingsFile);
-    auto mpcPtr = switched_model::getSqpMpc(*anymalInterface, mpcSettings, sqpSettings);
-    switched_model::quadrupedMpcNode(nodeHandle, *anymalInterface, std::move(mpcPtr));
+    if (anymalInterface->modelSettings().algorithm_ == switched_model::Algorithm::DDP) {
+        ROS_INFO_STREAM("[MpcNode] Using DDP MPC");
+        const auto ddpSettings = ocs2::ddp::loadSettings(taskSettingsFile);
+        auto mpcPtr = switched_model::getDdpMpc(*anymalInterface, mpcSettings, ddpSettings);
+        switched_model::quadrupedMpcNode(nodeHandle, *anymalInterface, std::move(mpcPtr));
+    }
 
     return EXIT_SUCCESS;
 }

@@ -11,7 +11,7 @@ class SqpSolver {
    public:
     EIGEN_MAKE_ALIGNED_OPERATOR_NEW
 
-    vector_t solve_sqp(const Task &weightedTasks, const Task &constraints);
+    vector_t solveSqp(const Task &weightedTasks, const Task &constraints);
 };
 
 }  // namespace switched_model

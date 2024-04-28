@@ -1,3 +1,8 @@
+
+// clang-format off
+#include <pinocchio/fwd.hpp>
+// clang-format on
+
 #include <iostream>
 
 #include <tbai_core/Utils.hpp>
@@ -29,7 +34,6 @@ int main(int argc, char *argv[]) {
     // Start controller loop
 
     controller.start();
-
 
     return EXIT_SUCCESS;
 }

@@ -4,7 +4,7 @@
 
 namespace switched_model {
 
-vector_t SqpSolver::solve_sqp(const Task &weightedTasks, const Task &constraints) {
+vector_t SqpSolver::solveSqp(const Task &weightedTasks, const Task &constraints) {
     // Number of decision variables
     const size_t nDecisionVariables = weightedTasks.A.cols();
 

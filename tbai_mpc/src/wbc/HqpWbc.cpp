@@ -2,7 +2,7 @@
 #include <pinocchio/fwd.hpp>
 // clang-format on
 
-#include "tbai_mpc/wbc/SqpWbc.hpp"
+#include "tbai_mpc/wbc/HqpWbc.hpp"
 
 #include <ocs2_core/misc/LoadData.h>
 #include <pinocchio/multibody/data.hpp>
@@ -10,7 +10,7 @@
 
 namespace switched_model {
 
-tbai_msgs::JointCommandArray SqpWbc::getCommandMessage(scalar_t currentTime, const vector_t &currentState,
+tbai_msgs::JointCommandArray HqpWbc::getCommandMessage(scalar_t currentTime, const vector_t &currentState,
                                                        const vector_t &currentInput, const size_t currentMode,
                                                        const vector_t &desiredState, const vector_t &desiredInput,
                                                        const size_t desiredMode,
@@ -21,24 +21,29 @@ tbai_msgs::JointCommandArray SqpWbc::getCommandMessage(scalar_t currentTime, con
     updateDesiredState(desiredState, desiredInput);
 
     // QP constraints
-    Task constraints =
-        createDynamicsTask() + createStanceFootNoMotionTask() + createContactForceTask() + createTorqueLimitTask();
-
-    // QP cost function
-    Task weightedTasks =
-        createBaseAccelerationTask(currentState, desiredState, desiredInput, desiredJointAcceleration) *
-            weightBaseAcceleration_ +
-        createContactForceMinimizationTask(desiredInput) * weightContactForce_ +
-        createSwingFootAccelerationTask(currentState, currentInput, desiredState, desiredInput) * weightSwingLeg_;
-
-    // solve QP
-    vector_t sqpSolution = sqpSolver_.solveSqp(weightedTasks, constraints);
+    vector_t hqpSolution;
+    if (nContacts_ == 4) {
+        Task task1 =
+            createDynamicsTask() + createStanceFootNoMotionTask() + createContactForceTask() + createTorqueLimitTask();
+        Task task2 = createBaseAccelerationTask(currentState, desiredState, desiredInput, desiredJointAcceleration);
+        Task task3 = createContactForceMinimizationTask(desiredInput);
+        std::vector<Task *> tasks = {&task1, &task2, &task3};
+        hqpSolution = hqpSolver_.solveHqp(tasks);
+    } else {
+        Task task1 =
+            createDynamicsTask() + createStanceFootNoMotionTask() + createContactForceTask() + createTorqueLimitTask();
+        Task task2 = createSwingFootAccelerationTask(currentState, currentInput, desiredState, desiredInput);
+        Task task3 = createBaseAccelerationTask(currentState, desiredState, desiredInput, desiredJointAcceleration);
+        Task task4 = createContactForceMinimizationTask(desiredInput);
+        std::vector<Task *> tasks = {&task1, &task2, &task3, &task4};
+        hqpSolution = hqpSolver_.solveHqp(tasks);
+    }
 
     // Generalized accelerations
-    const vector_t &udot = sqpSolution.segment(0, nGeneralizedCoordinates_);
+    const vector_t &udot = hqpSolution.segment(0, nGeneralizedCoordinates_);
 
     // External forces, expressed in the world frame
-    const vector_t &Fext = sqpSolution.segment(nGeneralizedCoordinates_, 3 * NUM_CONTACT_POINTS);
+    const vector_t &Fext = hqpSolution.segment(nGeneralizedCoordinates_, 3 * NUM_CONTACT_POINTS);
 
     // Compute joint torques
     auto &data = pinocchioInterfaceMeasured_.getData();
@@ -80,7 +85,7 @@ tbai_msgs::JointCommandArray SqpWbc::getCommandMessage(scalar_t currentTime, con
 /*********************************************************************************************************************/
 /*********************************************************************************************************************/
 /*********************************************************************************************************************/
-void SqpWbc::loadSettings(const std::string &configFile) {
+void HqpWbc::loadSettings(const std::string &configFile) {
     using ocs2::scalar_t;
     using ocs2::loadData::loadCppDataType;
 

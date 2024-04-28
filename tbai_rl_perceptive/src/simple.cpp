@@ -2,11 +2,10 @@
 
 #include "tbai_rl/BobController.hpp"
 #include <ros/ros.h>
+#include <tbai_core/Utils.hpp>
 #include <tbai_core/config/YamlConfig.hpp>
 #include <tbai_core/control/CentralController.hpp>
 #include <tbai_static/StaticController.hpp>
-
-#include <tbai_core/Utils.hpp>
 
 int main(int argc, char *argv[]) {
     ros::init(argc, argv, "tbai_static");

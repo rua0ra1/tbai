@@ -118,11 +118,11 @@ bool BobController::isSupported(const std::string &controllerType) {
 bool BobController::checkStability() const {
     const auto &state = stateSubscriberPtr_->getLatestRbdState();
     scalar_t roll = state[0];
-    if(roll >= 1.57 || roll <= -1.57) {
+    if (roll >= 1.57 || roll <= -1.57) {
         return false;
     }
     scalar_t pitch = state[1];
-    if(pitch >= 1.57 || pitch <= -1.57) {
+    if (pitch >= 1.57 || pitch <= -1.57) {
         return false;
     }
     return true;

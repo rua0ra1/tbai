@@ -49,7 +49,7 @@ inline vector3_t mat2rpy(const matrix3_t &R) {
 inline vector3_t mat2oc2rpy(const matrix3_t &R, const scalar_t lastYaw) {
     // Taken from OCS2, see:
     // https://github.com/leggedrobotics/ocs2/blob/164c26b46bed5d24cd03d90588db8980d03a4951/ocs2_robotic_examples/ocs2_perceptive_anymal/ocs2_anymal_commands/src/TerrainAdaptation.cpp#L19
-    vector3_t eulerXYZ = R.eulerAngles(0,1,2);
+    vector3_t eulerXYZ = R.eulerAngles(0, 1, 2);
     ocs2::makeEulerAnglesUnique(eulerXYZ);
     eulerXYZ.z() = ocs2::moduloAngleWithReference(eulerXYZ.z(), lastYaw);
     return eulerXYZ;
@@ -57,7 +57,7 @@ inline vector3_t mat2oc2rpy(const matrix3_t &R, const scalar_t lastYaw) {
 
 /**
  * @brief Convert ocs2-style rpy angles to quaternion
- * 
+ *
  * @param rpy : ocs2-style rpy angles
  * @return quaternion_t : quaternion
  */

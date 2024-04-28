@@ -1,5 +1,10 @@
 
+// clang-format off
+#include <pinocchio/fwd.hpp>
+// clang-format on
+
 #include "tbai_mpc/MpcController.hpp"
+#include "tbai_mpc/wbc/Factory.hpp"
 
 #include <string>
 #include <vector>
@@ -49,9 +54,9 @@ MpcController::MpcController(const std::shared_ptr<tbai::core::StateSubscriber> 
                                                                            quadrupedInterfacePtr_->getJointNames(),
                                                                            quadrupedInterfacePtr_->getBaseName(), nh);
 
-    wbcPtr_ = std::make_unique<switched_model::SqpWbc>(
-        controllerConfigFile, urdfString, quadrupedInterfacePtr_->getComModel(),
-        quadrupedInterfacePtr_->getKinematicModel(), quadrupedInterfacePtr_->getJointNames());
+    wbcPtr_ = switched_model::getWbcUnique(controllerConfigFile, urdfString, quadrupedInterfacePtr_->getComModel(),
+                                           quadrupedInterfacePtr_->getKinematicModel(),
+                                           quadrupedInterfacePtr_->getJointNames());
 
     referenceThreadNodeHandle_.setCallbackQueue(&referenceThreadCallbackQueue_);
     referenceTrajectoryGeneratorPtr_ = reference::getReferenceTrajectoryGeneratorUnique(referenceThreadNodeHandle_);
@@ -162,7 +167,7 @@ void MpcController::stopReferenceThread() {
 }
 
 bool MpcController::isSupported(const std::string &controllerType) {
-    return controllerType == "SQP_WBC";
+    return controllerType == "WBC";
 }
 
 void MpcController::resetMpc() {

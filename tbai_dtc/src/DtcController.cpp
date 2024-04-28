@@ -34,7 +34,6 @@ namespace dtc {
 
 DtcController::DtcController(const std::shared_ptr<tbai::core::StateSubscriber> &stateSubscriber)
     : stateSubscriberPtr_(stateSubscriber), mrt_("legged_robot") {
-    
     initTime_ = tbai::core::getEpochStart();
 
     ros::NodeHandle nh;
@@ -383,7 +382,8 @@ ocs2::SystemObservation DtcController::generateSystemObservation() const {
 
     // Set observation time
     ocs2::SystemObservation observation;
-    observation.time = stateSubscriberPtr_->getLatestRbdStamp().toSec() - initTime_;  // TODO: Replace with actual observation stamp
+    observation.time =
+        stateSubscriberPtr_->getLatestRbdStamp().toSec() - initTime_;  // TODO: Replace with actual observation stamp
 
     // Set mode
     observation.mode = 14;  // This is not important
@@ -500,8 +500,8 @@ void DtcController::computeObservation(const ocs2::PrimalSolution &policy, scala
     // Compute desired footholds
     computeDesiredFootholds(time);
 
-    computeCurrentDesiredJointAngles(time + 1/50);  // TODO: time + some time delta
-    computeBaseObservation(time + 1/50);            // TODO: time + some time delta ?????
+    computeCurrentDesiredJointAngles(time + 1 / 50);  // TODO: time + some time delta
+    computeBaseObservation(time + 1 / 50);            // TODO: time + some time delta ?????
 }
 
 void DtcController::computeCommandObservation(scalar_t time) {
@@ -560,7 +560,6 @@ void DtcController::computeDesiredFootholds(scalar_t time) {
     auto rpy = tbai::core::mat2rpy(tbai::core::ocs2rpy2quat(currentRbdState.segment<3>(0)).toRotationMatrix());
     auto currentJointAngles = currentRbdState.segment<12>(12);
     // set roll and pitch to zero
-
 
     rpy[0] = 0.0;
     rpy[1] = 0.0;
@@ -634,14 +633,18 @@ void DtcController::computeBaseObservation(scalar_t time) {
     // Desired base orientation
     vector3_t desiredBaseEulerAngles =
         ocs2::LinearInterpolation::interpolate(time, solution.timeTrajectory_, solution.stateTrajectory_).segment<3>(9);
-    quaternion_t quatDesired = Eigen::AngleAxis<scalar_t>(desiredBaseEulerAngles(0), Eigen::Matrix<scalar_t, 3, 1>::UnitZ()) *
-         Eigen::AngleAxis<scalar_t>(desiredBaseEulerAngles(1), Eigen::Matrix<scalar_t, 3, 1>::UnitY()) *
-         Eigen::AngleAxis<scalar_t>(desiredBaseEulerAngles(2), Eigen::Matrix<scalar_t, 3, 1>::UnitX());
+    quaternion_t quatDesired =
+        Eigen::AngleAxis<scalar_t>(desiredBaseEulerAngles(0), Eigen::Matrix<scalar_t, 3, 1>::UnitZ()) *
+        Eigen::AngleAxis<scalar_t>(desiredBaseEulerAngles(1), Eigen::Matrix<scalar_t, 3, 1>::UnitY()) *
+        Eigen::AngleAxis<scalar_t>(desiredBaseEulerAngles(2), Eigen::Matrix<scalar_t, 3, 1>::UnitX());
     quaternion_t check_q = tbai::core::rpy2quat(desiredBaseEulerAngles.reverse());  // reverse because we want rpy order
 
-    if(check_q.x() != quatDesired.x() || check_q.y() != quatDesired.y() || check_q.z() != quatDesired.z() || check_q.w() != quatDesired.w()) {
-        std::cout << "Desired quaternion: " << quatDesired.x() << " " << quatDesired.y() << " " << quatDesired.z() << " " << quatDesired.w() << std::endl;
-        std::cout << "Check quaternion: " << check_q.x() << " " << check_q.y() << " " << check_q.z() << " " << check_q.w() << std::endl;
+    if (check_q.x() != quatDesired.x() || check_q.y() != quatDesired.y() || check_q.z() != quatDesired.z() ||
+        check_q.w() != quatDesired.w()) {
+        std::cout << "Desired quaternion: " << quatDesired.x() << " " << quatDesired.y() << " " << quatDesired.z()
+                  << " " << quatDesired.w() << std::endl;
+        std::cout << "Check quaternion: " << check_q.x() << " " << check_q.y() << " " << check_q.z() << " "
+                  << check_q.w() << std::endl;
     }
 
     quaternion_t quatDiff =

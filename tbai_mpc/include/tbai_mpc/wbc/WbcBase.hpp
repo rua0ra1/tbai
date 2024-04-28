@@ -1,8 +1,13 @@
 #pragma once
 
+// clang-format off
+#include <pinocchio/fwd.hpp>
+// clang-format on
+
 #include <ocs2_anymal_models/QuadrupedCom.h>
 #include <ocs2_anymal_models/QuadrupedKinematics.h>
 #include <tbai_mpc/wbc/Task.hpp>
+#include <tbai_msgs/JointCommandArray.h>
 
 namespace switched_model {
 
@@ -11,6 +16,14 @@ class WbcBase {
     WbcBase(const std::string &configFile, const std::string &urdfString,
             const switched_model::ComModelBase<scalar_t> &comModel,
             const switched_model::KinematicsModelBase<scalar_t> &kinematics);
+
+    virtual ~WbcBase() = default;
+
+    virtual tbai_msgs::JointCommandArray getCommandMessage(scalar_t currentTime, const vector_t &currentState,
+                                                           const vector_t &currentInput, const size_t currentMode,
+                                                           const vector_t &desiredState, const vector_t &desiredInput,
+                                                           const size_t desiredMode,
+                                                           const vector_t &desiredJointAcceleration) = 0;
 
    protected:
     Task createDynamicsTask();

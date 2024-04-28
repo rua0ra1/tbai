@@ -1,8 +1,8 @@
 #include <iostream>
 
-#include <tbai_core/Utils.hpp>
 #include "tbai_static/StaticController.hpp"
 #include <ros/ros.h>
+#include <tbai_core/Utils.hpp>
 #include <tbai_core/config/YamlConfig.hpp>
 #include <tbai_core/control/CentralController.hpp>
 

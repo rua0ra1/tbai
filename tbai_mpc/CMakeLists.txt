@@ -47,6 +47,9 @@ add_library(${PROJECT_NAME}
     src/wbc/Task.cpp
     src/wbc/SqpSolver.cpp
     src/wbc/SqpWbc.cpp
+    src/wbc/HqpSolver.cpp
+    src/wbc/HqpWbc.cpp
+    src/wbc/Factory.cpp
     src/wbc/WbcBase.cpp
     src/utils/LoadConfig.cpp
     src/MpcController.cpp
