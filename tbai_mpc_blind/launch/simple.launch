@@ -106,5 +106,8 @@
         </rosparam>
         </node>
 
+        <node pkg="elevation_mapping" type="elevation_mapping" name="elevation_mapping" output="screen">
+        <rosparam command="load" file="$(find tbai_mpc)/config/elevation_mapping.yaml"/>
+        </node>
 
 </launch>

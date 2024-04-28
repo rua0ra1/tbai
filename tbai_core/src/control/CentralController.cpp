@@ -19,6 +19,7 @@ CentralController::CentralController(ros::NodeHandle &nh, const std::string &sta
     commandPublisher_ = nh.advertise<tbai_msgs::JointCommandArray>(commandTopic, 1);
     changeControllerSubscriber_ =
         nh.subscribe(changeControllerTopic, 1, &CentralController::changeControllerCallback, this);
+    fallbackControllerType_ = "SIT";
 }
 
 /*********************************************************************************************************************/
@@ -47,6 +48,13 @@ void CentralController::start() {
         return;
     }
 
+    // Check if fallback controller is available
+    if (checkForFallbackController()) {
+        containsFallbackController_ = true;
+    } else {
+        ROS_WARN("Fallback controller not found, not stability checking will be performed.");
+    }
+
     // Wait for initial state message
     stateSubscriberPtr_->waitTillInitialized();
 
@@ -57,8 +65,16 @@ void CentralController::start() {
 
     scalar_t lastTime = getCurrentTime();
     while (ros::ok()) {
+        // Keep track of time for stats
+        auto t1 = std::chrono::high_resolution_clock::now();
+
         // Spin once to allow ROS run callbacks
         ros::spinOnce();
+
+        // Check stability and switch to fallback controller if necessary
+        if (containsFallbackController_ && !activeController_->checkStability()) {
+            switchToFallbackController();
+        }
 
         // Compute current time and time since last call
         scalar_t currentTime = getCurrentTime();
@@ -71,7 +87,19 @@ void CentralController::start() {
         visualize();
 
         lastTime = currentTime;
+
+        auto t2 = std::chrono::high_resolution_clock::now();
         loopRate_.sleep();
+        auto t3 = std::chrono::high_resolution_clock::now();
+
+        // Compute timing stats
+        auto duration1 = std::chrono::duration_cast<std::chrono::microseconds>(t2 - t1).count();
+        auto duration2 = std::chrono::duration_cast<std::chrono::microseconds>(t3 - t2).count();
+        auto sleepTimePercentage = 100.0 * duration2 / (duration1 + duration2);
+
+        ROS_DEBUG_STREAM_THROTTLE(
+            5.0, "[CentralController] Loop duration: " << duration1 << " us, Sleep duration: " << duration2 << " us, "
+                                                       << "Sleep time percentage: " << sleepTimePercentage << "%");
     }
 }
 
@@ -83,6 +111,27 @@ void CentralController::addController(std::unique_ptr<Controller> controller, bo
     if (makeActive || activeController_ == nullptr) {
         activeController_ = controllers_.back().get();
     }
+}
+
+/*********************************************************************************************************************/
+/*********************************************************************************************************************/
+/*********************************************************************************************************************/
+bool CentralController::checkForFallbackController() {
+    for (const auto &controller : controllers_) {
+        if (controller->isSupported(fallbackControllerType_)) {
+            return true;
+        }
+    }
+    return false;
+}
+
+/*********************************************************************************************************************/
+/*********************************************************************************************************************/
+/*********************************************************************************************************************/
+void CentralController::switchToFallbackController() {
+    std_msgs::String msg;
+    msg.data = fallbackControllerType_;
+    changeControllerCallback(std_msgs::String::ConstPtr(new std_msgs::String(msg)));
 }
 
 /*********************************************************************************************************************/

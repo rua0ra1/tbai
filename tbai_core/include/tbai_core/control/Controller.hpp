@@ -57,6 +57,14 @@ class Controller {
      * @return scalar_t : rate in Hz
      */
     virtual scalar_t getRate() const = 0;
+
+    /**
+     * @brief Check if the controller is stable
+     *
+     * @return true : if controller is stable
+     * @return false : if controller is not stable
+     */
+    virtual bool checkStability() const = 0;
 };
 
 }  // namespace core

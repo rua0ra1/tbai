@@ -52,10 +52,10 @@
           output="screen" launch-prefix=""/>
 
     <node pkg="ocs2_legged_robot_ros" type="legged_robot_gait_command" name="legged_robot_gait_command"
-            output="screen" launch-prefix="konsole -e"/>
+            output="screen" launch-prefix="gnome-terminal --"/>
 
     <node pkg="ocs2_legged_robot_ros" type="legged_robot_target" name="legged_robot_target"
-          output="screen" launch-prefix="konsole -e"/>
+          output="screen" launch-prefix="gnome-terminal --"/>
 
     <arg name="rvizconfig" default="$(find ocs2_legged_robot_ros)/rviz/legged_robot.rviz" />
       <node pkg="rviz" type="rviz" name="rviz" args="-d $(arg rvizconfig)" output="screen" />   

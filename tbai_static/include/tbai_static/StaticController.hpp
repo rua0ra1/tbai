@@ -35,6 +35,8 @@ class StaticController : public tbai::core::Controller {
 
     scalar_t getRate() const override;
 
+    bool checkStability() const override { return true; }
+
    private:
     /** Load settings from config file specified by ROS param*/
     void loadSettings(const std::string &configRosParam);

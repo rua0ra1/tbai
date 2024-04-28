@@ -45,7 +45,7 @@
     <node pkg="tbai_mpc" type="anymal_mpc_node" name="anymal_mpc_node" output="screen"/>
 
     <node pkg="ocs2_anymal_commands" type="gait_command_node" name="gait_command_node"
-          output="screen" launch-prefix="konsole -e"/>
+          output="screen" launch-prefix="gnome-terminal --"/>
 
     <!-- Launch convex decomposition node -->
         <include file="$(find convex_plane_decomposition_ros)/launch/convex_plane_decomposition.launch">

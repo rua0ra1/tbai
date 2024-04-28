@@ -39,6 +39,8 @@ class MpcController final : public tbai::core::Controller {
 
     scalar_t getRate() const override { return 200.0; }
 
+    bool checkStability() const override;
+
    private:
     std::shared_ptr<tbai::core::StateSubscriber> stateSubscriberPtr_;
 

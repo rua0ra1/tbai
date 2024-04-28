@@ -65,29 +65,6 @@ void MpcController::spinOnceReferenceThread() {
 }
 
 tbai_msgs::JointCommandArray MpcController::getCommandMessage(scalar_t currentTime, scalar_t dt) {
-    // std::vector<std::string> jointNames = {"LF_HAA", "LF_HFE", "LF_KFE", "LH_HAA", "LH_HFE", "LH_KFE",
-    //                                        "RF_HAA", "RF_HFE", "RF_KFE", "RH_HAA", "RH_HFE", "RH_KFE"};
-
-    // std::vector<scalar_t> jointAngles = {0.0, 0.4, -0.8, 0.0, -0.4, 0.8, 0.0, 0.4, -0.8, 0.0, -0.4, 0.8};
-
-    // tbai_msgs::JointCommandArray jointCommandArray;
-    // jointCommandArray.joint_commands.resize(12);
-    // for (int i = 0; i < 12; ++i) {
-    //     auto &command = jointCommandArray.joint_commands[i];
-    //     command.joint_name = jointNames[i];
-    //     command.desired_position = jointAngles[i];
-    //     command.desired_velocity = 0.0;
-    //     command.torque_ff = 0.0;
-    //     command.kp = 400;
-    //     command.kd = 10;
-    // }
-
-    // std::cout << "MPC controller" << std::endl;
-    // auto obs = generateSystemObservation();
-    // std::cout << obs << std::endl;
-
-    // return jointCommandArray;
-
     mrt_.spinMRT();
     mrt_.updatePolicy();
 
@@ -138,6 +115,19 @@ void MpcController::referenceThread() {
         referenceTrajectoryGeneratorPtr_->publishReferenceTrajectory();
         rate.sleep();
     }
+}
+
+bool MpcController::checkStability() const {
+    const auto &state = stateSubscriberPtr_->getLatestRbdState();
+    scalar_t roll = state[0];
+    if (roll >= 1.57 || roll <= -1.57) {
+        return false;
+    }
+    scalar_t pitch = state[1];
+    if (pitch >= 1.57 || pitch <= -1.57) {
+        return false;
+    }
+    return true;
 }
 
 void MpcController::visualize() {
@@ -205,7 +195,8 @@ ocs2::SystemObservation MpcController::generateSystemObservation() const {
 
     // Set observation time
     ocs2::SystemObservation observation;
-    observation.time = stateSubscriberPtr_->getLatestRbdStamp().toSec() - initTime_;  // TODO: Replace with actual observation stamp
+    observation.time =
+        stateSubscriberPtr_->getLatestRbdStamp().toSec() - initTime_;  // TODO: Replace with actual observation stamp
 
     // Set mode
     observation.mode = switched_model::stanceLeg2ModeNumber(stateSubscriberPtr_->getContactFlags());

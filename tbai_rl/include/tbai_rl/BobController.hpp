@@ -50,6 +50,8 @@ class BobController : public tbai::core::Controller {
 
     scalar_t getRate() const override { return 50.0; }
 
+    bool checkStability() const override;
+
    private:
     std::shared_ptr<tbai::core::StateSubscriber> stateSubscriberPtr_;
 

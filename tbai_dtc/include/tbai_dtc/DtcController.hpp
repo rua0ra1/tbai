@@ -39,6 +39,8 @@ class DtcController final : public tbai::core::Controller {
 
     scalar_t getRate() const override { return 50.0; }
 
+    bool checkStability() const override { return true; }
+
    private:
     // Torchscript model
     torch::jit::script::Module dtcModel_;

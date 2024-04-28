@@ -93,6 +93,13 @@ class CentralController {
     ros::Publisher commandPublisher_;
     ros::Subscriber changeControllerSubscriber_;
 
+    /** Whether or not the SIT controller is present */
+    bool containsFallbackController_ = false;
+
+    bool checkForFallbackController();
+    void switchToFallbackController();
+    std::string fallbackControllerType_;
+
     scalar_t initTime_;
 };
 
