@@ -3,11 +3,72 @@
 #include "ocs2_switched_model_interface/core/SwitchedModel.h"
 #include <grid_map_ros/grid_map_ros.hpp>
 #include <ocs2_msgs/mpc_target_trajectories.h>
+#include <ocs2_switched_model_interface/core/MotionPhaseDefinition.h>
 #include <ocs2_switched_model_interface/core/Rotations.h>
+#include <ocs2_switched_model_interface/terrain/PlaneFitting.h>
+#include <ocs2_switched_model_msgs/local_terrain.h>
 #include <tbai_core/config/YamlConfig.hpp>
 namespace tbai {
 namespace mpc {
 namespace reference {
+
+/*********************************************************************************************************************/
+/*********************************************************************************************************************/
+/*********************************************************************************************************************/
+LocalTerrainEstimator::LocalTerrainEstimator() {
+    // Get ros node handle
+    ros::NodeHandle nodeHandle;
+
+    std::string urdfString;
+    nodeHandle.getParam("/robot_description", urdfString);
+
+    // load frame declaration file
+    std::string frameDeclarationFile =
+        "/home/kuba/fun/ocs2_project/src/ocs2_fun/ocs2_anymal_robot/config/frame_declarations.info";
+
+    // Load kinematics model
+    kinematicsModel_ = getAnymalKinematics(anymal::frameDeclarationFromFile(frameDeclarationFile), urdfString);
+
+    lastFootholds_.resize(4);
+    for (size_t i = 0; i < 4; i++) {
+        lastFootholds_[i] = vector3_t::Zero();
+    }
+}
+
+/*********************************************************************************************************************/
+/*********************************************************************************************************************/
+/*********************************************************************************************************************/
+void LocalTerrainEstimator::updateFootholds(const ocs2::SystemObservation &observation) {
+    // Base position
+    auto basePose = getBasePose(observation.state);
+
+    // Joint positions
+    auto jointPositions = getJointPositions(observation.state);
+
+    // Compute forward kinematics
+    auto footholds = kinematicsModel_->feetPositionsInOriginFrame(basePose, jointPositions);
+
+    // contact flags
+    contact_flag_t contactFlags = modeNumber2StanceLeg(observation.mode);
+
+    // Update last footholds
+    for (size_t i = 0; i < 4; i++) {
+        if (contactFlags[i]) {
+            lastFootholds_[i] = footholds[i];
+        }
+    }
+
+    updateLocalTerrainEstimate(lastFootholds_);
+}
+
+/*********************************************************************************************************************/
+/*********************************************************************************************************************/
+/*********************************************************************************************************************/
+void LocalTerrainEstimator::updateLocalTerrainEstimate(const std::vector<vector3_t> &footholds) {
+    const auto normalAndPosition = estimatePlane(footholds);
+    terrainPlane_ = TerrainPlane(normalAndPosition.position,
+                                 orientationWorldToTerrainFromSurfaceNormalInWorld(normalAndPosition.normal));
+}
 
 /*********************************************************************************************************************/
 /*********************************************************************************************************************/
@@ -37,6 +98,7 @@ ReferenceTrajectoryGenerator::ReferenceTrajectoryGenerator(const std::string &ta
     blind_ = fromRosConfig<bool>("mpc_controller/reference_trajectory/blind");
 
     velocityGeneratorPtr_ = tbai::reference::getReferenceVelocityGeneratorUnique(nh);
+    terrainPublisher_ = nh.advertise<ocs2_switched_model_msgs::local_terrain>("/local_terrain", 1, false);
 }
 
 /*********************************************************************************************************************/
@@ -85,8 +147,8 @@ BaseReferenceState ReferenceTrajectoryGenerator::getBaseReferenceState() {
 /*********************************************************************************************************************/
 /*********************************************************************************************************************/
 /*********************************************************************************************************************/
-TerrainPlane &ReferenceTrajectoryGenerator::getTerrainPlane() {
-    return localTerrain_;
+const TerrainPlane &ReferenceTrajectoryGenerator::getTerrainPlane() const {
+    return localTerrainEstimator_.getPlane();
 }
 
 /*********************************************************************************************************************/
@@ -154,6 +216,33 @@ void ReferenceTrajectoryGenerator::loadSettings(const std::string &targetCommand
 void ReferenceTrajectoryGenerator::observationCallback(const ocs2_msgs::mpc_observation::ConstPtr &msg) {
     std::lock_guard<std::mutex> lock(observationMutex_);
     latestObservation_ = ocs2::ros_msg_conversions::readObservationMsg(*msg);
+
+    // Update local terrain estimate if no terrain map is available
+    if (!terrainMapPtr_) {
+        localTerrainEstimator_.updateFootholds(latestObservation_);
+
+        // Publish local terrain estimate
+        ocs2_switched_model_msgs::local_terrain localTerrainMsg;
+
+        vector_t position = localTerrainEstimator_.getPlane().positionInWorld;
+        localTerrainMsg.position.push_back(position[0]);
+        localTerrainMsg.position.push_back(position[1]);
+        localTerrainMsg.position.push_back(position[2]);
+
+        matrix_t rotation = localTerrainEstimator_.getPlane().orientationWorldToTerrain;
+        localTerrainMsg.rotation.push_back(rotation(0, 0));
+        localTerrainMsg.rotation.push_back(rotation(0, 1));
+        localTerrainMsg.rotation.push_back(rotation(0, 2));
+        localTerrainMsg.rotation.push_back(rotation(1, 0));
+        localTerrainMsg.rotation.push_back(rotation(1, 1));
+        localTerrainMsg.rotation.push_back(rotation(1, 2));
+        localTerrainMsg.rotation.push_back(rotation(2, 0));
+        localTerrainMsg.rotation.push_back(rotation(2, 1));
+        localTerrainMsg.rotation.push_back(rotation(2, 2));
+
+        terrainPublisher_.publish(localTerrainMsg);
+    }
+
     firstObservationReceived_ = true;
 }
 
