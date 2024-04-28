@@ -69,7 +69,7 @@ class DtcController final : public tbai::core::Controller {
     pinocchio::Model model_;
     pinocchio::Data data_;
 
-    scalar_t mpcRate_ = 50.5;
+    scalar_t mpcRate_ = 2.5;
     scalar_t timeSinceLastMpcUpdate_ = 1e5;
 
     std::unique_ptr<ocs2::legged_robot::LeggedRobotInterface> leggedInterface_;

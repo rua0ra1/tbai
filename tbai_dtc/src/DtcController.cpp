@@ -101,6 +101,7 @@ DtcController::DtcController(const std::shared_ptr<tbai::core::StateSubscriber> 
     }
 
     action_ = torch::zeros({12});
+    mpcRate_ = 20.0;
 }
 
 void DtcController::publishReference(scalar_t currentTime, scalar_t dt) {
@@ -387,8 +388,10 @@ ocs2::SystemObservation DtcController::generateSystemObservation() const {
     // Set mode
     observation.mode = 14;  // This is not important
 
-    vector3_t rpy = (vector3_t() << rbdState(0), rbdState(1), rbdState(2)).finished();
-    matrix3_t R_world_base = tbai::core::rpy2mat(rpy);
+    vector3_t rpyocs2 = (vector3_t() << rbdState(0), rbdState(1), rbdState(2)).finished();
+    // matrix3_t R_world_base = tbai::core::rpy2mat(rpy);
+    matrix3_t R_world_base = tbai::core::ocs2rpy2quat(rpyocs2).toRotationMatrix();
+    vector3_t rpy = tbai::core::mat2rpy(R_world_base);
     matrix3_t R_base_world = R_world_base.transpose();
 
     vector_t state = vector_t().setZero(24);
@@ -470,7 +473,7 @@ void DtcController::computeObservation(const ocs2::PrimalSolution &policy, scala
 
     // Compute projected gravity
     auto rpy = state.segment<3>(0);
-    auto R_world_base = tbai::core::rpy2mat(rpy);
+    auto R_world_base = tbai::core::ocs2rpy2quat(rpy).toRotationMatrix();
     auto R_base_world = R_world_base.transpose();
     obsProjectedGravity_ = R_base_world * vector3_t(0, 0, -1.0);
 
@@ -497,8 +500,8 @@ void DtcController::computeObservation(const ocs2::PrimalSolution &policy, scala
     // Compute desired footholds
     computeDesiredFootholds(time);
 
-    computeCurrentDesiredJointAngles(time + 1 / getRate());  // TODO: time + some time delta
-    computeBaseObservation(time + 1 / getRate());            // TODO: time + some time delta ?????
+    computeCurrentDesiredJointAngles(time + 1/50);  // TODO: time + some time delta
+    computeBaseObservation(time + 1/50);            // TODO: time + some time delta ?????
 }
 
 void DtcController::computeCommandObservation(scalar_t time) {
@@ -554,9 +557,11 @@ void DtcController::computeDesiredFootholds(scalar_t time) {
 
     // current state
     auto currentRbdState = stateSubscriberPtr_->getLatestRbdState();
-    auto rpy = currentRbdState.segment<3>(0);
+    auto rpy = tbai::core::mat2rpy(tbai::core::ocs2rpy2quat(currentRbdState.segment<3>(0)).toRotationMatrix());
     auto currentJointAngles = currentRbdState.segment<12>(12);
     // set roll and pitch to zero
+
+
     rpy[0] = 0.0;
     rpy[1] = 0.0;
     auto R_world_base = tbai::core::rpy2mat(rpy);
@@ -589,6 +594,8 @@ void DtcController::computeDesiredFootholds(scalar_t time) {
         vector3_t temp = R_base_world * (positions[i] - basePosition);
         obsDesiredFootholds_.segment<2>(2 * i) = temp.head<2>();  // take only x and y
     }
+
+    std::cout << obsDesiredFootholds_.transpose() << std::endl;
 }
 
 void DtcController::computeCurrentDesiredJointAngles(scalar_t time) {
@@ -601,17 +608,17 @@ void DtcController::computeCurrentDesiredJointAngles(scalar_t time) {
     auto jointAngles = state.segment<12>(12);
     obsCurrentDesiredJointAngles_ = jointAngles - defaultDofPositions_;
     kk_ = defaultDofPositions_;
-    kk_ = jointAngles;
 }
 
 void DtcController::computeBaseObservation(scalar_t time) {
     auto &solution = mrt_.getPolicy();
     auto state = stateSubscriberPtr_->getLatestRbdState();
     vector3_t rpy = state.segment<3>(0);
-    matrix3_t R_world_base = tbai::core::rpy2mat(rpy);
+    matrix3_t R_world_base = tbai::core::ocs2rpy2quat(rpy).toRotationMatrix();
     matrix3_t R_base_world = R_world_base.transpose();
-    quaternion_t quatCurrent = tbai::core::rpy2quat(rpy);
+    quaternion_t quatCurrent = tbai::core::ocs2rpy2quat(rpy);
 
+    vector3_t rpyZero = tbai::core::mat2rpy(R_world_base);
     rpy[0] = 0.0;
     rpy[1] = 0.0;
     matrix3_t R_world_base_zero = tbai::core::rpy2mat(rpy);
@@ -627,8 +634,16 @@ void DtcController::computeBaseObservation(scalar_t time) {
     // Desired base orientation
     vector3_t desiredBaseEulerAngles =
         ocs2::LinearInterpolation::interpolate(time, solution.timeTrajectory_, solution.stateTrajectory_).segment<3>(9);
-    quaternion_t quatDesired =
-        tbai::core::rpy2quat(desiredBaseEulerAngles.reverse());  // reverse because we want rpy order
+    quaternion_t quatDesired = Eigen::AngleAxis<scalar_t>(desiredBaseEulerAngles(0), Eigen::Matrix<scalar_t, 3, 1>::UnitZ()) *
+         Eigen::AngleAxis<scalar_t>(desiredBaseEulerAngles(1), Eigen::Matrix<scalar_t, 3, 1>::UnitY()) *
+         Eigen::AngleAxis<scalar_t>(desiredBaseEulerAngles(2), Eigen::Matrix<scalar_t, 3, 1>::UnitX());
+    quaternion_t check_q = tbai::core::rpy2quat(desiredBaseEulerAngles.reverse());  // reverse because we want rpy order
+
+    if(check_q.x() != quatDesired.x() || check_q.y() != quatDesired.y() || check_q.z() != quatDesired.z() || check_q.w() != quatDesired.w()) {
+        std::cout << "Desired quaternion: " << quatDesired.x() << " " << quatDesired.y() << " " << quatDesired.z() << " " << quatDesired.w() << std::endl;
+        std::cout << "Check quaternion: " << check_q.x() << " " << check_q.y() << " " << check_q.z() << " " << check_q.w() << std::endl;
+    }
+
     quaternion_t quatDiff =
         quatDesired *
         quatCurrent.conjugate();  // conjugate is enough, the quaternion is normalized <=> conjugate == inverse
