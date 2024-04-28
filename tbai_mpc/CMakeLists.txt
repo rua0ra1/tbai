@@ -32,8 +32,8 @@ find_package(catkin REQUIRED COMPONENTS
 
 catkin_package(
   INCLUDE_DIRS include
-  LIBRARIES tbai_mpc 
- CATKIN_DEPENDS  
+  LIBRARIES tbai_mpc
+ CATKIN_DEPENDS ocs2_anymal_mpc tbai_reference
 )
 
 include_directories(
