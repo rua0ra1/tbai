@@ -136,7 +136,7 @@ void StaticController::publishOdomBaseTransforms(const vector_t &currentState, c
     odomBaseTransform.transform.translation.z = currentState(5);
 
     // Orientation
-    tbai::quaternion_t quat = tbai::core::rpy2quat(currentState.head<3>());
+    tbai::quaternion_t quat = tbai::core::ocs2rpy2quat(currentState.head<3>());
     odomBaseTransform.transform.rotation.x = quat.x();
     odomBaseTransform.transform.rotation.y = quat.y();
     odomBaseTransform.transform.rotation.z = quat.z();
