@@ -49,10 +49,9 @@ void CentralController::start() {
     }
 
     // Check if fallback controller is available
-    if (checkForFallbackController()) {
-        containsFallbackController_ = true;
-    } else {
-        ROS_WARN("Fallback controller not found, not stability checking will be performed.");
+    containsFallbackController_ = checkForFallbackController();
+    if(!containsFallbackController_) {
+        ROS_WARN("Fallback controller not found, no stability checking will be performed.");
     }
 
     // Wait for initial state message
