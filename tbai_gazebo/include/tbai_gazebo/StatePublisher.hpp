@@ -8,6 +8,7 @@
 #include <gazebo/gazebo.hh>
 #include <gazebo/physics/physics.hh>
 #include <ros/ros.h>
+#include <std_msgs/Bool.h>
 #include <tbai_core/Types.hpp>
 
 namespace gazebo {
@@ -37,6 +38,9 @@ class StatePublisher : public ModelPlugin {
     bool firstUpdate_ = true;
 
     double lastYaw_ = 0.0;
+
+    std::array<bool, 4> contactFlags_;
+    std::array<ros::Subscriber, 4> contactSubscribers_;
 
     // last yaw angle
     std::vector<tbai::scalar_t> lastJointAngles_;

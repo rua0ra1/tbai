@@ -350,6 +350,44 @@
     <hackBaseline>0</hackBaseline>
     </plugin>
 </sensor>
+
+</gazebo>
+
+<!-- Add contact sensors -->
+<gazebo reference="LF_FOOT">
+    <sensor name="lf_foot_contact" type="contact">
+    <plugin name="lf_contact_plugin" filename="libContactSensor.so"/>
+    <contact>
+        <collision>LF_SHANK_fixed_joint_lump__LF_FOOT_collision_3</collision>
+    </contact>
+    </sensor>
+</gazebo>
+
+<gazebo reference="RF_FOOT">
+    <sensor name="rf_foot_contact" type="contact">
+    <plugin name="rf_contact_plugin" filename="libContactSensor.so"/>
+    <contact>
+        <collision>RF_SHANK_fixed_joint_lump__RF_FOOT_collision_3</collision>
+    </contact>
+    </sensor>
+</gazebo>
+
+<gazebo reference="LH_FOOT">
+    <sensor name="lh_foot_contact" type="contact">
+    <plugin name="lh_contact_plugin" filename="libContactSensor.so"/>
+    <contact>
+        <collision>LH_SHANK_fixed_joint_lump__LH_FOOT_collision_3</collision>
+    </contact>
+    </sensor>
+</gazebo>
+
+<gazebo reference="RH_FOOT">
+    <sensor name="rh_foot_contact" type="contact">
+    <plugin name="rh_contact_plugin" filename="libContactSensor.so"/>
+    <contact>
+        <collision>RH_SHANK_fixed_joint_lump__RH_FOOT_collision_3</collision>
+    </contact>
+    </sensor>
 </gazebo>
 
 </robot>

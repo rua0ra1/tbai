@@ -44,8 +44,17 @@ void StatePublisher::Load(physics::ModelPtr robot, sdf::ElementPtr sdf) {
     rate_ = config.get<double>("state_publisher/update_rate");
     period_ = 1.0 / rate_;
 
+    // Setup contact flags - TODO(lnotspotl): This is a bit hacky, remove hardcoding!
+    std::vector<std::string> contactTopics = {"/lf_foot_contact", "/rf_foot_contact", "/lh_foot_contact",
+                                              "/rh_foot_contact"};
+    for (int i = 0; i < contactTopics.size(); ++i) {
+        contactFlags_[i] = false;
+        auto callback = [this, i](const std_msgs::Bool::ConstPtr &msg) { contactFlags_[i] = msg->data; };
+        contactSubscribers_[i] = nh.subscribe<std_msgs::Bool>(contactTopics[i], 1, callback);
+    }
+
     ROS_INFO_STREAM("[StatePublisher] Loaded StatePublisher plugin");
-}
+}  // namespace gazebo
 
 /*********************************************************************************************************************/
 /*********************************************************************************************************************/
@@ -146,6 +155,9 @@ void StatePublisher::OnUpdate() {
 
     // Observation time
     message.stamp = ros::Time::now();
+
+    // Contact flags
+    std::copy(contactFlags_.begin(), contactFlags_.end(), message.contact_flags.begin());
 
     lastOrientationBase2World_ = R_base_world;
     lastPositionBase_ = basePosition;

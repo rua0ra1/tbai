@@ -8,6 +8,10 @@
 # Joint velocities - 12
 #
 # In total, there are (3+3+3+3+12+12) = 36 values in the message.
+# The message also includes contact information for the feet.
+# There are four feet, each contains a single contact flag
+# The feet are ordered as follows: LF, RF, LH, RH
 
 time stamp
 float64[36] rbd_state
+bool[4] contact_flags

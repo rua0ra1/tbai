@@ -40,6 +40,17 @@ class StateSubscriber {
      */
     inline const ros::Time &getLatestRbdStamp() { return stateMessage_->stamp; }
 
+    /**
+     * @brief Get the Contact Flags
+     *
+     * @return std::arrat<bool, 4> : contact flags
+     */
+    inline std::array<bool, 4> getContactFlags() {
+        std::array<bool, 4> contactFlags;
+        std::copy(stateMessage_->contact_flags.begin(), stateMessage_->contact_flags.end(), contactFlags.begin());
+        return contactFlags;
+    }
+
    private:
     /** State message callback */
     void stateMessageCallback(const tbai_msgs::RbdState::Ptr &msg);

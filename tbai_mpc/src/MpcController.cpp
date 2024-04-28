@@ -208,9 +208,7 @@ ocs2::SystemObservation MpcController::generateSystemObservation() const {
     observation.time = stateSubscriberPtr_->getLatestRbdStamp().toSec() - initTime_;  // TODO: Replace with actual observation stamp
 
     // Set mode
-    std::array<bool, 4> contacts = {false, false, false, false};
-    observation.mode = switched_model::stanceLeg2ModeNumber(contacts);
-    observation.mode = 14;
+    observation.mode = switched_model::stanceLeg2ModeNumber(stateSubscriberPtr_->getContactFlags());
 
     // Set state
     observation.state = rbdState.head<3 + 3 + 3 + 3 + 12>();

@@ -11,6 +11,7 @@
   <buildtool_depend>catkin</buildtool_depend>
   <depend>tbai_core</depend>
   <depend>tbai_msgs</depend>
+  <depend>std_msgs</depend>
   <depend>ocs2_robotic_tools</depend>
   <depend>controller_interface</depend>
   <depend>hardware_interface</depend>
