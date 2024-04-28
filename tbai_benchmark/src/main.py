@@ -34,9 +34,14 @@ class Robot:
 
         yaw_diff = (desired_yaw - self.yaw + np.pi) % (2*np.pi) - np.pi
 
+
+        if yaw_diff > np.pi / 3 or yaw_diff < -np.pi / 3:
+            lin_vel = 0.0
+        else:
+            lin_vel = 0.4
         command = Twist()
-        command.linear.x = 1.0
-        command.angular.z = np.clip(0.5 * (yaw_diff), -0.5, 0.5)
+        command.linear.x = lin_vel
+        command.angular.z = np.clip(0.5 * (yaw_diff), -0.7, 0.7)
         return command
 
     def update_goal(self, track):
@@ -61,8 +66,14 @@ class Robot:
 
 def main():
 
-    Waypoints = [Waypoint(0, 0), Waypoint(3, 0), Waypoint(3, 3), Waypoint(5,5), Waypoint(0, 3)]
-    track = Track(Waypoints)
+    # Just copy-pasted waypoint locations from world sdf
+    t = ["0.037268 0.557564", "-8.99859 0.429756", "-12.0103 1.39205", "-12.0559 2.95944", 
+         "-10.6984 2.95193", "-0.032725 2.93892", "1.64538 3.79553", 
+         "1.0071 4.95789", "-10.4925 5.02624", "-13.0383 6.07977",
+         "-10.1211 7.49309", "-0.030184 7.41345"]
+
+    waypoints = [Waypoint(float(x), float(y)) for s in t for x, y in [s.split()]]
+    track = Track(waypoints)
     robot = Robot(0, 0, 0, 0.4)
 
     rospy.init_node("tbai_benchmark")

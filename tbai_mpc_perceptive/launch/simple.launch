@@ -47,6 +47,10 @@
     <node pkg="ocs2_anymal_commands" type="gait_command_node" name="gait_command_node"
           output="screen" launch-prefix="gnome-terminal --"/>
 
+    <!-- Start Rviz visualizer -->
+    <arg name="rvizconfig" default="$(find tbai_mpc_perceptive)/launch/anymal_d.rviz" />
+    <node pkg="rviz" type="rviz" name="rviz" args="-d $(arg rvizconfig)" output="screen" />
+
     <!-- Launch convex decomposition node -->
         <include file="$(find convex_plane_decomposition_ros)/launch/convex_plane_decomposition.launch">
           <arg name="parameter_file" default="$(find tbai_mpc)/config/convex_plane_decomposition_parameters.yaml"/>

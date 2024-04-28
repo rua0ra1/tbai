@@ -145,10 +145,10 @@
       <pose>-0.718261 -0.700054 0 0 -0 0</pose>
     </model>
     <state world_name='default'>
-      <sim_time>527 937000000</sim_time>
-      <real_time>394 421987481</real_time>
-      <wall_time>1713206260 9669390</wall_time>
-      <iterations>326962</iterations>
+      <sim_time>610 7000000</sim_time>
+      <real_time>83 141615900</real_time>
+      <wall_time>1714334843 292529091</wall_time>
+      <iterations>82070</iterations>
       <model name='box_clone'>
         <pose>-1.9971 0.496665 0 0 0.212574 0</pose>
         <scale>1.99786 3.79559 0.334751</scale>
@@ -269,6 +269,126 @@
           <wrench>0 0 0 0 -0 0</wrench>
         </link>
       </model>
+      <model name='wp1'>
+        <pose>0.037268 0.557564 -0.015307 0 -0.017033 0</pose>
+        <scale>0.184567 0.070453 1</scale>
+        <link name='link'>
+          <pose>0.037268 0.557564 -0.015307 0 -0.017033 0</pose>
+          <velocity>0 0 0 0 -0 0</velocity>
+          <acceleration>0 0 0 0 -0 0</acceleration>
+          <wrench>0 0 0 0 -0 0</wrench>
+        </link>
+      </model>
+      <model name='wp2'>
+        <pose>-8.99859 0.429756 -0.015307 0 -0.017033 0</pose>
+        <scale>1 1 1</scale>
+        <link name='link'>
+          <pose>-8.99859 0.429756 -0.015307 0 -0.017033 0</pose>
+          <velocity>0 0 0 0 -0 0</velocity>
+          <acceleration>0 0 0 0 -0 0</acceleration>
+          <wrench>0 0 0 0 -0 0</wrench>
+        </link>
+      </model>
+      <model name='wp3'>
+        <pose>-12.0103 1.39205 -0.015307 0 -0.017033 0</pose>
+        <scale>1 1 1</scale>
+        <link name='link'>
+          <pose>-12.0103 1.39205 -0.015307 0 -0.017033 0</pose>
+          <velocity>0 0 0 0 -0 0</velocity>
+          <acceleration>0 0 0 0 -0 0</acceleration>
+          <wrench>0 0 0 0 -0 0</wrench>
+        </link>
+      </model>
+      <model name='wp4'>
+        <pose>-12.0559 2.95944 -0.015307 0 -0.017033 0</pose>
+        <scale>1 1 1</scale>
+        <link name='link'>
+          <pose>-12.0559 2.95944 -0.015307 0 -0.017033 0</pose>
+          <velocity>0 0 0 0 -0 0</velocity>
+          <acceleration>0 0 0 0 -0 0</acceleration>
+          <wrench>0 0 0 0 -0 0</wrench>
+        </link>
+      </model>
+      <model name='wp5'>
+        <pose>-10.6984 2.95193 -0.015307 0 -0.017033 0</pose>
+        <scale>1 1 1</scale>
+        <link name='link'>
+          <pose>-10.6984 2.95193 -0.015307 0 -0.017033 0</pose>
+          <velocity>0 0 0 0 -0 0</velocity>
+          <acceleration>0 0 0 0 -0 0</acceleration>
+          <wrench>0 0 0 0 -0 0</wrench>
+        </link>
+      </model>
+      <model name='wp6'>
+        <pose>-0.032725 2.93892 -0.015307 0 -0.017033 0</pose>
+        <scale>1 1 1</scale>
+        <link name='link'>
+          <pose>-0.032725 2.93892 -0.015307 0 -0.017033 0</pose>
+          <velocity>0 0 0 0 -0 0</velocity>
+          <acceleration>0 0 0 0 -0 0</acceleration>
+          <wrench>0 0 0 0 -0 0</wrench>
+        </link>
+      </model>
+      <model name='wp7'>
+        <pose>1.64538 3.79553 -0.015307 0 -0.017033 0</pose>
+        <scale>1 1 1</scale>
+        <link name='link'>
+          <pose>1.64538 3.79553 -0.015307 0 -0.017033 0</pose>
+          <velocity>0 0 0 0 -0 0</velocity>
+          <acceleration>0 0 0 0 -0 0</acceleration>
+          <wrench>0 0 0 0 -0 0</wrench>
+        </link>
+      </model>
+      <model name='wp8'>
+        <pose>1.0071 4.95789 -0.015307 0 -0.017033 0</pose>
+        <scale>1 1 1</scale>
+        <link name='link'>
+          <pose>1.0071 4.95789 -0.015307 0 -0.017033 0</pose>
+          <velocity>0 0 0 0 -0 0</velocity>
+          <acceleration>0 0 0 0 -0 0</acceleration>
+          <wrench>0 0 0 0 -0 0</wrench>
+        </link>
+      </model>
+      <model name='wp9'>
+        <pose>-10.4925 5.02624 -0.015307 0 -0.017033 0</pose>
+        <scale>1 1 1</scale>
+        <link name='link'>
+          <pose>-10.4925 5.02624 -0.015307 0 -0.017033 0</pose>
+          <velocity>0 0 0 0 -0 0</velocity>
+          <acceleration>0 0 0 0 -0 0</acceleration>
+          <wrench>0 0 0 0 -0 0</wrench>
+        </link>
+      </model>
+      <model name='wp10'>
+        <pose>-13.0383 6.07977 -0.015307 0 -0.017033 0</pose>
+        <scale>1 1 1</scale>
+        <link name='link'>
+          <pose>-13.0383 6.07977 -0.015307 0 -0.017033 0</pose>
+          <velocity>0 0 0 0 -0 0</velocity>
+          <acceleration>0 0 0 0 -0 0</acceleration>
+          <wrench>0 0 0 0 -0 0</wrench>
+        </link>
+      </model>
+      <model name='wp11'>
+        <pose>-10.1211 7.49309 -0.015307 0 -0.017033 0</pose>
+        <scale>1 1 1</scale>
+        <link name='link'>
+          <pose>-10.1211 7.49309 -0.015307 0 -0.017033 0</pose>
+          <velocity>0 0 0 0 -0 0</velocity>
+          <acceleration>0 0 0 0 -0 0</acceleration>
+          <wrench>0 0 0 0 -0 0</wrench>
+        </link>
+      </model>
+      <model name='wp12'>
+        <pose>-0.030184 7.41345 -0.015307 0 -0.017033 0</pose>
+        <scale>1 1 1</scale>
+        <link name='link'>
+          <pose>-0.030184 7.41345 -0.015307 0 -0.017033 0</pose>
+          <velocity>0 0 0 0 -0 0</velocity>
+          <acceleration>0 0 0 0 -0 0</acceleration>
+          <wrench>0 0 0 0 -0 0</wrench>
+        </link>
+      </model>
       <model name='box_clone_clone_2'>
         <pose>-7.44368 0.355255 -0.012815 0 -0.432808 0</pose>
         <scale>1 1 1</scale>
@@ -310,57 +430,57 @@
         </link>
       </model>
       <model name='lumber_4x4x40'>
-        <pose>-3.25575 5.23237 0.0443 0.000457 3.4e-05 -0.010263</pose>
+        <pose>-3.25575 5.23237 0.0443 0.000443 3.2e-05 -0.010269</pose>
         <scale>1 1 1</scale>
         <link name='link'>
-          <pose>-3.25575 5.23237 0.0443 0.000457 3.4e-05 -0.010263</pose>
+          <pose>-3.25575 5.23237 0.0443 0.000443 3.2e-05 -0.010269</pose>
           <velocity>0 0 0 0 -0 0</velocity>
-          <acceleration>0.011007 0.110571 0.246414 -2.67786 0.278074 0.006293</acceleration>
-          <wrench>0.03016 0.302965 0.675173 0 -0 0</wrench>
+          <acceleration>0.040373 0.02726 -0.789855 -1.16441 0.980103 0.001346</acceleration>
+          <wrench>0.110622 0.074691 -2.1642 0 -0 0</wrench>
         </link>
       </model>
       <model name='lumber_4x4x40_clone'>
-        <pose>-2.92061 5.02745 0.132679 -0.000171 -0.001318 1.76465</pose>
+        <pose>-2.92073 5.02747 0.132695 -0.000187 -0.001303 1.76432</pose>
         <scale>1 1 1</scale>
         <link name='link'>
-          <pose>-2.92061 5.02745 0.132679 -0.000171 -0.001318 1.76465</pose>
+          <pose>-2.92073 5.02747 0.132695 -0.000187 -0.001303 1.76432</pose>
           <velocity>0 0 0 0 -0 0</velocity>
-          <acceleration>-0.485504 0.209188 -0.617901 3.10841 -1.47875 -1.04721</acceleration>
-          <wrench>-1.33028 0.573175 -1.69305 0 -0 0</wrench>
+          <acceleration>1.24842 0.042376 1.39194 -0.325225 1.51074 1.71782</acceleration>
+          <wrench>3.42068 0.116111 3.81392 0 -0 0</wrench>
         </link>
       </model>
       <model name='lumber_4x4x40_clone_0'>
-        <pose>-3.37359 4.88703 0.044038 0.001327 0.000183 0.005798</pose>
+        <pose>-3.37359 4.88702 0.044034 0.001311 0.000188 0.005902</pose>
         <scale>1 1 1</scale>
         <link name='link'>
-          <pose>-3.37359 4.88703 0.044038 0.001327 0.000183 0.005798</pose>
+          <pose>-3.37359 4.88702 0.044034 0.001311 0.000188 0.005902</pose>
           <velocity>0 0 0 0 -0 0</velocity>
-          <acceleration>-0.001464 0.159733 -0.589721 2.65355 0.032535 -0.083715</acceleration>
-          <wrench>-0.00401 0.437669 -1.61584 0 -0 0</wrench>
+          <acceleration>-0.039139 -0.016029 0.310374 0.399866 -0.909811 -0.178405</acceleration>
+          <wrench>-0.107242 -0.043921 0.850425 0 -0 0</wrench>
         </link>
       </model>
       <model name='lumber_4x4x40_clone_clone_0'>
-        <pose>-3.05709 4.54629 0.099681 -0.020444 -0.108028 1.76665</pose>
+        <pose>-3.0571 4.54622 0.099672 -0.020465 -0.108007 1.76683</pose>
         <scale>1 1 1</scale>
         <link name='link'>
-          <pose>-3.05709 4.54629 0.099681 -0.020444 -0.108028 1.76665</pose>
+          <pose>-3.0571 4.54622 0.099672 -0.020465 -0.108007 1.76683</pose>
           <velocity>0 0 0 0 -0 0</velocity>
-          <acceleration>1.40769 -0.092154 1.08166 1.95226 -0.517298 -0.359767</acceleration>
-          <wrench>3.85707 -0.252502 2.96373 0 -0 0</wrench>
+          <acceleration>0.949658 0.054193 0.475029 2.52704 0.986785 1.48526</acceleration>
+          <wrench>2.60206 0.14849 1.30158 0 -0 0</wrench>
         </link>
       </model>
       <model name='lumber_4x4x40_clone_clone_1'>
-        <pose>-3.50599 4.91921 0.132669 -0.000129 -0.001539 1.78524</pose>
+        <pose>-3.50612 4.91905 0.132691 -0.00011 -0.001457 1.7906</pose>
         <scale>1 1 1</scale>
         <link name='link'>
-          <pose>-3.50599 4.91921 0.132669 -0.000129 -0.001539 1.78524</pose>
+          <pose>-3.50612 4.91905 0.132691 -0.00011 -0.001457 1.7906</pose>
           <velocity>0 0 0 0 -0 0</velocity>
-          <acceleration>0.075536 0.510465 -0.666412 -2.79716 0.18006 -0.030886</acceleration>
-          <wrench>0.206969 1.39867 -1.82597 0 -0 0</wrench>
+          <acceleration>-0.002511 0.015837 -0.007697 -1.31704 1.11222 2.71903</acceleration>
+          <wrench>-0.006881 0.043394 -0.021091 0 -0 0</wrench>
         </link>
       </model>
       <model name='unit_cylinder_clone_0'>
-        <pose>-2.78058 3.00794 0.5 0 -0 0</pose>
+        <pose>-2.78057 3.00794 0.5 0 -0 0</pose>
         <scale>1 1 1</scale>
         <link name='link'>
           <pose>-2.77861 2.99829 0.000216 1.55252 -0 0</pose>
@@ -370,7 +490,7 @@
         </link>
       </model>
       <model name='unit_cylinder_clone_1'>
-        <pose>-3.83639 3.01167 0.5 0 -0 0</pose>
+        <pose>-3.83638 3.01167 0.5 0 -0 0</pose>
         <scale>1 1 1</scale>
         <link name='link'>
           <pose>-3.83442 3.00202 0.000216 1.55252 -0 0</pose>
@@ -380,7 +500,7 @@
         </link>
       </model>
       <model name='unit_cylinder_clone_2'>
-        <pose>-3.96674 3.01014 0.5 0 -0 0</pose>
+        <pose>-3.96673 3.01014 0.5 0 -0 0</pose>
         <scale>1 1 1</scale>
         <link name='link'>
           <pose>-3.96477 3.00049 0.000216 1.55252 -0 0</pose>
@@ -390,7 +510,7 @@
         </link>
       </model>
       <model name='unit_cylinder_clone_3'>
-        <pose>-4.09698 3.00429 0.5 0 -0 0</pose>
+        <pose>-4.09699 3.00429 0.5 0 -0 0</pose>
         <scale>1 1 1</scale>
         <link name='link'>
           <pose>-4.09502 2.99464 0.000216 1.55252 -0 0</pose>
@@ -400,7 +520,7 @@
         </link>
       </model>
       <model name='unit_cylinder_clone_3_clone'>
-        <pose>-4.57955 7.21952 -0.259905 1.61465 -0 0</pose>
+        <pose>-4.57955 7.21951 -0.259906 1.61465 -0 0</pose>
         <scale>1 1 1</scale>
         <link name='link'>
           <pose>-4.57758 7.71924 -0.247637 -3.11601 -0 0</pose>
@@ -410,7 +530,7 @@
         </link>
       </model>
       <model name='unit_cylinder_clone_3_clone_clone'>
-        <pose>-4.75433 7.58258 -0.259905 1.61465 -0 0</pose>
+        <pose>-4.75434 7.58258 -0.259907 1.61465 -0 0</pose>
         <scale>1 1 1</scale>
         <link name='link'>
           <pose>-4.75237 8.08231 -0.247638 -3.11601 -0 0</pose>
@@ -420,7 +540,7 @@
         </link>
       </model>
       <model name='unit_cylinder_clone_3_clone_clone_0'>
-        <pose>-4.90346 7.30763 -0.259905 1.61465 -0 0</pose>
+        <pose>-4.90346 7.30763 -0.259907 1.61465 -0 0</pose>
         <scale>1 1 1</scale>
         <link name='link'>
           <pose>-4.90149 7.80736 -0.247638 -3.11601 -0 0</pose>
@@ -430,7 +550,7 @@
         </link>
       </model>
       <model name='unit_cylinder_clone_3_clone_clone_1'>
-        <pose>-4.66801 6.86691 -0.259905 1.61465 -0 0</pose>
+        <pose>-4.66801 6.86691 -0.259907 1.61465 -0 0</pose>
         <scale>1 1 1</scale>
         <link name='link'>
           <pose>-4.66605 7.36664 -0.247638 -3.11601 -0 0</pose>
@@ -440,7 +560,7 @@
         </link>
       </model>
       <model name='unit_cylinder_clone_3_clone_clone_10'>
-        <pose>-5.82641 7.11341 -0.259905 1.61465 -0 0</pose>
+        <pose>-5.82641 7.11341 -0.259907 1.61465 -0 0</pose>
         <scale>1 1 1</scale>
         <link name='link'>
           <pose>-5.82444 7.61314 -0.247638 -3.11601 -0 0</pose>
@@ -450,7 +570,7 @@
         </link>
       </model>
       <model name='unit_cylinder_clone_3_clone_clone_11'>
-        <pose>-5.16319 6.60487 -0.259905 1.61465 -0 0</pose>
+        <pose>-5.16319 6.60487 -0.259907 1.61465 -0 0</pose>
         <scale>1 1 1</scale>
         <link name='link'>
           <pose>-5.16122 7.1046 -0.247638 -3.11601 -0 0</pose>
@@ -460,7 +580,7 @@
         </link>
       </model>
       <model name='unit_cylinder_clone_3_clone_clone_12'>
-        <pose>-5.56848 6.49181 -0.259905 1.61465 -0 0</pose>
+        <pose>-5.56848 6.49181 -0.259907 1.61465 -0 0</pose>
         <scale>1 1 1</scale>
         <link name='link'>
           <pose>-5.56651 6.99154 -0.247638 -3.11601 -0 0</pose>
@@ -470,7 +590,7 @@
         </link>
       </model>
       <model name='unit_cylinder_clone_3_clone_clone_13'>
-        <pose>-5.78976 6.63593 -0.259905 1.61465 -0 0</pose>
+        <pose>-5.78977 6.63593 -0.259907 1.61465 -0 0</pose>
         <scale>1 1 1</scale>
         <link name='link'>
           <pose>-5.7878 7.13566 -0.247638 -3.11601 -0 0</pose>
@@ -480,7 +600,7 @@
         </link>
       </model>
       <model name='unit_cylinder_clone_3_clone_clone_14'>
-        <pose>-5.75051 7.51593 -0.259905 1.61465 -0 0</pose>
+        <pose>-5.75052 7.51593 -0.259907 1.61465 -0 0</pose>
         <scale>1 1 1</scale>
         <link name='link'>
           <pose>-5.74855 8.01566 -0.247638 -3.11601 -0 0</pose>
@@ -490,7 +610,7 @@
         </link>
       </model>
       <model name='unit_cylinder_clone_3_clone_clone_15'>
-        <pose>-5.89474 7.35287 -0.259905 1.61465 -0 0</pose>
+        <pose>-5.89475 7.35287 -0.259907 1.61465 -0 0</pose>
         <scale>1 1 1</scale>
         <link name='link'>
           <pose>-5.89278 7.8526 -0.247638 -3.11601 -0 0</pose>
@@ -500,7 +620,7 @@
         </link>
       </model>
       <model name='unit_cylinder_clone_3_clone_clone_1_clone'>
-        <pose>-4.49317 6.54074 -0.259905 1.61465 -0 0</pose>
+        <pose>-4.49317 6.54074 -0.259907 1.61465 -0 0</pose>
         <scale>1 1 1</scale>
         <link name='link'>
           <pose>-4.4912 7.04047 -0.247638 -3.11601 -0 0</pose>
@@ -510,7 +630,7 @@
         </link>
       </model>
       <model name='unit_cylinder_clone_3_clone_clone_1_clone_0'>
-        <pose>-4.48195 6.86965 -0.259905 1.61465 -0 0</pose>
+        <pose>-4.48196 6.86965 -0.259907 1.61465 -0 0</pose>
         <scale>1 1 1</scale>
         <link name='link'>
           <pose>-4.47999 7.36938 -0.247638 -3.11601 -0 0</pose>
@@ -520,7 +640,7 @@
         </link>
       </model>
       <model name='unit_cylinder_clone_3_clone_clone_1_clone_1'>
-        <pose>-4.48217 7.47947 -0.259905 1.61465 -0 0</pose>
+        <pose>-4.48217 7.47947 -0.259907 1.61465 -0 0</pose>
         <scale>1 1 1</scale>
         <link name='link'>
           <pose>-4.4802 7.9792 -0.247638 -3.11601 -0 0</pose>
@@ -530,7 +650,7 @@
         </link>
       </model>
       <model name='unit_cylinder_clone_3_clone_clone_2'>
-        <pose>-5.01861 7.03914 -0.259905 1.61465 -0 0</pose>
+        <pose>-5.0186 7.03914 -0.259907 1.61465 -0 0</pose>
         <scale>1 1 1</scale>
         <link name='link'>
           <pose>-5.01664 7.53887 -0.247638 -3.11601 -0 0</pose>
@@ -540,7 +660,7 @@
         </link>
       </model>
       <model name='unit_cylinder_clone_3_clone_clone_3'>
-        <pose>-5.21817 7.53102 -0.259905 1.61465 -0 0</pose>
+        <pose>-5.21817 7.53102 -0.259907 1.61465 -0 0</pose>
         <scale>1 1 1</scale>
         <link name='link'>
           <pose>-5.21621 8.03075 -0.247638 -3.11601 -0 0</pose>
@@ -550,7 +670,7 @@
         </link>
       </model>
       <model name='unit_cylinder_clone_3_clone_clone_4'>
-        <pose>-5.33829 7.28402 -0.259905 1.61465 -0 0</pose>
+        <pose>-5.33829 7.28402 -0.259907 1.61465 -0 0</pose>
         <scale>1 1 1</scale>
         <link name='link'>
           <pose>-5.33633 7.78375 -0.247638 -3.11601 -0 0</pose>
@@ -560,7 +680,7 @@
         </link>
       </model>
       <model name='unit_cylinder_clone_3_clone_clone_5'>
-        <pose>-5.31255 6.94999 -0.259905 1.61465 -0 0</pose>
+        <pose>-5.31255 6.94999 -0.259907 1.61465 -0 0</pose>
         <scale>1 1 1</scale>
         <link name='link'>
           <pose>-5.31058 7.44972 -0.247638 -3.11601 -0 0</pose>
@@ -570,7 +690,7 @@
         </link>
       </model>
       <model name='unit_cylinder_clone_3_clone_clone_6'>
-        <pose>-4.85951 6.60455 -0.259905 1.61465 -0 0</pose>
+        <pose>-4.85952 6.60455 -0.259907 1.61465 -0 0</pose>
         <scale>1 1 1</scale>
         <link name='link'>
           <pose>-4.85755 7.10428 -0.247638 -3.11601 -0 0</pose>
@@ -580,7 +700,7 @@
         </link>
       </model>
       <model name='unit_cylinder_clone_3_clone_clone_7'>
-        <pose>-5.58092 6.90475 -0.259905 1.61465 -0 0</pose>
+        <pose>-5.58092 6.90475 -0.259907 1.61465 -0 0</pose>
         <scale>1 1 1</scale>
         <link name='link'>
           <pose>-5.57895 7.40448 -0.247638 -3.11601 -0 0</pose>
@@ -590,7 +710,7 @@
         </link>
       </model>
       <model name='unit_cylinder_clone_3_clone_clone_8'>
-        <pose>-5.66805 7.36995 -0.259905 1.61465 -0 0</pose>
+        <pose>-5.66805 7.36995 -0.259907 1.61465 -0 0</pose>
         <scale>1 1 1</scale>
         <link name='link'>
           <pose>-5.66608 7.86968 -0.247638 -3.11601 -0 0</pose>
@@ -600,7 +720,7 @@
         </link>
       </model>
       <model name='unit_cylinder_clone_3_clone_clone_9'>
-        <pose>-5.50935 7.59353 -0.259905 1.61465 -0 0</pose>
+        <pose>-5.50936 7.59353 -0.259907 1.61465 -0 0</pose>
         <scale>1 1 1</scale>
         <link name='link'>
           <pose>-5.50739 8.09326 -0.247638 -3.11601 -0 0</pose>
@@ -610,7 +730,7 @@
         </link>
       </model>
       <model name='unit_cylinder_clone_4'>
-        <pose>-4.9739 2.99072 0.5 0 -0 0</pose>
+        <pose>-4.97391 2.99072 0.5 0 -0 0</pose>
         <scale>1 1 1</scale>
         <link name='link'>
           <pose>-4.97194 2.98107 0.000216 1.55252 -0 0</pose>
@@ -630,7 +750,7 @@
         </link>
       </model>
       <model name='unit_cylinder_clone_6'>
-        <pose>-5.41623 2.98556 0.5 0 -0 0</pose>
+        <pose>-5.41624 2.98556 0.5 0 -0 0</pose>
         <scale>1 1 1</scale>
         <link name='link'>
           <pose>-5.41427 2.97591 0.000216 1.55252 -0 0</pose>
@@ -640,7 +760,7 @@
         </link>
       </model>
       <model name='unit_cylinder_clone_7'>
-        <pose>-6.78288 3.02429 0.5 0 -0 0</pose>
+        <pose>-6.78289 3.02429 0.5 0 -0 0</pose>
         <scale>1 1 1</scale>
         <link name='link'>
           <pose>-6.78092 3.01464 0.000216 1.55252 -0 0</pose>
@@ -650,7 +770,7 @@
         </link>
       </model>
       <model name='unit_cylinder_clone_8'>
-        <pose>-7.10924 3.03145 0.5 0 -0 0</pose>
+        <pose>-7.10923 3.03145 0.5 0 -0 0</pose>
         <scale>1 1 1</scale>
         <link name='link'>
           <pose>-7.10727 3.0218 0.000216 1.55252 -0 0</pose>
@@ -660,7 +780,7 @@
         </link>
       </model>
       <model name='unit_cylinder_clone_9'>
-        <pose>-7.44012 3.04124 0.5 0 -0 0</pose>
+        <pose>-7.44013 3.04124 0.5 0 -0 0</pose>
         <scale>1 1 1</scale>
         <link name='link'>
           <pose>-7.43816 3.03159 0.000216 1.55252 -0 0</pose>
@@ -670,7 +790,7 @@
         </link>
       </model>
       <model name='unit_cylinder_clone_clone'>
-        <pose>-3.16213 3.06519 0.5 0.346982 -0 0</pose>
+        <pose>-3.16214 3.06519 0.5 0.34698 -0 0</pose>
         <scale>1 1 1</scale>
         <link name='link'>
           <pose>-3.16017 3.22607 0.026719 1.8995 -0 0</pose>
@@ -680,7 +800,7 @@
         </link>
       </model>
       <model name='unit_cylinder_clone_clone_clone'>
-        <pose>-3.45584 3.01997 0.46206 -0.511249 0 0</pose>
+        <pose>-3.45585 3.01997 0.46206 -0.51125 0 0</pose>
         <scale>1 1 1</scale>
         <link name='link'>
           <pose>-3.45388 2.76702 0.030904 1.04127 -0 0</pose>
@@ -690,7 +810,7 @@
         </link>
       </model>
       <model name='unit_cylinder_clone_clone_clone_0'>
-        <pose>-7.99139 2.9479 0.5 0.346982 -0 0</pose>
+        <pose>-7.99139 2.9479 0.5 0.34698 -0 0</pose>
         <scale>1 1 1</scale>
         <link name='link'>
           <pose>-7.98942 3.10878 0.026719 1.8995 -0 0</pose>
@@ -705,8 +825,8 @@
         <link name='link'>
           <pose>-4.5337 5.10533 0.048987 0 -0 0</pose>
           <velocity>0 0 0 0 -0 0</velocity>
-          <acceleration>0 -0 0 0 -0 0</acceleration>
-          <wrench>0 -0 0 0 -0 0</wrench>
+          <acceleration>-0 -0 0 0 -0 0</acceleration>
+          <wrench>-0 -0 0 0 -0 0</wrench>
         </link>
       </model>
       <model name='wood_cube_10cm_clone'>
@@ -715,8 +835,8 @@
         <link name='link'>
           <pose>-4.77393 4.80973 0.048987 0 -0 0</pose>
           <velocity>0 0 0 0 -0 0</velocity>
-          <acceleration>0 -0 0 0 -0 0</acceleration>
-          <wrench>0 -0 0 0 -0 0</wrench>
+          <acceleration>-0 -0 0 0 -0 0</acceleration>
+          <wrench>-0 -0 0 0 -0 0</wrench>
         </link>
       </model>
       <model name='wood_cube_10cm_clone_0'>
@@ -725,8 +845,8 @@
         <link name='link'>
           <pose>-4.82741 5.1542 0.048987 0 -0 0</pose>
           <velocity>0 0 0 0 -0 0</velocity>
-          <acceleration>0 0 0 0 -0 0</acceleration>
-          <wrench>0 0 0 0 -0 0</wrench>
+          <acceleration>-0 -0 0 0 -0 0</acceleration>
+          <wrench>-0 -0 0 0 -0 0</wrench>
         </link>
       </model>
       <model name='wood_cube_10cm_clone_1'>
@@ -735,8 +855,8 @@
         <link name='link'>
           <pose>-5.21036 4.89458 0.048987 0 -0 0</pose>
           <velocity>0 0 0 0 -0 0</velocity>
-          <acceleration>0 0 0 0 -0 0</acceleration>
-          <wrench>0 0 0 0 -0 0</wrench>
+          <acceleration>-0 -0 0 0 -0 0</acceleration>
+          <wrench>-0 -0 0 0 -0 0</wrench>
         </link>
       </model>
       <model name='wood_cube_10cm_clone_15'>
@@ -745,18 +865,18 @@
         <link name='link'>
           <pose>10.473 291.342 0.048987 1.5708 -0 -0.821878</pose>
           <velocity>0 0 0 0 -0 0</velocity>
-          <acceleration>-0 -0 -0 0 -0 0</acceleration>
-          <wrench>-0 -0 -0 0 -0 0</wrench>
+          <acceleration>0 0 0 0 -0 0</acceleration>
+          <wrench>0 0 0 0 -0 0</wrench>
         </link>
       </model>
       <model name='wood_cube_10cm_clone_18'>
-        <pose>-12.7929 28.726 -0.001013 0 -0 -2.0281</pose>
+        <pose>-12.7929 28.726 -0.001013 0 0 -2.0281</pose>
         <scale>1 1 1</scale>
         <link name='link'>
-          <pose>-12.7929 28.726 0.048987 0 -0 -2.0281</pose>
+          <pose>-12.7929 28.726 0.048987 0 0 -2.0281</pose>
           <velocity>0 0 0 0 -0 0</velocity>
-          <acceleration>-0 -0 -0 0 -0 0</acceleration>
-          <wrench>-0 -0 -0 0 -0 0</wrench>
+          <acceleration>0 0 -0 0 -0 0</acceleration>
+          <wrench>0 0 -0 0 -0 0</wrench>
         </link>
       </model>
       <model name='wood_cube_10cm_clone_2'>
@@ -765,8 +885,8 @@
         <link name='link'>
           <pose>-5.1145 5.35732 0.048987 0 -0 0</pose>
           <velocity>0 0 0 0 -0 0</velocity>
-          <acceleration>0 -0 0 0 -0 0</acceleration>
-          <wrench>0 -0 0 0 -0 0</wrench>
+          <acceleration>-0 -0 0 0 -0 0</acceleration>
+          <wrench>-0 -0 0 0 -0 0</wrench>
         </link>
       </model>
       <model name='wood_cube_10cm_clone_2_clone'>
@@ -775,8 +895,8 @@
         <link name='link'>
           <pose>-6.86928 4.85228 0.048987 0 -0 0</pose>
           <velocity>0 0 0 0 -0 0</velocity>
-          <acceleration>0 0 0 0 -0 0</acceleration>
-          <wrench>0 0 0 0 -0 0</wrench>
+          <acceleration>-0 -0 0 0 -0 0</acceleration>
+          <wrench>-0 -0 0 0 -0 0</wrench>
         </link>
       </model>
       <model name='wood_cube_10cm_clone_2_clone_0'>
@@ -795,8 +915,8 @@
         <link name='link'>
           <pose>-6.88145 5.00376 0.048987 0 -0 0</pose>
           <velocity>0 0 0 0 -0 0</velocity>
-          <acceleration>0 -0 0 0 -0 0</acceleration>
-          <wrench>0 -0 0 0 -0 0</wrench>
+          <acceleration>-0 -0 0 0 -0 0</acceleration>
+          <wrench>-0 -0 0 0 -0 0</wrench>
         </link>
       </model>
       <model name='wood_cube_10cm_clone_2_clone_10'>
@@ -815,8 +935,8 @@
         <link name='link'>
           <pose>-7.03434 5.41807 0.048987 0 -0 0</pose>
           <velocity>0 0 0 0 -0 0</velocity>
-          <acceleration>0 0 0 0 -0 0</acceleration>
-          <wrench>0 0 0 0 -0 0</wrench>
+          <acceleration>-0 -0 0 0 -0 0</acceleration>
+          <wrench>-0 -0 0 0 -0 0</wrench>
         </link>
       </model>
       <model name='wood_cube_10cm_clone_2_clone_12'>
@@ -825,8 +945,8 @@
         <link name='link'>
           <pose>-7.216 5.45282 0.048987 0 -0 0</pose>
           <velocity>0 0 0 0 -0 0</velocity>
-          <acceleration>0 0 0 0 -0 0</acceleration>
-          <wrench>0 0 0 0 -0 0</wrench>
+          <acceleration>-0 -0 0 0 -0 0</acceleration>
+          <wrench>-0 -0 0 0 -0 0</wrench>
         </link>
       </model>
       <model name='wood_cube_10cm_clone_2_clone_13'>
@@ -835,8 +955,8 @@
         <link name='link'>
           <pose>-7.3986 5.31269 0.048987 0 -0 0</pose>
           <velocity>0 0 0 0 -0 0</velocity>
-          <acceleration>0 -0 0 0 -0 0</acceleration>
-          <wrench>0 -0 0 0 -0 0</wrench>
+          <acceleration>-0 -0 0 0 -0 0</acceleration>
+          <wrench>-0 -0 0 0 -0 0</wrench>
         </link>
       </model>
       <model name='wood_cube_10cm_clone_2_clone_14'>
@@ -845,8 +965,8 @@
         <link name='link'>
           <pose>-7.42967 4.90556 0.048987 0 -0 0</pose>
           <velocity>0 0 0 0 -0 0</velocity>
-          <acceleration>-0 0 0 -0 -0 -0</acceleration>
-          <wrench>-0 0 0 0 -0 0</wrench>
+          <acceleration>-0 -0 0 0 -0 0</acceleration>
+          <wrench>-0 -0 0 0 -0 0</wrench>
         </link>
       </model>
       <model name='wood_cube_10cm_clone_2_clone_15'>
@@ -855,8 +975,8 @@
         <link name='link'>
           <pose>-7.36887 4.67147 0.048987 0 -0 0</pose>
           <velocity>0 0 0 0 -0 0</velocity>
-          <acceleration>0 0 0 0 -0 0</acceleration>
-          <wrench>0 0 0 0 -0 0</wrench>
+          <acceleration>-0 -0 0 0 -0 0</acceleration>
+          <wrench>-0 -0 0 0 -0 0</wrench>
         </link>
       </model>
       <model name='wood_cube_10cm_clone_2_clone_16'>
@@ -865,8 +985,8 @@
         <link name='link'>
           <pose>-7.5154 5.05494 0.048987 0 -0 0</pose>
           <velocity>0 0 0 0 -0 0</velocity>
-          <acceleration>0 -0 0 0 -0 0</acceleration>
-          <wrench>0 -0 0 0 -0 0</wrench>
+          <acceleration>-0 -0 0 0 -0 0</acceleration>
+          <wrench>-0 -0 0 0 -0 0</wrench>
         </link>
       </model>
       <model name='wood_cube_10cm_clone_2_clone_17'>
@@ -875,8 +995,8 @@
         <link name='link'>
           <pose>-7.56764 4.7326 0.048987 0 -0 0</pose>
           <velocity>0 0 0 0 -0 0</velocity>
-          <acceleration>-0 0 0 -0 -0 -0</acceleration>
-          <wrench>-0 0 0 0 -0 0</wrench>
+          <acceleration>-0 -0 0 0 -0 0</acceleration>
+          <wrench>-0 -0 0 0 -0 0</wrench>
         </link>
       </model>
       <model name='wood_cube_10cm_clone_2_clone_18'>
@@ -885,8 +1005,8 @@
         <link name='link'>
           <pose>-7.61858 4.89383 0.048987 0 -0 0</pose>
           <velocity>0 0 0 0 -0 0</velocity>
-          <acceleration>0 0 0 0 -0 0</acceleration>
-          <wrench>0 0 0 0 -0 0</wrench>
+          <acceleration>-0 -0 0 0 -0 0</acceleration>
+          <wrench>-0 -0 0 0 -0 0</wrench>
         </link>
       </model>
       <model name='wood_cube_10cm_clone_2_clone_19'>
@@ -905,8 +1025,8 @@
         <link name='link'>
           <pose>-7.00345 5.05488 0.048987 0 -0 0</pose>
           <velocity>0 0 0 0 -0 0</velocity>
-          <acceleration>0 0 0 0 -0 0</acceleration>
-          <wrench>0 0 0 0 -0 0</wrench>
+          <acceleration>-0 -0 0 0 -0 0</acceleration>
+          <wrench>-0 -0 0 0 -0 0</wrench>
         </link>
       </model>
       <model name='wood_cube_10cm_clone_2_clone_20'>
@@ -945,8 +1065,8 @@
         <link name='link'>
           <pose>-6.86354 5.5574 0.048987 0 -0 0</pose>
           <velocity>0 0 0 0 -0 0</velocity>
-          <acceleration>0 0 0 0 -0 0</acceleration>
-          <wrench>0 0 0 0 -0 0</wrench>
+          <acceleration>-0 -0 0 0 -0 0</acceleration>
+          <wrench>-0 -0 0 0 -0 0</wrench>
         </link>
       </model>
       <model name='wood_cube_10cm_clone_2_clone_24'>
@@ -955,8 +1075,8 @@
         <link name='link'>
           <pose>-6.69226 5.39857 0.048987 0 -0 0</pose>
           <velocity>0 0 0 0 -0 0</velocity>
-          <acceleration>0 0 0 0 -0 0</acceleration>
-          <wrench>0 0 0 0 -0 0</wrench>
+          <acceleration>-0 -0 0 0 -0 0</acceleration>
+          <wrench>-0 -0 0 0 -0 0</wrench>
         </link>
       </model>
       <model name='wood_cube_10cm_clone_2_clone_25'>
@@ -965,8 +1085,8 @@
         <link name='link'>
           <pose>-6.73532 5.17859 0.048987 0 -0 0</pose>
           <velocity>0 0 0 0 -0 0</velocity>
-          <acceleration>0 0 0 0 -0 0</acceleration>
-          <wrench>0 0 0 0 -0 0</wrench>
+          <acceleration>-0 -0 0 0 -0 0</acceleration>
+          <wrench>-0 -0 0 0 -0 0</wrench>
         </link>
       </model>
       <model name='wood_cube_10cm_clone_2_clone_26'>
@@ -975,8 +1095,8 @@
         <link name='link'>
           <pose>-6.71871 4.97851 0.048987 0 -0 0</pose>
           <velocity>0 0 0 0 -0 0</velocity>
-          <acceleration>-0 0 0 -0 -0 -0</acceleration>
-          <wrench>-0 0 0 0 -0 0</wrench>
+          <acceleration>-0 -0 0 0 -0 0</acceleration>
+          <wrench>-0 -0 0 0 -0 0</wrench>
         </link>
       </model>
       <model name='wood_cube_10cm_clone_2_clone_27'>
@@ -985,8 +1105,8 @@
         <link name='link'>
           <pose>-6.91612 4.68978 0.048987 0 -0 0</pose>
           <velocity>0 0 0 0 -0 0</velocity>
-          <acceleration>-0 0 0 -0 -0 -0</acceleration>
-          <wrench>-0 0 0 0 -0 0</wrench>
+          <acceleration>-0 -0 0 0 -0 0</acceleration>
+          <wrench>-0 -0 0 0 -0 0</wrench>
         </link>
       </model>
       <model name='wood_cube_10cm_clone_2_clone_28'>
@@ -1005,8 +1125,8 @@
         <link name='link'>
           <pose>-7.51038 4.57344 0.048987 0 -0 0</pose>
           <velocity>0 0 0 0 -0 0</velocity>
-          <acceleration>-0 0 0 0 -0 0</acceleration>
-          <wrench>-0 0 0 0 -0 0</wrench>
+          <acceleration>-0 -0 0 0 -0 0</acceleration>
+          <wrench>-0 -0 0 0 -0 0</wrench>
         </link>
       </model>
       <model name='wood_cube_10cm_clone_2_clone_3'>
@@ -1015,8 +1135,8 @@
         <link name='link'>
           <pose>-6.86543 5.17872 0.048987 0 -0 0</pose>
           <velocity>0 0 0 0 -0 0</velocity>
-          <acceleration>0 -0 0 0 -0 0</acceleration>
-          <wrench>0 -0 0 0 -0 0</wrench>
+          <acceleration>-0 -0 0 0 -0 0</acceleration>
+          <wrench>-0 -0 0 0 -0 0</wrench>
         </link>
       </model>
       <model name='wood_cube_10cm_clone_2_clone_30'>
@@ -1025,8 +1145,8 @@
         <link name='link'>
           <pose>-7.74881 4.71359 0.048987 0 -0 0</pose>
           <velocity>0 0 0 0 -0 0</velocity>
-          <acceleration>0 -0 0 0 -0 0</acceleration>
-          <wrench>0 -0 0 0 -0 0</wrench>
+          <acceleration>-0 -0 0 0 -0 0</acceleration>
+          <wrench>-0 -0 0 0 -0 0</wrench>
         </link>
       </model>
       <model name='wood_cube_10cm_clone_2_clone_31'>
@@ -1035,8 +1155,8 @@
         <link name='link'>
           <pose>-7.75291 4.97621 0.048987 0 -0 0</pose>
           <velocity>0 0 0 0 -0 0</velocity>
-          <acceleration>-0 0 0 -0 -0 -0</acceleration>
-          <wrench>-0 0 0 0 -0 0</wrench>
+          <acceleration>-0 -0 0 0 -0 0</acceleration>
+          <wrench>-0 -0 0 0 -0 0</wrench>
         </link>
       </model>
       <model name='wood_cube_10cm_clone_2_clone_32'>
@@ -1045,8 +1165,8 @@
         <link name='link'>
           <pose>-7.74046 5.21748 0.048987 0 -0 0</pose>
           <velocity>0 0 0 0 -0 0</velocity>
-          <acceleration>-0 0 0 -0 -0 -0</acceleration>
-          <wrench>-0 0 0 0 -0 0</wrench>
+          <acceleration>-0 -0 0 0 -0 0</acceleration>
+          <wrench>-0 -0 0 0 -0 0</wrench>
         </link>
       </model>
       <model name='wood_cube_10cm_clone_2_clone_33'>
@@ -1055,8 +1175,8 @@
         <link name='link'>
           <pose>-7.66512 5.42995 0.048987 0 -0 0</pose>
           <velocity>0 0 0 0 -0 0</velocity>
-          <acceleration>0 -0 0 0 -0 0</acceleration>
-          <wrench>0 -0 0 0 -0 0</wrench>
+          <acceleration>-0 -0 0 0 -0 0</acceleration>
+          <wrench>-0 -0 0 0 -0 0</wrench>
         </link>
       </model>
       <model name='wood_cube_10cm_clone_2_clone_4'>
@@ -1065,8 +1185,8 @@
         <link name='link'>
           <pose>-7.01286 5.26888 0.048987 0 -0 0</pose>
           <velocity>0 0 0 0 -0 0</velocity>
-          <acceleration>-0 0 0 0 -0 0</acceleration>
-          <wrench>-0 0 0 0 -0 0</wrench>
+          <acceleration>-0 -0 0 0 -0 0</acceleration>
+          <wrench>-0 -0 0 0 -0 0</wrench>
         </link>
       </model>
       <model name='wood_cube_10cm_clone_2_clone_5'>
@@ -1085,8 +1205,8 @@
         <link name='link'>
           <pose>-7.21871 4.87418 0.048987 0 -0 0</pose>
           <velocity>0 0 0 0 -0 0</velocity>
-          <acceleration>-0 0 0 0 -0 0</acceleration>
-          <wrench>-0 0 0 0 -0 0</wrench>
+          <acceleration>-0 -0 0 0 -0 0</acceleration>
+          <wrench>-0 -0 0 0 -0 0</wrench>
         </link>
       </model>
       <model name='wood_cube_10cm_clone_2_clone_7'>
@@ -1095,8 +1215,8 @@
         <link name='link'>
           <pose>-7.07046 4.7267 0.048987 0 -0 0</pose>
           <velocity>0 0 0 0 -0 0</velocity>
-          <acceleration>0 -0 0 0 -0 0</acceleration>
-          <wrench>0 -0 0 0 -0 0</wrench>
+          <acceleration>-0 -0 0 0 -0 0</acceleration>
+          <wrench>-0 -0 0 0 -0 0</wrench>
         </link>
       </model>
       <model name='wood_cube_10cm_clone_2_clone_8'>
@@ -1105,8 +1225,8 @@
         <link name='link'>
           <pose>-7.30695 5.11348 0.048987 0 -0 0</pose>
           <velocity>0 0 0 0 -0 0</velocity>
-          <acceleration>0 0 0 0 -0 0</acceleration>
-          <wrench>0 0 0 0 -0 0</wrench>
+          <acceleration>-0 -0 0 0 -0 0</acceleration>
+          <wrench>-0 -0 0 0 -0 0</wrench>
         </link>
       </model>
       <model name='wood_cube_10cm_clone_2_clone_9'>
@@ -1125,8 +1245,8 @@
         <link name='link'>
           <pose>-4.61327 5.48003 0.048987 0 -0 0</pose>
           <velocity>0 0 0 0 -0 0</velocity>
-          <acceleration>0 -0 0 0 -0 0</acceleration>
-          <wrench>0 -0 0 0 -0 0</wrench>
+          <acceleration>-0 -0 0 0 -0 0</acceleration>
+          <wrench>-0 -0 0 0 -0 0</wrench>
         </link>
       </model>
       <model name='wood_cube_10cm_clone_4'>
@@ -1135,8 +1255,8 @@
         <link name='link'>
           <pose>-4.88164 5.32159 0.048987 0 -0 0</pose>
           <velocity>0 0 0 0 -0 0</velocity>
-          <acceleration>0 0 0 0 -0 0</acceleration>
-          <wrench>0 0 0 0 -0 0</wrench>
+          <acceleration>-0 -0 0 0 -0 0</acceleration>
+          <wrench>-0 -0 0 0 -0 0</wrench>
         </link>
       </model>
       <model name='wood_cube_10cm_clone_5'>
@@ -1145,8 +1265,8 @@
         <link name='link'>
           <pose>-5.0744 4.96094 0.048987 0 -0 0</pose>
           <velocity>0 0 0 0 -0 0</velocity>
-          <acceleration>0 0 0 0 -0 0</acceleration>
-          <wrench>0 0 0 0 -0 0</wrench>
+          <acceleration>-0 -0 0 0 -0 0</acceleration>
+          <wrench>-0 -0 0 0 -0 0</wrench>
         </link>
       </model>
       <model name='wood_cube_10cm_clone_6'>
@@ -1155,18 +1275,18 @@
         <link name='link'>
           <pose>-4.70452 5.00576 0.048987 0 -0 0</pose>
           <velocity>0 0 0 0 -0 0</velocity>
-          <acceleration>0 -0 0 0 -0 0</acceleration>
-          <wrench>0 -0 0 0 -0 0</wrench>
+          <acceleration>-0 -0 0 0 -0 0</acceleration>
+          <wrench>-0 -0 0 0 -0 0</wrench>
         </link>
       </model>
       <model name='wood_cube_10cm_clone_7'>
-        <pose>-133.264 -156.134 0.048987 -2.33319 1.57079 3.14159</pose>
+        <pose>-133.265 -156.134 0.048987 -2.33319 1.57079 3.14159</pose>
         <scale>1 1 1</scale>
         <link name='link'>
           <pose>-133.23 -156.17 0.048987 -2.33319 1.57079 3.14159</pose>
           <velocity>0 0 0 0 -0 0</velocity>
-          <acceleration>-0 -0 0 0 -0 0</acceleration>
-          <wrench>-0 -0 0 0 -0 0</wrench>
+          <acceleration>-0 0 -0 0 -0 0</acceleration>
+          <wrench>-0 0 -0 0 -0 0</wrench>
         </link>
       </model>
       <model name='wood_cube_10cm_clone_8'>
@@ -1175,8 +1295,8 @@
         <link name='link'>
           <pose>-5.43041 4.34384 0.048987 -3.14159 -0 2.11987</pose>
           <velocity>0 0 0 0 -0 0</velocity>
-          <acceleration>-0 0 0 -0 -0 -0</acceleration>
-          <wrench>-0 0 0 0 -0 0</wrench>
+          <acceleration>0 -0 -0 0 -0 0</acceleration>
+          <wrench>0 -0 -0 0 -0 0</wrench>
         </link>
       </model>
       <light name='sun'>
@@ -1418,7 +1538,7 @@
         <collision name='collision'>
           <geometry>
             <box>
-              <size>0.999998 0.499999 0.100003</size>
+              <size>1 0.499999 0.100003</size>
             </box>
           </geometry>
           <max_contacts>10</max_contacts>
@@ -1438,7 +1558,7 @@
         <visual name='visual'>
           <geometry>
             <box>
-              <size>0.999998 0.499999 0.100003</size>
+              <size>1 0.499999 0.100003</size>
             </box>
           </geometry>
         </visual>
@@ -1449,7 +1569,7 @@
     </model>
     <gui fullscreen='0'>
       <camera name='user_camera'>
-        <pose>-11.6622 14.3288 4.95774 0 0.415643 -0.969717</pose>
+        <pose>13.5493 0.036621 6.47994 0 0.271643 2.84147</pose>
         <view_controller>orbit</view_controller>
         <projection_type>perspective</projection_type>
       </camera>
@@ -1677,7 +1797,7 @@
         <collision name='collision'>
           <geometry>
             <box>
-              <size>0.666255 1.89779 0.033476</size>
+              <size>0.666254 1.89779 0.033476</size>
             </box>
           </geometry>
           <max_contacts>10</max_contacts>
@@ -1697,7 +1817,7 @@
         <visual name='visual'>
           <geometry>
             <box>
-              <size>0.666255 1.89779 0.033476</size>
+              <size>0.666254 1.89779 0.033476</size>
             </box>
           </geometry>
         </visual>
@@ -8327,6 +8447,510 @@
       <static>1</static>
       <allow_auto_disable>1</allow_auto_disable>
       <pose>-4.48217 7.47947 -0.259905 1.61465 -0 0</pose>
+    </model>
+    <model name='wp1'>
+      <static>1</static>
+      <pose>0.029438 -0.311026 0.444335 0 -0.017033 0</pose>
+      <link name='link'>
+        <collision name='collision'>
+          <geometry>
+            <box>
+              <size>0.666251 1.89779 0.033476</size>
+            </box>
+          </geometry>
+          <max_contacts>10</max_contacts>
+          <surface>
+            <contact>
+              <ode/>
+            </contact>
+            <bounce/>
+            <friction>
+              <torsional>
+                <ode/>
+              </torsional>
+              <ode/>
+            </friction>
+          </surface>
+        </collision>
+        <visual name='visual'>
+          <geometry>
+            <box>
+              <size>0.666251 1.89779 0.033476</size>
+            </box>
+          </geometry>
+          <material>
+            <ambient>0.5 0.75 0 1</ambient>
+            <diffuse>0.7 0.9 0 1</diffuse>
+            <specular>0.2 0.2 0.2 64</specular>
+            <emissive>0.1 0 0.1 1</emissive>
+          </material>
+        </visual>
+        <self_collide>0</self_collide>
+        <enable_wind>0</enable_wind>
+        <kinematic>0</kinematic>
+      </link>
+    </model>
+    <model name='wp2'>
+      <static>1</static>
+      <pose>-8.99859 0.429756 -0.015307 0 -0.017033 0</pose>
+      <link name='link'>
+        <collision name='collision'>
+          <geometry>
+            <box>
+              <size>0.122968 0.133706 0.033476</size>
+            </box>
+          </geometry>
+          <max_contacts>10</max_contacts>
+          <surface>
+            <contact>
+              <ode/>
+            </contact>
+            <bounce/>
+            <friction>
+              <torsional>
+                <ode/>
+              </torsional>
+              <ode/>
+            </friction>
+          </surface>
+        </collision>
+        <visual name='visual'>
+          <geometry>
+            <box>
+              <size>0.122968 0.133706 0.033476</size>
+            </box>
+          </geometry>
+          <material>
+            <ambient>0.5 0.75 0 1</ambient>
+            <diffuse>0.7 0.9 0 1</diffuse>
+            <specular>0.2 0.2 0.2 64</specular>
+            <emissive>0.1 0 0.1 1</emissive>
+          </material>
+        </visual>
+        <self_collide>0</self_collide>
+        <enable_wind>0</enable_wind>
+        <kinematic>0</kinematic>
+      </link>
+    </model>
+    <model name='wp3'>
+      <static>1</static>
+      <pose>-12.0103 1.39205 -0.015307 0 -0.017033 0</pose>
+      <link name='link'>
+        <collision name='collision'>
+          <geometry>
+            <box>
+              <size>0.122968 0.133706 0.033476</size>
+            </box>
+          </geometry>
+          <max_contacts>10</max_contacts>
+          <surface>
+            <contact>
+              <ode/>
+            </contact>
+            <bounce/>
+            <friction>
+              <torsional>
+                <ode/>
+              </torsional>
+              <ode/>
+            </friction>
+          </surface>
+        </collision>
+        <visual name='visual'>
+          <geometry>
+            <box>
+              <size>0.122968 0.133706 0.033476</size>
+            </box>
+          </geometry>
+          <material>
+            <ambient>0.5 0.75 0 1</ambient>
+            <diffuse>0.7 0.9 0 1</diffuse>
+            <specular>0.2 0.2 0.2 64</specular>
+            <emissive>0.1 0 0.1 1</emissive>
+          </material>
+        </visual>
+        <self_collide>0</self_collide>
+        <enable_wind>0</enable_wind>
+        <kinematic>0</kinematic>
+      </link>
+    </model>
+    <model name='wp4'>
+      <static>1</static>
+      <pose>-12.0559 2.95944 -0.015307 0 -0.017033 0</pose>
+      <link name='link'>
+        <collision name='collision'>
+          <geometry>
+            <box>
+              <size>0.122968 0.133706 0.033476</size>
+            </box>
+          </geometry>
+          <max_contacts>10</max_contacts>
+          <surface>
+            <contact>
+              <ode/>
+            </contact>
+            <bounce/>
+            <friction>
+              <torsional>
+                <ode/>
+              </torsional>
+              <ode/>
+            </friction>
+          </surface>
+        </collision>
+        <visual name='visual'>
+          <geometry>
+            <box>
+              <size>0.122968 0.133706 0.033476</size>
+            </box>
+          </geometry>
+          <material>
+            <ambient>0.5 0.75 0 1</ambient>
+            <diffuse>0.7 0.9 0 1</diffuse>
+            <specular>0.2 0.2 0.2 64</specular>
+            <emissive>0.1 0 0.1 1</emissive>
+          </material>
+        </visual>
+        <self_collide>0</self_collide>
+        <enable_wind>0</enable_wind>
+        <kinematic>0</kinematic>
+      </link>
+    </model>
+    <model name='wp5'>
+      <static>1</static>
+      <pose>-10.6984 2.95193 -0.015307 0 -0.017033 0</pose>
+      <link name='link'>
+        <collision name='collision'>
+          <geometry>
+            <box>
+              <size>0.122968 0.133706 0.033476</size>
+            </box>
+          </geometry>
+          <max_contacts>10</max_contacts>
+          <surface>
+            <contact>
+              <ode/>
+            </contact>
+            <bounce/>
+            <friction>
+              <torsional>
+                <ode/>
+              </torsional>
+              <ode/>
+            </friction>
+          </surface>
+        </collision>
+        <visual name='visual'>
+          <geometry>
+            <box>
+              <size>0.122968 0.133706 0.033476</size>
+            </box>
+          </geometry>
+          <material>
+            <ambient>0.5 0.75 0 1</ambient>
+            <diffuse>0.7 0.9 0 1</diffuse>
+            <specular>0.2 0.2 0.2 64</specular>
+            <emissive>0.1 0 0.1 1</emissive>
+          </material>
+        </visual>
+        <self_collide>0</self_collide>
+        <enable_wind>0</enable_wind>
+        <kinematic>0</kinematic>
+      </link>
+    </model>
+    <model name='wp6'>
+      <static>1</static>
+      <pose>-0.032725 2.93892 -0.015307 0 -0.017033 0</pose>
+      <link name='link'>
+        <collision name='collision'>
+          <geometry>
+            <box>
+              <size>0.122968 0.133706 0.033476</size>
+            </box>
+          </geometry>
+          <max_contacts>10</max_contacts>
+          <surface>
+            <contact>
+              <ode/>
+            </contact>
+            <bounce/>
+            <friction>
+              <torsional>
+                <ode/>
+              </torsional>
+              <ode/>
+            </friction>
+          </surface>
+        </collision>
+        <visual name='visual'>
+          <geometry>
+            <box>
+              <size>0.122968 0.133706 0.033476</size>
+            </box>
+          </geometry>
+          <material>
+            <ambient>0.5 0.75 0 1</ambient>
+            <diffuse>0.7 0.9 0 1</diffuse>
+            <specular>0.2 0.2 0.2 64</specular>
+            <emissive>0.1 0 0.1 1</emissive>
+          </material>
+        </visual>
+        <self_collide>0</self_collide>
+        <enable_wind>0</enable_wind>
+        <kinematic>0</kinematic>
+      </link>
+    </model>
+    <model name='wp7'>
+      <static>1</static>
+      <pose>1.64538 3.79553 -0.015307 0 -0.017033 0</pose>
+      <link name='link'>
+        <collision name='collision'>
+          <geometry>
+            <box>
+              <size>0.122968 0.133706 0.033476</size>
+            </box>
+          </geometry>
+          <max_contacts>10</max_contacts>
+          <surface>
+            <contact>
+              <ode/>
+            </contact>
+            <bounce/>
+            <friction>
+              <torsional>
+                <ode/>
+              </torsional>
+              <ode/>
+            </friction>
+          </surface>
+        </collision>
+        <visual name='visual'>
+          <geometry>
+            <box>
+              <size>0.122968 0.133706 0.033476</size>
+            </box>
+          </geometry>
+          <material>
+            <ambient>0.5 0.75 0 1</ambient>
+            <diffuse>0.7 0.9 0 1</diffuse>
+            <specular>0.2 0.2 0.2 64</specular>
+            <emissive>0.1 0 0.1 1</emissive>
+          </material>
+        </visual>
+        <self_collide>0</self_collide>
+        <enable_wind>0</enable_wind>
+        <kinematic>0</kinematic>
+      </link>
+    </model>
+    <model name='wp8'>
+      <static>1</static>
+      <pose>1.0071 4.95789 -0.015307 0 -0.017033 0</pose>
+      <link name='link'>
+        <collision name='collision'>
+          <geometry>
+            <box>
+              <size>0.122968 0.133706 0.033476</size>
+            </box>
+          </geometry>
+          <max_contacts>10</max_contacts>
+          <surface>
+            <contact>
+              <ode/>
+            </contact>
+            <bounce/>
+            <friction>
+              <torsional>
+                <ode/>
+              </torsional>
+              <ode/>
+            </friction>
+          </surface>
+        </collision>
+        <visual name='visual'>
+          <geometry>
+            <box>
+              <size>0.122968 0.133706 0.033476</size>
+            </box>
+          </geometry>
+          <material>
+            <ambient>0.5 0.75 0 1</ambient>
+            <diffuse>0.7 0.9 0 1</diffuse>
+            <specular>0.2 0.2 0.2 64</specular>
+            <emissive>0.1 0 0.1 1</emissive>
+          </material>
+        </visual>
+        <self_collide>0</self_collide>
+        <enable_wind>0</enable_wind>
+        <kinematic>0</kinematic>
+      </link>
+    </model>
+    <model name='wp9'>
+      <static>1</static>
+      <pose>-10.4925 5.02624 -0.015307 0 -0.017033 0</pose>
+      <link name='link'>
+        <collision name='collision'>
+          <geometry>
+            <box>
+              <size>0.122968 0.133706 0.033476</size>
+            </box>
+          </geometry>
+          <max_contacts>10</max_contacts>
+          <surface>
+            <contact>
+              <ode/>
+            </contact>
+            <bounce/>
+            <friction>
+              <torsional>
+                <ode/>
+              </torsional>
+              <ode/>
+            </friction>
+          </surface>
+        </collision>
+        <visual name='visual'>
+          <geometry>
+            <box>
+              <size>0.122968 0.133706 0.033476</size>
+            </box>
+          </geometry>
+          <material>
+            <ambient>0.5 0.75 0 1</ambient>
+            <diffuse>0.7 0.9 0 1</diffuse>
+            <specular>0.2 0.2 0.2 64</specular>
+            <emissive>0.1 0 0.1 1</emissive>
+          </material>
+        </visual>
+        <self_collide>0</self_collide>
+        <enable_wind>0</enable_wind>
+        <kinematic>0</kinematic>
+      </link>
+    </model>
+    <model name='wp10'>
+      <static>1</static>
+      <pose>-13.0383 6.07977 -0.015307 0 -0.017033 0</pose>
+      <link name='link'>
+        <collision name='collision'>
+          <geometry>
+            <box>
+              <size>0.122968 0.133706 0.033476</size>
+            </box>
+          </geometry>
+          <max_contacts>10</max_contacts>
+          <surface>
+            <contact>
+              <ode/>
+            </contact>
+            <bounce/>
+            <friction>
+              <torsional>
+                <ode/>
+              </torsional>
+              <ode/>
+            </friction>
+          </surface>
+        </collision>
+        <visual name='visual'>
+          <geometry>
+            <box>
+              <size>0.122968 0.133706 0.033476</size>
+            </box>
+          </geometry>
+          <material>
+            <ambient>0.5 0.75 0 1</ambient>
+            <diffuse>0.7 0.9 0 1</diffuse>
+            <specular>0.2 0.2 0.2 64</specular>
+            <emissive>0.1 0 0.1 1</emissive>
+          </material>
+        </visual>
+        <self_collide>0</self_collide>
+        <enable_wind>0</enable_wind>
+        <kinematic>0</kinematic>
+      </link>
+    </model>
+    <model name='wp11'>
+      <static>1</static>
+      <pose>-10.1211 7.49309 -0.015307 0 -0.017033 0</pose>
+      <link name='link'>
+        <collision name='collision'>
+          <geometry>
+            <box>
+              <size>0.122968 0.133706 0.033476</size>
+            </box>
+          </geometry>
+          <max_contacts>10</max_contacts>
+          <surface>
+            <contact>
+              <ode/>
+            </contact>
+            <bounce/>
+            <friction>
+              <torsional>
+                <ode/>
+              </torsional>
+              <ode/>
+            </friction>
+          </surface>
+        </collision>
+        <visual name='visual'>
+          <geometry>
+            <box>
+              <size>0.122968 0.133706 0.033476</size>
+            </box>
+          </geometry>
+          <material>
+            <ambient>0.5 0.75 0 1</ambient>
+            <diffuse>0.7 0.9 0 1</diffuse>
+            <specular>0.2 0.2 0.2 64</specular>
+            <emissive>0.1 0 0.1 1</emissive>
+          </material>
+        </visual>
+        <self_collide>0</self_collide>
+        <enable_wind>0</enable_wind>
+        <kinematic>0</kinematic>
+      </link>
+    </model>
+    <model name='wp112'>
+      <static>1</static>
+      <pose>-0.030184 7.41345 -0.015307 0 -0.017033 0</pose>
+      <link name='link'>
+        <collision name='collision'>
+          <geometry>
+            <box>
+              <size>0.122968 0.133706 0.033476</size>
+            </box>
+          </geometry>
+          <max_contacts>10</max_contacts>
+          <surface>
+            <contact>
+              <ode/>
+            </contact>
+            <bounce/>
+            <friction>
+              <torsional>
+                <ode/>
+              </torsional>
+              <ode/>
+            </friction>
+          </surface>
+        </collision>
+        <visual name='visual'>
+          <geometry>
+            <box>
+              <size>0.122968 0.133706 0.033476</size>
+            </box>
+          </geometry>
+          <material>
+            <ambient>0.5 0.75 0 1</ambient>
+            <diffuse>0.7 0.9 0 1</diffuse>
+            <specular>0.2 0.2 0.2 64</specular>
+            <emissive>0.1 0 0.1 1</emissive>
+          </material>
+        </visual>
+        <self_collide>0</self_collide>
+        <enable_wind>0</enable_wind>
+        <kinematic>0</kinematic>
+      </link>
     </model>
   </world>
 </sdf>

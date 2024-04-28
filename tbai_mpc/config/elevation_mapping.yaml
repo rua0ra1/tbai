@@ -62,4 +62,4 @@ length_in_x_init_submap:                    3.0
 length_in_y_init_submap:                    3.0
 init_submap_height_offset:                  -0.01
 init_submap_variance:                       0.001
-target_frame_init_submap:                   world
+target_frame_init_submap:                   odom
