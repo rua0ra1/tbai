@@ -21,7 +21,7 @@ static_controller:
   rate: 50 # Hz
 
 mpc_controller:
-  wbc_type: "hqp"
+  wbc_type: "sqp"
   reference_trajectory:
     terrain_topic: "/convex_plane_decomposition_ros/filtered_map"
     reference_topic: "/anymal_mpc_target"
