@@ -1,6 +1,8 @@
 
 
 #include <memory>
+#include <string>
+#include <vector>
 
 #include <robot_state_publisher/robot_state_publisher.h>
 #include <ros/ros.h>
@@ -12,7 +14,7 @@
 namespace tbai {
 namespace rl {
 
-using namespace torch::indexing;
+using namespace torch::indexing;  // NOLINT
 
 class StateVisualizer {
    public:

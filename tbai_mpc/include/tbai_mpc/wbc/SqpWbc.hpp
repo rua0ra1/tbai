@@ -1,5 +1,8 @@
 #pragma once
 
+#include <string>
+#include <vector>
+
 #include <ocs2_anymal_models/QuadrupedCom.h>
 #include <ocs2_anymal_models/QuadrupedKinematics.h>
 #include <ocs2_core/Types.h>
@@ -14,7 +17,7 @@ class SqpWbc : public WbcBase {
     SqpWbc(const std::string &configFile, const std::string &urdfString,
            const switched_model::ComModelBase<scalar_t> &comModel,
            const switched_model::KinematicsModelBase<scalar_t> &kinematics, const std::vector<std::string> &jointNames)
-        : WbcBase(configFile, urdfString, comModel, kinematics), jointNames_(jointNames) {
+        : WbcBase(configFile, urdfString, comModel, kinematics, "sqpWbc."), jointNames_(jointNames) {
         loadSettings(configFile);
     }
 

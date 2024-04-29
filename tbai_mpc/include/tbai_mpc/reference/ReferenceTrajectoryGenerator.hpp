@@ -3,6 +3,7 @@
 #include <memory>
 #include <mutex>
 #include <string>
+#include <vector>
 
 #include <grid_map_core/GridMap.hpp>
 #include <grid_map_ros/GridMapRosConverter.hpp>
@@ -22,7 +23,7 @@ namespace tbai {
 namespace mpc {
 namespace reference {
 
-using namespace switched_model;
+using namespace switched_model;  // NOLINT
 
 using ocs2::scalar_t;
 using ocs2::SystemObservation;

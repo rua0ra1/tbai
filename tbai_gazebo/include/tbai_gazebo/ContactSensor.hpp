@@ -8,7 +8,7 @@
 namespace gazebo {
 class ContactSensor : public SensorPlugin {
    public:
-    ContactSensor() : SensorPlugin(){};
+    ContactSensor() : SensorPlugin() {}
     void Load(sensors::SensorPtr sensor, sdf::ElementPtr sdf);
     void OnUpdate();
 

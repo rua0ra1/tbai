@@ -1,6 +1,7 @@
 #pragma once
 
 #include <memory>
+#include <string>
 
 #include "ocs2_legged_robot_ros/visualization/LeggedRobotVisualizer.h"
 #include <ocs2_centroidal_model/CentroidalModelPinocchioMapping.h>

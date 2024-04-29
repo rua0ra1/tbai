@@ -1,5 +1,7 @@
 #pragma once
 
+#include <string>
+
 #include <ocs2_core/Types.h>
 
 namespace switched_model {

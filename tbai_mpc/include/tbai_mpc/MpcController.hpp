@@ -1,6 +1,7 @@
 
 #include <atomic>
 #include <memory>
+#include <string>
 #include <thread>
 
 #include "ocs2_anymal_mpc/AnymalInterface.h"

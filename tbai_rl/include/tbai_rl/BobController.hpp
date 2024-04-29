@@ -29,8 +29,8 @@
 namespace tbai {
 namespace rl {
 
-using namespace tbai; // NOLINT
-using namespace torch::indexing; // NOLINT
+using namespace tbai;             // NOLINT
+using namespace torch::indexing;  // NOLINT
 using torch::jit::script::Module;
 
 class BobController : public tbai::core::Controller {

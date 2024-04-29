@@ -382,8 +382,7 @@ ocs2::SystemObservation DtcController::generateSystemObservation() const {
 
     // Set observation time
     ocs2::SystemObservation observation;
-    observation.time =
-        stateSubscriberPtr_->getLatestRbdStamp().toSec() - initTime_;  // TODO: Replace with actual observation stamp
+    observation.time = stateSubscriberPtr_->getLatestRbdStamp().toSec() - initTime_;
 
     // Set mode
     observation.mode = 14;  // This is not important

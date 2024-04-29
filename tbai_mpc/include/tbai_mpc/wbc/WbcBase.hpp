@@ -4,6 +4,10 @@
 #include <pinocchio/fwd.hpp>
 // clang-format on
 
+#include <memory>
+#include <vector>
+#include <string>
+
 #include <ocs2_anymal_models/QuadrupedCom.h>
 #include <ocs2_anymal_models/QuadrupedKinematics.h>
 #include <tbai_mpc/wbc/Task.hpp>
@@ -15,7 +19,7 @@ class WbcBase {
    public:
     WbcBase(const std::string &configFile, const std::string &urdfString,
             const switched_model::ComModelBase<scalar_t> &comModel,
-            const switched_model::KinematicsModelBase<scalar_t> &kinematics);
+            const switched_model::KinematicsModelBase<scalar_t> &kinematics, const std::string &configPrefix);
 
     virtual ~WbcBase() = default;
 
@@ -96,7 +100,7 @@ class WbcBase {
     size_t nContacts_;
 
    private:
-    void loadSettings(const std::string &configFile);
+    void loadSettings(const std::string &configFile, const std::string &configPrefix);
     void generateFrictionConeMatrix(const scalar_t mu);
 
     std::unique_ptr<switched_model::ComModelBase<scalar_t>> comModelPtr_;

@@ -7,6 +7,7 @@
 #include <ocs2_switched_model_interface/core/Rotations.h>
 #include <ocs2_switched_model_interface/terrain/PlaneFitting.h>
 #include <ocs2_switched_model_msgs/local_terrain.h>
+#include <tbai_core/Throws.hpp>
 #include <tbai_core/config/YamlConfig.hpp>
 namespace tbai {
 namespace mpc {
@@ -19,12 +20,15 @@ LocalTerrainEstimator::LocalTerrainEstimator() {
     // Get ros node handle
     ros::NodeHandle nodeHandle;
 
+    // Load robot description - urdf
     std::string urdfString;
-    nodeHandle.getParam("/robot_description", urdfString);
+    TBAI_ROS_THROW_IF(!nodeHandle.getParam("/robot_description", urdfString),
+                      "Failed to get robot description from parameter server.");
 
     // load frame declaration file
-    std::string frameDeclarationFile =
-        "/home/kuba/fun/ocs2_project/src/ocs2_fun/ocs2_anymal_robot/config/frame_declarations.info";
+    std::string frameDeclarationFile;
+    TBAI_ROS_THROW_IF(!nodeHandle.getParam("/frame_declaration_file", frameDeclarationFile),
+                      "Failed to get frame declaration file from parameter server.");
 
     // Load kinematics model
     kinematicsModel_ = getAnymalKinematics(anymal::frameDeclarationFromFile(frameDeclarationFile), urdfString);
@@ -262,8 +266,9 @@ void ReferenceTrajectoryGenerator::terrainCallback(const grid_map_msgs::GridMap 
 }
 
 std::unique_ptr<ReferenceTrajectoryGenerator> getReferenceTrajectoryGeneratorUnique(ros::NodeHandle &nh) {
-    const std::string configPath =
-        "/home/kuba/fun/ocs2_project/src/ocs2_fun/ocs2_anymal_robot/config/targetCommand.info";
+    std::string configPath;
+    TBAI_ROS_THROW_IF(!nh.getParam("target_command_config_file", configPath),
+                      "Failed to get config file path from parameter server.");
     return std::make_unique<ReferenceTrajectoryGenerator>(configPath, nh);
 }
 

@@ -19,7 +19,7 @@ namespace switched_model {
 /*********************************************************************************************************************/
 WbcBase::WbcBase(const std::string &configFile, const std::string &urdfString,
                  const switched_model::ComModelBase<scalar_t> &comModel,
-                 const switched_model::KinematicsModelBase<scalar_t> &kinematics)
+                 const switched_model::KinematicsModelBase<scalar_t> &kinematics, const std::string &configPrefix)
     : pinocchioInterfaceMeasured_(anymal::createQuadrupedPinocchioInterfaceFromUrdfString(urdfString)),
       comModelPtr_(comModel.clone()),
       kinematicsPtr_(kinematics.clone()) {
@@ -37,7 +37,7 @@ WbcBase::WbcBase(const std::string &configFile, const std::string &urdfString,
     Jcontact_ = matrix_t(3 * NUM_CONTACT_POINTS, nGeneralizedCoordinates_);
     dJcontactdt_ = matrix_t(3 * NUM_CONTACT_POINTS, nGeneralizedCoordinates_);
 
-    loadSettings(configFile);
+    loadSettings(configFile, configPrefix);
 }
 
 /*********************************************************************************************************************/
@@ -387,40 +387,38 @@ void WbcBase::updateContactFlags(const size_t modeCurrent, const size_t modeDesi
 void WbcBase::generateFrictionConeMatrix(const scalar_t mu) {
     muMatrix_ = matrix_t(4, 3);
     muMatrix_ << 1, 0, -mu,  // clang-format off
-				-1, 0, -mu,
-				 0, 1, -mu,
-				 0,-1, -mu;  // clang-format on
+                -1,  0, -mu,
+                 0,  1, -mu,
+                 0, -1, -mu;  // clang-format on
 }
 
 /*********************************************************************************************************************/
 /*********************************************************************************************************************/
 /*********************************************************************************************************************/
 
-void WbcBase::loadSettings(const std::string &configFile) {
+void WbcBase::loadSettings(const std::string &configFile, const std::string &configPrefix) {
     using ocs2::scalar_t;
     using ocs2::loadData::loadCppDataType;
 
-    const std::string prefix = "sqpWbc.";
-
     // friction coefficient
     scalar_t mu;
-    loadCppDataType<scalar_t>(configFile, prefix + "frictionCoefficient", mu);
+    loadCppDataType<scalar_t>(configFile, configPrefix + "frictionCoefficient", mu);
     generateFrictionConeMatrix(mu);
 
     // swing kp and kd
-    loadCppDataType<scalar_t>(configFile, prefix + "swingKp", swingKp_);
-    loadCppDataType<scalar_t>(configFile, prefix + "swingKd", swingKd_);
+    loadCppDataType<scalar_t>(configFile, configPrefix + "swingKp", swingKp_);
+    loadCppDataType<scalar_t>(configFile, configPrefix + "swingKd", swingKd_);
 
     // base kp and kd
-    loadCppDataType<scalar_t>(configFile, prefix + "baseKp", baseKp_);
-    loadCppDataType<scalar_t>(configFile, prefix + "baseKd", baseKd_);
+    loadCppDataType<scalar_t>(configFile, configPrefix + "baseKp", baseKp_);
+    loadCppDataType<scalar_t>(configFile, configPrefix + "baseKd", baseKd_);
 
     // euler kp and kd
-    loadCppDataType<scalar_t>(configFile, prefix + "eulerKp", eulerKp_);
-    loadCppDataType<scalar_t>(configFile, prefix + "eulerKd", eulerKd_);
+    loadCppDataType<scalar_t>(configFile, configPrefix + "eulerKp", eulerKp_);
+    loadCppDataType<scalar_t>(configFile, configPrefix + "eulerKd", eulerKd_);
 
     // torque limit
-    loadCppDataType<scalar_t>(configFile, prefix + "torqueLimit", torqueLimit_);
+    loadCppDataType<scalar_t>(configFile, configPrefix + "torqueLimit", torqueLimit_);
 }
 
 }  // namespace switched_model

@@ -89,11 +89,7 @@ void HqpWbc::loadSettings(const std::string &configFile) {
     using ocs2::scalar_t;
     using ocs2::loadData::loadCppDataType;
 
-    const std::string prefix = "sqpWbc.";
-
-    loadCppDataType<scalar_t>(configFile, prefix + "weightBaseTracking", weightBaseAcceleration_);
-    loadCppDataType<scalar_t>(configFile, prefix + "weightSwingLeg", weightSwingLeg_);
-    loadCppDataType<scalar_t>(configFile, prefix + "weightContactForce", weightContactForce_);
+    const std::string prefix = "hqpWbc.";
 
     loadCppDataType<scalar_t>(configFile, prefix + "jointSwingKp", jointSwingKp_);
     loadCppDataType<scalar_t>(configFile, prefix + "jointSwingKd", jointSwingKd_);

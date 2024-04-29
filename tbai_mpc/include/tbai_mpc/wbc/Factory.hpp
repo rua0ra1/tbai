@@ -2,6 +2,7 @@
 
 #include <memory>
 #include <string>
+#include <vector>
 
 #include "tbai_mpc/wbc/HqpWbc.hpp"
 #include "tbai_mpc/wbc/SqpWbc.hpp"

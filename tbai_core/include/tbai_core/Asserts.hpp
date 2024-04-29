@@ -1,4 +1,5 @@
 
+#pragma once
 
 #ifdef TBAI_DISABLE_ASSERTS
 #define TBAI_ASSERT(condition, message)

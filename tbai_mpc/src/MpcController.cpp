@@ -11,6 +11,7 @@
 
 #include <ocs2_switched_model_interface/core/MotionPhaseDefinition.h>
 #include <tbai_core/Utils.hpp>
+#include <tbai_core/Throws.hpp>
 
 namespace tbai {
 namespace mpc {
@@ -23,28 +24,28 @@ MpcController::MpcController(const std::shared_ptr<tbai::core::StateSubscriber> 
     ros::NodeHandle nh;
 
     // Load default joint state
-    std::string targetCommandConfig =
-        "/home/kuba/fun/ocs2_project/src/ocs2_fun/ocs2_anymal_robot/config/targetCommand.info";
-
-    // Description name
-    std::string descriptionName = "robot_description";
+    std::string targetCommandConfig;
+    TBAI_ROS_THROW_IF(!nh.getParam("/target_command_config_file", targetCommandConfig),
+                      "Failed to get parameter /target_command_config_file");
 
     // URDF
     std::string urdfString;
-    nh.getParam(descriptionName, urdfString);
+    TBAI_ROS_THROW_IF(!nh.getParam("/robot_description", urdfString), "Failed to get parameter /robot_description");
 
     // Task settings
-    std::string taskSettingsFile = "/home/kuba/fun/ocs2_project/src/ocs2_fun/ocs2_anymal_robot/config/task.info";
+    std::string taskSettingsFile;
+    TBAI_ROS_THROW_IF(!nh.getParam("/task_settings_file", taskSettingsFile),
+                      "Failed to get parameter /task_settings_file");
 
     // Frame declarations
-    std::string frameDeclarationFile =
-        "/home/kuba/fun/ocs2_project/src/ocs2_fun/ocs2_anymal_robot/config/frame_declarations.info";
+    std::string frameDeclarationFile;
+    TBAI_ROS_THROW_IF(!nh.getParam("/frame_declaration_file", frameDeclarationFile),
+                      "Failed to get parameter /frame_declaration_file");
 
     // Controller config
-    std::string controllerConfigFile =
-        "/home/kuba/fun/ocs2_project/src/ocs2_fun/ocs2_anymal_robot/config/controllers.info";
-
-    const std::string stateTopic = "/" + descriptionName + "/" + robotName + "/state";
+    std::string controllerConfigFile;
+    TBAI_ROS_THROW_IF(!nh.getParam("/controller_config_file", controllerConfigFile),
+                      "Failed to get parameter /controller_config_file");
 
     quadrupedInterfacePtr_ =
         anymal::getAnymalInterface(urdfString, switched_model::loadQuadrupedSettings(taskSettingsFile),
@@ -200,8 +201,7 @@ ocs2::SystemObservation MpcController::generateSystemObservation() const {
 
     // Set observation time
     ocs2::SystemObservation observation;
-    observation.time =
-        stateSubscriberPtr_->getLatestRbdStamp().toSec() - initTime_;  // TODO: Replace with actual observation stamp
+    observation.time = stateSubscriberPtr_->getLatestRbdStamp().toSec() - initTime_;
 
     // Set mode
     observation.mode = switched_model::stanceLeg2ModeNumber(stateSubscriberPtr_->getContactFlags());
