@@ -64,8 +64,8 @@
 
     <!-- Launch convex decomposition node -->
         <include file="$(find convex_plane_decomposition_ros)/launch/convex_plane_decomposition.launch">
-          <arg name="parameter_file" default="$(find tbai_mpc)/config/convex_plane_decomposition_parameters.yaml"/>
-          <arg name="node_parameter_file" default="$(find tbai_mpc)/config/convex_plane_decomposition_node.yaml"/>
+          <arg name="parameter_file" default="$(find tbai_mpc_perceptive)/config/convex_plane_decomposition_parameters.yaml"/>
+          <arg name="node_parameter_file" default="$(find tbai_mpc_perceptive)/config/convex_plane_decomposition_node.yaml"/>
         </include>
 
         <!-- Elevation mapping -->
@@ -122,7 +122,7 @@
         </node>
 
         <node pkg="elevation_mapping" type="elevation_mapping" name="elevation_mapping" output="screen">
-        <rosparam command="load" file="$(find tbai_mpc)/config/elevation_mapping.yaml"/>
+        <rosparam command="load" file="$(find tbai_mpc_perceptive)/config/elevation_mapping.yaml"/>
         </node>
 
 </launch>
