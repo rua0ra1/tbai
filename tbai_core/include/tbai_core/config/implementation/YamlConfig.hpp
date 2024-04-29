@@ -1,5 +1,4 @@
-#ifndef TBAI_CORE_INCLUDE_TBAI_CORE_CONFIG_IMPLEMENTATION_YAMLCONFIG_HPP_
-#define TBAI_CORE_INCLUDE_TBAI_CORE_CONFIG_IMPLEMENTATION_YAMLCONFIG_HPP_
+#pragma once
 
 #include <iostream>
 #include <string>
@@ -109,5 +108,3 @@ T fromRosConfig(const std::string &path, const char delim, const std::string &co
 
 }  // namespace core
 }  // namespace tbai
-
-#endif  // TBAI_CORE_INCLUDE_TBAI_CORE_CONFIG_IMPLEMENTATION_YAMLCONFIG_HPP_

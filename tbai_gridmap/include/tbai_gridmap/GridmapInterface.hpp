@@ -1,5 +1,4 @@
-#ifndef TBAI_GRIDMAP_INCLUDE_TBAI_GRIDMAP_GRIDMAPINTERFACE_HPP_
-#define TBAI_GRIDMAP_INCLUDE_TBAI_GRIDMAP_GRIDMAPINTERFACE_HPP_
+#pragma once
 
 #include <memory>
 #include <string>
@@ -93,5 +92,3 @@ std::shared_ptr<GridmapInterface> getGridmapInterfaceShared();
 
 }  // namespace gridmap
 }  // namespace tbai
-
-#endif  // TBAI_GRIDMAP_INCLUDE_TBAI_GRIDMAP_GRIDMAPINTERFACE_HPP_

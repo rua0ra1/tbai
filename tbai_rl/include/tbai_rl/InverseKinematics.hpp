@@ -1,5 +1,4 @@
-#ifndef TBAI_RL_INCLUDE_TBAI_RL_INVERSEKINEMATICS_HPP_
-#define TBAI_RL_INCLUDE_TBAI_RL_INVERSEKINEMATICS_HPP_
+#pragma once
 
 #include <memory>
 
@@ -53,5 +52,3 @@ std::shared_ptr<InverseKinematics> getInverseKinematicsShared();
 
 }  // namespace rl
 }  // namespace tbai
-
-#endif  // TBAI_RL_INCLUDE_TBAI_RL_INVERSEKINEMATICS_HPP_

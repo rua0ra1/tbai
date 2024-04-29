@@ -1,5 +1,4 @@
-#ifndef TBAI_REFERENCE_INCLUDE_TBAI_REFERENCE_REFERENCEVELOCITYGENERATOR_HPP_
-#define TBAI_REFERENCE_INCLUDE_TBAI_REFERENCE_REFERENCEVELOCITYGENERATOR_HPP_
+#pragma once
 
 #include <memory>
 #include <string>
@@ -106,5 +105,3 @@ std::shared_ptr<ReferenceVelocityGenerator> getReferenceVelocityGeneratorShared(
 
 }  // namespace reference
 }  // namespace tbai
-
-#endif  // TBAI_REFERENCE_INCLUDE_TBAI_REFERENCE_REFERENCEVELOCITYGENERATOR_HPP_

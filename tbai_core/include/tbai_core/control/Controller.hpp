@@ -1,5 +1,4 @@
-#ifndef TBAI_CORE_INCLUDE_TBAI_CORE_CONTROL_CONTROLLER_HPP_
-#define TBAI_CORE_INCLUDE_TBAI_CORE_CONTROL_CONTROLLER_HPP_
+#pragma once
 
 #include <string>
 
@@ -69,5 +68,3 @@ class Controller {
 
 }  // namespace core
 }  // namespace tbai
-
-#endif  // TBAI_CORE_INCLUDE_TBAI_CORE_CONTROL_CONTROLLER_HPP_

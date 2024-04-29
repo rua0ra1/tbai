@@ -1,5 +1,4 @@
-#ifndef TBAI_STATIC_INCLUDE_TBAI_STATIC_STATICCONTROLLER_HPP_
-#define TBAI_STATIC_INCLUDE_TBAI_STATIC_STATICCONTROLLER_HPP_
+#pragma once
 
 #include <memory>
 #include <string>
@@ -101,5 +100,3 @@ class StaticController : public tbai::core::Controller {
 
 }  // namespace static_
 }  // namespace tbai
-
-#endif  // TBAI_STATIC_INCLUDE_TBAI_STATIC_STATICCONTROLLER_HPP_

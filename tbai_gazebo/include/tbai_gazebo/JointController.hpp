@@ -1,6 +1,4 @@
-#ifndef TBAI_GAZEBO_INCLUDE_TBAI_GAZEBO_JOINTCONTROLLER_HPP_
-#define TBAI_GAZEBO_INCLUDE_TBAI_GAZEBO_JOINTCONTROLLER_HPP_
-
+#pragma once
 // System
 #include <string>
 #include <unordered_map>
@@ -67,5 +65,3 @@ class JointController : public controller_interface::Controller<hardware_interfa
 
 }  // namespace gazebo
 }  // namespace tbai
-
-#endif  // TBAI_GAZEBO_INCLUDE_TBAI_GAZEBO_JOINTCONTROLLER_HPP_

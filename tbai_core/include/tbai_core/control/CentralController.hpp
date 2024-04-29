@@ -1,5 +1,4 @@
-#ifndef TBAI_CORE_INCLUDE_TBAI_CORE_CONTROL_CENTRALCONTROLLER_HPP_
-#define TBAI_CORE_INCLUDE_TBAI_CORE_CONTROL_CENTRALCONTROLLER_HPP_
+#pragma once
 
 #include <memory>
 #include <string>
@@ -105,5 +104,3 @@ class CentralController {
 
 }  // namespace core
 }  // namespace tbai
-
-#endif  // TBAI_CORE_INCLUDE_TBAI_CORE_CONTROL_CENTRALCONTROLLER_HPP_

@@ -1,5 +1,4 @@
-#ifndef TBAI_RL_INCLUDE_TBAI_RL_CENTRALPATTERNGENERATOR_HPP_
-#define TBAI_RL_INCLUDE_TBAI_RL_CENTRALPATTERNGENERATOR_HPP_
+#pragma once
 
 #include <memory>
 
@@ -36,5 +35,3 @@ std::shared_ptr<CentralPatternGenerator> getCentralPatternGeneratorShared();
 
 }  // namespace rl
 }  // namespace tbai
-
-#endif  // TBAI_RL_INCLUDE_TBAI_RL_CENTRALPATTERNGENERATOR_HPP_

@@ -1,5 +1,4 @@
-#ifndef TBAI_GAZEBO_INCLUDE_TBAI_GAZEBO_STATEPUBLISHER_HPP_
-#define TBAI_GAZEBO_INCLUDE_TBAI_GAZEBO_STATEPUBLISHER_HPP_
+#pragma once
 
 #include <vector>
 
@@ -50,5 +49,3 @@ class StatePublisher : public ModelPlugin {
 };
 
 }  // namespace gazebo
-
-#endif  // TBAI_GAZEBO_INCLUDE_TBAI_GAZEBO_STATEPUBLISHER_HPP_

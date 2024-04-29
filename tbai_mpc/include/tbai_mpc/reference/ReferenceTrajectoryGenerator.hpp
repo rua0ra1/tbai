@@ -1,5 +1,4 @@
-#ifndef TBAI_MPC_INCLUDE_TBAI_MPC_REFERENCE_REFERENCETRAJECTORYGENERATOR_HPP_
-#define TBAI_MPC_INCLUDE_TBAI_MPC_REFERENCE_REFERENCETRAJECTORYGENERATOR_HPP_
+#pragma once
 
 #include <memory>
 #include <mutex>
@@ -99,5 +98,3 @@ std::shared_ptr<ReferenceTrajectoryGenerator> getReferenceTrajectoryGeneratorSha
 }  // namespace reference
 }  // namespace mpc
 }  // namespace tbai
-
-#endif  // TBAI_MPC_INCLUDE_TBAI_MPC_REFERENCE_REFERENCETRAJECTORYGENERATOR_HPP_

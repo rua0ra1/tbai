@@ -1,5 +1,4 @@
-#ifndef TBAI_RL_INCLUDE_TBAI_RL_BOBCONTROLLER_HPP_
-#define TBAI_RL_INCLUDE_TBAI_RL_BOBCONTROLLER_HPP_
+#pragma once
 
 // clang-format off
 #include <pinocchio/fwd.hpp>
@@ -30,8 +29,8 @@
 namespace tbai {
 namespace rl {
 
-using namespace tbai;
-using namespace torch::indexing;
+using namespace tbai; // NOLINT
+using namespace torch::indexing; // NOLINT
 using torch::jit::script::Module;
 
 class BobController : public tbai::core::Controller {
@@ -150,5 +149,3 @@ class BobController : public tbai::core::Controller {
 
 }  // namespace rl
 }  // namespace tbai
-
-#endif  // TBAI_RL_INCLUDE_TBAI_RL_BOBCONTROLLER_HPP_

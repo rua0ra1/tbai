@@ -1,5 +1,4 @@
-#ifndef TBAI_CORE_INCLUDE_TBAI_CORE_TYPES_HPP_
-#define TBAI_CORE_INCLUDE_TBAI_CORE_TYPES_HPP_
+#pragma once
 
 #include <Eigen/Dense>
 
@@ -27,5 +26,3 @@ using angleaxis_t = Eigen::AngleAxis<scalar_t>;
 using quaternion_t = Eigen::Quaternion<scalar_t>;
 
 }  // namespace tbai
-
-#endif  // TBAI_CORE_INCLUDE_TBAI_CORE_TYPES_HPP_

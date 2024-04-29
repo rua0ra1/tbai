@@ -1,5 +1,4 @@
-#ifndef TBAI_RL_INCLUDE_TBAI_RL_STATE_HPP_
-#define TBAI_RL_INCLUDE_TBAI_RL_STATE_HPP_
+#pragma once
 
 #include <tbai_core/Types.hpp>
 
@@ -50,5 +49,3 @@ struct State {
 
 }  // namespace rl
 }  // namespace tbai
-
-#endif  // TBAI_RL_INCLUDE_TBAI_RL_STATE_HPP_

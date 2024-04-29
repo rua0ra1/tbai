@@ -1,5 +1,4 @@
-#ifndef TBAI_CORE_INCLUDE_TBAI_CORE_CONTROL_STATESUBSCRIBER_HPP_
-#define TBAI_CORE_INCLUDE_TBAI_CORE_CONTROL_STATESUBSCRIBER_HPP_
+#pragma once
 
 #include <string>
 
@@ -73,5 +72,3 @@ class StateSubscriber {
 
 }  // namespace core
 }  // namespace tbai
-
-#endif  // TBAI_CORE_INCLUDE_TBAI_CORE_CONTROL_STATESUBSCRIBER_HPP_

@@ -1,5 +1,4 @@
-#ifndef TBAI_REFERENCE_INCLUDE_TBAI_REFERENCE_TYPES_HPP_
-#define TBAI_REFERENCE_INCLUDE_TBAI_REFERENCE_TYPES_HPP_
+#pragma once
 
 #include <tbai_core/Types.hpp>
 
@@ -20,5 +19,3 @@ struct ReferenceVelocity {
 
 }  // namespace reference
 }  // namespace tbai
-
-#endif  // TBAI_REFERENCE_INCLUDE_TBAI_REFERENCE_TYPES_HPP_
