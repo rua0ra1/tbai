@@ -178,8 +178,6 @@ Task WbcBase::createBaseAccelerationTask(const vector_t &stateCurrent, const vec
     vector_t baseAccelerationLocal = comModelPtr_->calculateBaseLocalAccelerations(
         basePose, baseVelocity, jointPositions, jointVelocities, jointAccelerations, forcesOnBaseInBaseFrame);
 
-    vector_t baseAccelerationGlobal = vector_t::Zero(6);
-
     /* Base position error */
     auto positionError = rDesired_.transpose() * basePose.tail<3>() - rMeasured_.transpose() * qMeasured_.head<3>();
 
@@ -196,16 +194,20 @@ Task WbcBase::createBaseAccelerationTask(const vector_t &stateCurrent, const vec
     vector3_t w_desired = stateDesired.segment<3>(6);
     vector3_t w_error = w_desired - w_current;
 
-    // desired global linear acceleration
-    baseAccelerationGlobal.head<3>() = baseAccelerationLocal.tail<3>() + baseKp_ * positionError + baseKd_ * v_error;
+    // This "total" desired acceleration is expressed in the base frame - this is FreeFlyer's property
+    // See https://github.com/stack-of-tasks/pinocchio/issues/1140#issuecomment-611878250
+    vector_t baseAcceleration = vector_t::Zero(6);
 
-    // desired global angular acceleration
-    baseAccelerationGlobal.tail<3>() = baseAccelerationLocal.head<3>() + eulerKp_ * eulerError + eulerKd_ * w_error;
+    // desired base linear acceleration (expressed in base frame)
+    baseAcceleration.head<3>() = baseAccelerationLocal.tail<3>() + baseKp_ * positionError + baseKd_ * v_error;
+
+    // desired base angular acceleration (expressed in base frame)
+    baseAcceleration.tail<3>() = baseAccelerationLocal.head<3>() + eulerKp_ * eulerError + eulerKd_ * w_error;
 
     matrix_t A = matrix_t::Zero(6, nDecisionVariables_);
     A.block<6, 6>(0, 0) = matrix_t::Identity(6, 6);
 
-    return Task(A, baseAccelerationGlobal, matrix_t(), vector_t());
+    return Task(A, baseAcceleration, matrix_t(), vector_t());
 }
 
 /*********************************************************************************************************************/
