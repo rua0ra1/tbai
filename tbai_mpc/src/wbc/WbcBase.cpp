@@ -194,7 +194,7 @@ Task WbcBase::createBaseAccelerationTask(const vector_t &stateCurrent, const vec
     vector3_t w_desired = stateDesired.segment<3>(6);
     vector3_t w_error = w_desired - w_current;
 
-    // This "total" desired acceleration is expressed in the base frame - this is FreeFlyer's property
+    // "total" desired acceleration is expressed in the base frame - this is the FreeFlyer's property
     // See https://github.com/stack-of-tasks/pinocchio/issues/1140#issuecomment-611878250
     vector_t baseAcceleration = vector_t::Zero(6);
 
