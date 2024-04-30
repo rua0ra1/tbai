@@ -5,8 +5,6 @@ project(tbai_rl)
 add_compile_options(-std=c++17)
 set(CMAKE_CXX_STANDARD 17)
 
-set(Torch_DIR /home/kuba/Downloads/libtorch/share/cmake/Torch)
-
 find_package(catkin REQUIRED COMPONENTS
   tf
   urdf
@@ -21,8 +19,13 @@ find_package(catkin REQUIRED COMPONENTS
   visualization_msgs
 )
 
+set(Torch_DIR ${LIBTORCH_CMAKE_DIR})
+find_package(Torch)
+if (NOT Torch_FOUND)
+    message(FATAL_ERROR "PyTorch Not Found! Move your libtorch to the ${LIBTORCH_DIR} folder. You can a symlink if you want. See the 'Installing libtorch C++' section in the README.md file.")
+endif()
+
 find_package(pinocchio REQUIRED)
-find_package(Torch REQUIRED)
 
 catkin_package(
   INCLUDE_DIRS include

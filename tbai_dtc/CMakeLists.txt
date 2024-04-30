@@ -22,8 +22,12 @@ find_package(catkin REQUIRED COMPONENTS
   ocs2_ros_interfaces
   tbai_reference
 )
-set(Torch_DIR /home/kuba/Downloads/libtorch/share/cmake/Torch)
-find_package(Torch REQUIRED)
+
+set(Torch_DIR ${LIBTORCH_CMAKE_DIR})
+find_package(Torch)
+if (NOT Torch_FOUND)
+    message(FATAL_ERROR "PyTorch Not Found! Move your libtorch to the ${LIBTORCH_DIR} folder. You can a symlink if you want. See the 'Installing libtorch C++' section in the README.md file.")
+endif()
 
 catkin_package(
   INCLUDE_DIRS include
