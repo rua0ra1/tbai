@@ -96,7 +96,7 @@ void CentralController::start() {
         auto duration2 = std::chrono::duration_cast<std::chrono::microseconds>(t3 - t2).count();
         auto sleepTimePercentage = 100.0 * duration2 / (duration1 + duration2);
 
-        ROS_DEBUG_STREAM_THROTTLE(
+        ROS_INFO_STREAM_THROTTLE(
             5.0, "[CentralController] Loop duration: " << duration1 << " us, Sleep duration: " << duration2 << " us, "
                                                        << "Sleep time percentage: " << sleepTimePercentage << "%");
     }
