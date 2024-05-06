@@ -40,3 +40,6 @@ reference_generator:
 
   twist:
     topic: "cmd_vel"
+
+contact_sensor:
+  update_rate: 20 # Hz

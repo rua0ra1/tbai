@@ -41,12 +41,11 @@
     <!-- Launch simple node -->
     <node name="simple" pkg="tbai_dtc" type="simple" output="screen"/>
 
-    <arg name="taskFile"          default="$(find ocs2_legged_robot)/config/mpc/task.info"/>
-    <arg name="referenceFile"     default="$(find ocs2_legged_robot)/config/command/reference.info"/>
-    <param name="taskFile"          value="$(arg taskFile)" />
-    <param name="referenceFile"     value="$(arg referenceFile)" />
+    <param name="taskFile"          value="$(find tbai_dtc)/config/task.info" />
+    <param name="referenceFile"     value="$(find tbai_dtc)/config/reference.info" />
+    <param name="gaitCommandFile"   value="$(find tbai_dtc)/config/gait.info"/>
+    <param name="dtcModelFile"      value="$(find tbai_dtc)/models/dtc_wbc_jitted.pt"/>
     <param name="urdfFile"          value="$(find ocs2_robotic_assets)/resources/anymal_d/urdf/anymal.urdf" />
-    <param name="gaitCommandFile"   value="$(find ocs2_legged_robot)/config/command/gait.info"/>
 
     <node pkg="ocs2_legged_robot_ros" type="legged_robot_sqp_mpc" name="legged_robot_sqp_mpc"
           output="screen" launch-prefix=""/>
@@ -57,6 +56,6 @@
     <node pkg="ocs2_legged_robot_ros" type="legged_robot_target" name="legged_robot_target"
           output="screen" launch-prefix="gnome-terminal --"/>
 
-    <arg name="rvizconfig" default="$(find ocs2_legged_robot_ros)/rviz/legged_robot.rviz" />
+    <arg name="rvizconfig" default="$(find tbai_dtc)/launch/rviz/dtc.rviz" />
       <node pkg="rviz" type="rviz" name="rviz" args="-d $(arg rvizconfig)" output="screen" />   
 </launch>

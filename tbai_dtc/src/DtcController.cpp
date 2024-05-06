@@ -2,7 +2,7 @@
 #include <pinocchio/fwd.hpp>
 // clang-format on
 
-#include <tbai_core/Rotations.hpp>
+#include <tbai_core/config/YamlConfig.hpp>
 #include "tbai_dtc/DtcController.hpp"
 
 #include <pinocchio/parsers/urdf.hpp>
@@ -24,9 +24,12 @@
 #include <pinocchio/algorithm/centroidal.hpp>
 #include <string>
 #include <tbai_core/Asserts.hpp>
+#include <tbai_core/Throws.hpp>
 #include <vector>
 
 #include <tbai_core/Utils.hpp>
+
+#define DTC_PRINT(message) std::cout << "[Dtc controller] | " << message << std::endl
 
 namespace tbai {
 
@@ -34,133 +37,240 @@ namespace dtc {
 
 DtcController::DtcController(const std::shared_ptr<tbai::core::StateSubscriber> &stateSubscriber)
     : stateSubscriberPtr_(stateSubscriber), mrt_("legged_robot") {
+    // Load initial time - the epoch
     initTime_ = tbai::core::getEpochStart();
 
+    // Launch ROS nodes
     ros::NodeHandle nh;
     mrt_.launchNodes(nh);
-    setupPinocchioModel();
 
-    std::string taskFile;
-    ros::param::get("taskFile", taskFile);
+    // Load parameters
+    std::string taskFile, urdfFile, referenceFile;
+    TBAI_STD_THROW_IF(!nh.getParam("taskFile", taskFile), "Task file not found");
+    TBAI_STD_THROW_IF(!nh.getParam("urdfFile", urdfFile), "URDF file not found");
+    TBAI_STD_THROW_IF(!nh.getParam("referenceFile", referenceFile), "Reference file not found");
 
-    std::string urdfFile;
-    ros::param::get("urdfFile", urdfFile);
+    // Load default joint angles
+    DTC_PRINT("[DtcController] Loading default joint angles");
+    defaultJointAngles_ = tbai::core::fromRosConfig<vector_t>("static_controller/stand_controller/joint_angles");
 
-    std::string referenceFile;
-    ros::param::get("referenceFile", referenceFile);
+    // Load joint names
+    DTC_PRINT("[DtcController] Loading joint names");
+    jointNames_ = tbai::core::fromRosConfig<std::vector<std::string>>("joint_names");
 
-    ROS_INFO_STREAM("[DtcController] Setting up legged interface");
-
-    leggedInterface_ = std::make_unique<ocs2::legged_robot::LeggedRobotInterface>(taskFile, urdfFile, referenceFile);
-    ROS_INFO_STREAM("[DtcController] Setting up pinocchio interface");
-    pinocchioInterface_ = std::make_unique<ocs2::PinocchioInterface>(leggedInterface_->getPinocchioInterface());
-    ROS_INFO_STREAM("[DtcController] Setting up centroidal model mapping");
-    centroidalModelMapping_ =
-        std::make_unique<ocs2::CentroidalModelPinocchioMapping>(leggedInterface_->getCentroidalModelInfo());
-
-    ROS_INFO_STREAM("[DtcController] Setting up centroidal model mapping");
-    centroidalModelMapping_->setPinocchioInterface(*pinocchioInterface_);
-
-    ROS_INFO_STREAM("[DtcController] Setting up end effector kinematics");
-    std::vector<std::string> ee = {"LF_FOOT", "LH_FOOT", "RF_FOOT", "RH_FOOT"};
-    endEffectorKinematics_ =
-        std::make_unique<ocs2::PinocchioEndEffectorKinematics>(*pinocchioInterface_, *centroidalModelMapping_, ee);
-
-    ROS_INFO_STREAM("[DtcController] Setting up end effector kinematics");
-    endEffectorKinematics_->setPinocchioInterface(*pinocchioInterface_);
-
-    ROS_INFO_STREAM("[DtcController] Setting up default Dof positions");
-
-    defaultDofPositions_ = (vector_t(12) << 0.0, 0.4, -0.8, 0.0, -0.4, 0.8, 0.0, 0.4, -0.8, 0.0, -0.4, 0.8).finished();
-    ROS_INFO_STREAM("[DtcController] Setup done");
-
-    refVelGen_ = tbai::reference::getReferenceVelocityGeneratorUnique(nh);
-    refPub_ = nh.advertise<ocs2_msgs::mpc_target_trajectories>("legged_robot_mpc_target", 1, false);
-
-    ocs2::CentroidalModelPinocchioMapping pinocchioMapping(leggedInterface_->getCentroidalModelInfo());
-    ocs2::PinocchioEndEffectorKinematics endEffectorKinematics(leggedInterface_->getPinocchioInterface(),
-                                                               pinocchioMapping,
-                                                               leggedInterface_->modelSettings().contactNames3DoF);
-    // auto leggedRobotVisualizer = std::make_shared<LeggedRobotVisualizer>(
-    //    interface.getPinocchioInterface(), interface.getCentroidalModelInfo(), endEffectorKinematics, nodeHandle);
-    visualizer_ = std::make_unique<ocs2::legged_robot::LeggedRobotVisualizer>(
-        leggedInterface_->getPinocchioInterface(), leggedInterface_->getCentroidalModelInfo(), endEffectorKinematics,
-        nh);
-
-    initializeObservations();
-
-    // Load dtc model
-    std::string dtcModelFile = "/home/kuba/fun/tbai/src/tbai/tbai_dtc/models/model_deploy_jitted.pt";
+    // Load DTC model
+    std::string dtcModelFile;
+    TBAI_STD_THROW_IF(!nh.getParam("dtcModelFile", dtcModelFile), "DTC model file not found");
     try {
-        ROS_INFO_STREAM("[DtcController] Loading torch model from: " << dtcModelFile);
+        DTC_PRINT("Loading torch model");
         dtcModel_ = torch::jit::load(dtcModelFile);
     } catch (const c10::Error &e) {
         std::cerr << "Could not load model from: " << dtcModelFile << std::endl;
         throw std::runtime_error("Could not load model");
     }
+    DTC_PRINT("Torch model loaded");
 
-    action_ = torch::zeros({12});
+    // Do basic ff check
+    torch::Tensor input = torch::empty({MODEL_INPUT_SIZE});
+    for (int i = 0; i < MODEL_INPUT_SIZE; ++i) input[i] = static_cast<float>(i);
+    torch::Tensor output = dtcModel_.forward({input.view({1, -1})}).toTensor().view({-1});
+    std::cout << "Basic forward pass check...";
+    std::cout << "Input: " << input.view({1, -1}) << std::endl;
+    std::cout << "Output: " << output.view({1, -1}) << std::endl;
+
+    DTC_PRINT("Setting up legged interface");
+    interfacePtr_ = std::make_unique<LeggedRobotInterface>(taskFile, urdfFile, referenceFile);
+    auto &interface = *interfacePtr_;
+
+    DTC_PRINT("Setting up pinocchio interface");
+    pinocchioInterfacePtr_ = std::make_unique<PinocchioInterface>(interface.getPinocchioInterface());
+    auto &pinocchioInterface = *pinocchioInterfacePtr_;
+
+    DTC_PRINT("Setting up centroidal model mapping");
+    centroidalModelMappingPtr_ = std::make_unique<CentroidalModelPinocchioMapping>(interface.getCentroidalModelInfo());
+    auto &pinocchioMapping = *centroidalModelMappingPtr_;
+    pinocchioMapping.setPinocchioInterface(pinocchioInterface);
+
+    DTC_PRINT("Setting up end effector kinematics");
+    endEffectorKinematicsPtr_ = std::make_unique<PinocchioEndEffectorKinematics>(
+        pinocchioInterface, *centroidalModelMappingPtr_, interface.modelSettings().contactNames3DoF);
+    auto &endEffectorKinematics = *endEffectorKinematicsPtr_;
+    endEffectorKinematics.setPinocchioInterface(pinocchioInterface);
+
+    DTC_PRINT("Setting up RBD conversions");
+    PinocchioInterface pinint_temp(interface.getPinocchioInterface());
+    centroidalModelRbdConversionsPtr_ =
+        std::make_unique<CentroidalModelRbdConversions>(pinint_temp, interface.getCentroidalModelInfo());
+
+    DTC_PRINT("Setting up reference velocity generator");
+    refVelGen_ = tbai::reference::getReferenceVelocityGeneratorUnique(nh);
+    refPub_ = nh.advertise<ocs2_msgs::mpc_target_trajectories>("legged_robot_mpc_target", 1, false);
+
+    DTC_PRINT("Setting up visualizer");
+    CentroidalModelPinocchioMapping cmpmVisualizer(interface.getCentroidalModelInfo());
+    PinocchioEndEffectorKinematics eeVisualizer(interface.getPinocchioInterface(), cmpmVisualizer,
+                                                interface.modelSettings().contactNames3DoF);
+    visualizerPtr_ = std::make_unique<LeggedRobotVisualizer>(
+        interface.getPinocchioInterface(), interface.getCentroidalModelInfo(), endEffectorKinematics, nh);
+
+    horizon_ = interface.mpcSettings().timeHorizon_;
+    // mpcRate_ = interface.mpcSettings().mpcDesiredFrequency_;
     mpcRate_ = 20.0;
+    pastAction_ = vector_t().setZero(12);
+    DTC_PRINT("Initialization done");
 }
 
-void DtcController::publishReference(scalar_t currentTime, scalar_t dt) {
-    dt = 0.1;
-    auto refVel = refVelGen_->getReferenceVelocity(currentTime, 0.1);
-    auto x_vel = refVel.velocity_x;
-    auto y_vel = refVel.velocity_y;
-    auto yaw_rate = refVel.yaw_rate;
-    constexpr scalar_t horizon = 1.0;
-    const scalar_t finalTime = currentTime + horizon;
+void DtcController::publishReference(const TargetTrajectories &targetTrajectories) {
+    const auto mpcTargetTrajectoriesMsg = ocs2::ros_msg_conversions::createTargetTrajectoriesMsg(targetTrajectories);
+    refPub_.publish(mpcTargetTrajectoriesMsg);
+}
 
-    std::cout << "Publishing reference..."
-              << "vx: " << x_vel << " vy: " << y_vel << " yaw_rate: " << yaw_rate << std::endl;
+tbai_msgs::JointCommandArray DtcController::getCommandMessage(scalar_t currentTime, scalar_t dt) {
+    mrt_.spinMRT();
+    mrt_.updatePolicy();
 
-    if (dt == 0) {
-        dt = 0.1;
+    vector3_t linearVelocityObservation = getLinearVelocityObservation(currentTime, dt);
+    vector3_t angularVelocityObservation = getAngularVelocityObservation(currentTime, dt);
+    vector3_t projectedGravityObservation = getProjectedGravityObservation(currentTime, dt);
+    vector3_t commandObservation = getCommandObservation(currentTime, dt);
+    vector_t dofPosObservation = getDofPosObservation(currentTime, dt);
+    vector_t dofVelObservation = getDofVelObservation(currentTime, dt);
+    vector_t pastActionObservation = getPastActionObservation(currentTime, dt);
+    vector_t planarFootholdsObservation = getPlanarFootholdsObservation(currentTime, dt);
+    vector_t desiredJointAnglesObservation = getDesiredJointAnglesObservation(currentTime, dt);
+    vector_t currentDesiredJointAnglesObservation = getCurrentDesiredJointAnglesObservation(currentTime, dt);
+    vector_t desiredContactsObservation = getDesiredContactsObservation(currentTime, dt);
+    vector_t timeLeftInPhaseObservation = getTimeLeftInPhaseObservation(currentTime, dt);
+    vector_t desiredBasePosObservation = getDesiredBasePosObservation(currentTime, dt);
+    vector_t orientationDiffObservation = getOrientationDiffObservation(currentTime, dt);
+    vector_t desiredBaseLinVelObservation = getDesiredBaseLinVelObservation(currentTime, dt);
+    vector_t desiredBaseAngVelObservation = getDesiredBaseAngVelObservation(currentTime, dt);
+    vector_t desiredBaseLinAccObservation = getDesiredBaseLinAccObservation(currentTime, dt);
+    vector_t desiredBaseAngAccObservation = getDesiredBaseAngAccObservation(currentTime, dt);
+    vector_t cpgObservation = getCpgObservation(currentTime, dt);
+    vector_t desiredFootPositionsObservation = getDesiredFootPositionsObservation(currentTime, dt);
+    vector_t desiredFootVelocitiesObservation = getDesiredFootVelocitiesObservation(currentTime, dt);
+
+    vector_t eigenObservation = vector_t(MODEL_INPUT_SIZE);
+    eigenObservation << linearVelocityObservation, angularVelocityObservation, projectedGravityObservation,
+        commandObservation, dofPosObservation, dofVelObservation, pastActionObservation, planarFootholdsObservation,
+        desiredJointAnglesObservation, currentDesiredJointAnglesObservation, desiredContactsObservation,
+        timeLeftInPhaseObservation, desiredBasePosObservation, orientationDiffObservation, desiredBaseLinVelObservation,
+        desiredBaseAngVelObservation, desiredBaseLinAccObservation, desiredBaseAngAccObservation, cpgObservation,
+        desiredFootPositionsObservation, desiredFootVelocitiesObservation;
+
+    torch::Tensor torchObservation = vector2torch(eigenObservation).view({1, -1});
+    torch::Tensor torchAction = dtcModel_.forward({torchObservation}).toTensor().view({-1});
+
+    pastAction_ = torch2vector(torchAction);
+
+    vector_t commandedJointAngles = defaultJointAngles_ + pastAction_ * ACTION_SCALE;
+
+    tbai_msgs::JointCommandArray jointCommandArray;
+    jointCommandArray.joint_commands.resize(jointNames_.size());
+    for (int i = 0; i < jointNames_.size(); ++i) {
+        auto &command = jointCommandArray.joint_commands[i];
+        command.joint_name = jointNames_[i];
+        command.desired_position = commandedJointAngles[i];
+        command.desired_velocity = 0.0;
+        command.torque_ff = 0.0;
+        command.kp = 80;
+        command.kd = 2;
     }
 
-    auto currentObservation = generateSystemObservation();
+    timeSinceLastMpcUpdate_ += dt;
+    if (timeSinceLastMpcUpdate_ > 1.0 / mpcRate_) {
+        setObservation();
+        publishReference(generateTargetTrajectories(currentTime, dt, commandObservation));
+        timeSinceLastMpcUpdate_ = 0.0;
+    }
 
-    // auto initState = initialState_;
-    auto currentState = currentObservation.state;
-    auto initState = currentState;
+    return jointCommandArray;
+}
 
-    const scalar_t v_x = x_vel;
-    const scalar_t v_y = y_vel;
-    const scalar_t w_z = yaw_rate;
+contact_flag_t DtcController::getDesiredContactFlags(scalar_t currentTime, scalar_t dt) {
+    auto &solution = mrt_.getPolicy();
+    auto &modeSchedule = solution.modeSchedule_;
+    size_t mode = modeSchedule.modeAtTime(currentTime);
+    return ocs2::legged_robot::modeNumber2StanceLeg(mode);
+}
 
-    ocs2::scalar_array_t timeTrajectory;
-    ocs2::vector_array_t stateTrajectory;
-    ocs2::vector_array_t inputTrajectory;
+vector_t DtcController::getTimeLeftInPhase(scalar_t currentTime, scalar_t dt) {
+    auto &solution = mrt_.getPolicy();
+    auto &modeSchedule = solution.modeSchedule_;
+
+    contact_flag_t desiredContacts = getDesiredContactFlags(currentTime, dt);
+    auto contactPhases = ocs2::legged_robot::getContactPhasePerLeg(currentTime, modeSchedule);
+    auto swingPhases = ocs2::legged_robot::getSwingPhasePerLeg(currentTime, modeSchedule);
+
+    vector_t timeLeftInPhase(4);
+    for (int i = 0; i < 4; ++i) {
+        if (desiredContacts[i]) {
+            timeLeftInPhase(i) = (1.0 - contactPhases[i].phase) * contactPhases[i].duration;
+        } else {
+            timeLeftInPhase(i) = (1.0 - swingPhases[i].phase) * swingPhases[i].duration;
+        }
+
+        // Make sure there are no nans
+        if (std::isnan(timeLeftInPhase(i))) {
+            timeLeftInPhase(i) = 0.0;
+        }
+    }
+
+    return timeLeftInPhase;
+}
+
+TargetTrajectories DtcController::generateTargetTrajectories(scalar_t currentTime, scalar_t dt,
+                                                             const vector3_t &command) {
+    const scalar_t finalTime = currentTime + horizon_;
+
+    SystemObservation sysobs = generateSystemObservation();
+    vector_t currentState = sysobs.state;
+    vector_t initialState = currentState;
+
+    // Division because it's from the observation vector
+    const scalar_t v_x = command(0) / LIN_VEL_SCALE;
+    const scalar_t v_y = command(1) / LIN_VEL_SCALE;
+    const scalar_t w_z = command(2) / ANG_VEL_SCALE;
+
+    auto &interface = *interfacePtr_;
+    auto &centroidalModelInfo = interface.getCentroidalModelInfo();
+
+    scalar_array_t timeTrajectory;
+    vector_array_t stateTrajectory;
+    vector_array_t inputTrajectory;
 
     // Insert initial time, state and input
     timeTrajectory.push_back(currentTime);
-    stateTrajectory.push_back(initState);
+    stateTrajectory.push_back(initialState);
     inputTrajectory.push_back(vector_t().setZero(24));
 
     // Complete the rest of the trajectory
+    constexpr scalar_t timeStep = 0.1;
     scalar_t time = currentTime;
-    vector_t nextState = initState;
-    nextState.tail<12>() = defaultDofPositions_;
-    nextState.segment<6>(0) = currentState.segment<6>(0);
-    nextState.segment<6>(6) = currentState.segment<6>(6);
-    nextState(8) = 0.54;  // z position
-    nextState(10) = 0.0;  // roll
-    nextState(11) = 0.0;  // pitch
-    nextState(2) = 0.0;   // z velocity
+    vector_t nextState = initialState;
+
+    nextState.tail<12>() = interface.getInitialState().tail<12>();  // Joint angles
+    nextState.segment<6>(0) = currentState.segment<6>(0);           // Normalized linear and angular momentum
+    nextState.segment<6>(6) = currentState.segment<6>(6);           // World position and orientation
+    nextState(8) = 0.54;                                            // z position
+    nextState(10) = 0.0;                                            // roll
+    nextState(11) = 0.0;                                            // pitch
+    nextState(2) = 0.0;                                             // z velocity
+
     while (time < finalTime) {
-        time += dt;
+        time += timeStep;
 
         const scalar_t yaw = nextState(9);
         const scalar_t cy = std::cos(yaw);
         const scalar_t sy = std::sin(yaw);
 
-        const scalar_t dx = (cy * v_x - sy * v_y) * dt;
-        const scalar_t dy = (sy * v_x + cy * v_y) * dt;
-        const scalar_t dw = w_z * dt;
+        const scalar_t dx = (cy * v_x - sy * v_y) * timeStep;
+        const scalar_t dy = (sy * v_x + cy * v_y) * timeStep;
+        const scalar_t dw = w_z * timeStep;
 
-        nextState(0) = dx / dt;
-        nextState(1) = dy / dt;
+        nextState(0) = dx / timeStep;
+        nextState(1) = dy / timeStep;
 
         nextState(6) += dx;
         nextState(7) += dy;
@@ -171,202 +281,417 @@ void DtcController::publishReference(scalar_t currentTime, scalar_t dt) {
         inputTrajectory.push_back(vector_t().setZero(24));
     }
 
-    ocs2::TargetTrajectories t(timeTrajectory, stateTrajectory, inputTrajectory);
-    const auto mpcTargetTrajectoriesMsg = ocs2::ros_msg_conversions::createTargetTrajectoriesMsg(t);
-    refPub_.publish(mpcTargetTrajectoriesMsg);
+    return TargetTrajectories(timeTrajectory, stateTrajectory, inputTrajectory);
 }
 
-tbai_msgs::JointCommandArray DtcController::getCommandMessage(scalar_t currentTime, scalar_t dt) {
-    std::vector<std::string> jointNames = {"LF_HAA", "LF_HFE", "LF_KFE", "LH_HAA", "LH_HFE", "LH_KFE",
-                                           "RF_HAA", "RF_HFE", "RF_KFE", "RH_HAA", "RH_HFE", "RH_KFE"};
-
-    std::vector<scalar_t> jointAngles = {0.0, 0.4, -0.8, 0.0, -0.4, 0.8, 0.0, 0.4, -0.8, 0.0, -0.4, 0.8};
-
-    currentTime = ros::Time::now().toSec() - initTime_;
-
-    tbai_msgs::JointCommandArray jointCommandArray;
-    jointCommandArray.joint_commands.resize(12);
-    for (int i = 0; i < 12; ++i) {
-        auto &command = jointCommandArray.joint_commands[i];
-        command.joint_name = jointNames[i];
-        command.desired_position = jointAngles[i];
-        command.desired_velocity = 0.0;
-        command.torque_ff = 0.0;
-        command.kp = 400;
-        command.kd = 10;
-    }
-
-    std::cout << "DTC controller, Current time:" << currentTime << std::endl;
-
-    mrt_.spinMRT();
-    mrt_.updatePolicy();
-
-    ocs2::PrimalSolution policy = mrt_.getPolicy();
-    computeObservation(policy, currentTime);
-
-    timeSinceLastMpcUpdate_ += dt;
-    if (timeSinceLastMpcUpdate_ >= 1.0 / mpcRate_) {
-        // resetMpc();
-        publishReference(currentTime, dt);
-        setObservation();
-        timeSinceLastMpcUpdate_ = 0.0;
-    }
-
-    // Compute input for the model
-    torch::Tensor input = torch::zeros({MODEL_INPUT_SIZE});
-    fillObsTensor(input);
-
-    // Perform forward pass
-    auto t_start = std::chrono::high_resolution_clock::now();
-    // std::cout << "========================== START ===========================" << std::endl;
-    // std::cout << input << std::endl;
-    // std::cout << "========================== STOP ===========================" << std::endl;
-    auto output = dtcModel_.forward({input.view({1, MODEL_INPUT_SIZE})}).toTensor().squeeze();
-    auto t_end = std::chrono::high_resolution_clock::now();
-    auto duration_ms = std::chrono::duration_cast<std::chrono::microseconds>(t_end - t_start).count() / 1e3;
-
-    // ROS_INFO_STREAM("[DtcController] Forward pass duration: " << duration_ms << " ms");
-    action_ = output;
-
-    // Unpack actions
-    vector_t action = vector_t().setZero(12);
-    for (int i = 0; i < 12; ++i) {
-        action(i) = output[i].item<float>() * ACTION_SCALE + kk_(i);
-        // action(i) = kk_(i);
-    }
-
-    for (int i = 0; i < 12; ++i) {
-        scalar_t angle = action(i);
-        auto &jointName = jointNames[i];
-        // ROS_INFO_STREAM("[DtcController] Joint " << jointName << " angle: " << angle);
-    }
-
-    for (int i = 0; i < 12; ++i) {
-        auto &command = jointCommandArray.joint_commands[i];
-        command.joint_name = jointNames[i];
-        command.desired_position = action(i);
-        command.desired_velocity = 0.0;
-        command.torque_ff = 0.0;
-        command.kp = 80;
-        command.kd = 2;
-    }
-
-    return jointCommandArray;
+std::vector<vector3_t> DtcController::getCurrentFeetPositions(scalar_t currentTime, scalar_t dt) {
+    SystemObservation sysobs = generateSystemObservation();
+    vector_t currentState = sysobs.state;
+    auto &pinocchioMapping = *centroidalModelMappingPtr_;
+    auto &interface = *pinocchioInterfacePtr_;
+    auto qPinocchio = pinocchioMapping.getPinocchioJointPosition(currentState);
+    const auto &model = interface.getModel();
+    auto &data = interface.getData();
+    pinocchio::forwardKinematics(model, data, qPinocchio);
+    pinocchio::updateFramePlacements(model, data);
+    auto &endEffector = *endEffectorKinematicsPtr_;
+    auto positions = endEffector.getPosition(vector_t());
+    return positions;
 }
 
-void DtcController::fillObsTensor(torch::Tensor &tensor) {
-    // Linear velocity
-    tensor[0] = obsLinearVelocity_(0) * LIN_VEL_SCALE;
-    tensor[1] = obsLinearVelocity_(1) * LIN_VEL_SCALE;
-    tensor[2] = obsLinearVelocity_(2) * LIN_VEL_SCALE;
+std::vector<vector3_t> DtcController::getCurrentFeetVelocities(scalar_t currentTime, scalar_t dt) {
+    SystemObservation sysobs = generateSystemObservation();
+    vector_t currentState = sysobs.state;
+    vector_t currentInput = sysobs.input;
+    auto &pinocchioInterface = *pinocchioInterfacePtr_;
+    auto &pinocchioMapping = *centroidalModelMappingPtr_;
+    auto &modelInfo = pinocchioMapping.getCentroidalModelInfo();
+    vector_t qPinocchio = pinocchioMapping.getPinocchioJointPosition(currentState);
+    ocs2::updateCentroidalDynamics(pinocchioInterface, modelInfo, qPinocchio);
+    vector_t vPinocchio = pinocchioMapping.getPinocchioJointVelocity(currentState, currentInput);
 
-    // Angular velocity
-    tensor[3] = obsAngularVelocity_(0) * ANG_VEL_SCALE;
-    tensor[4] = obsAngularVelocity_(1) * ANG_VEL_SCALE;
-    tensor[5] = obsAngularVelocity_(2) * ANG_VEL_SCALE;
+    const auto &model = pinocchioInterface.getModel();
+    auto &data = pinocchioInterface.getData();
 
-    // Gravity
-    tensor[6] = obsProjectedGravity_(0);
-    tensor[7] = obsProjectedGravity_(1);
-    tensor[8] = obsProjectedGravity_(2);
+    pinocchio::forwardKinematics(model, data, qPinocchio, vPinocchio);
+    pinocchio::updateFramePlacements(model, data);
 
-    // Command
-    tensor[9] = obsCommand_(0);
-    tensor[10] = obsCommand_(1);
-    tensor[11] = obsCommand_(2);
+    auto &endEffector = *endEffectorKinematicsPtr_;
+    auto velocities = endEffector.getVelocity(vector_t(), vector_t());
+    return velocities;
+}
 
-    // Joint positions
-    size_t startIdx = 12;
-    for (int i = 0; i < 12; ++i) {
-        tensor[startIdx + i] = obsJointPositions_(i) * DOF_POS_SCALE;
+std::vector<vector3_t> DtcController::getDesiredFeetPositions(scalar_t currentTime, scalar_t dt) {
+    auto &solution = mrt_.getPolicy();
+    vector_t optimizedState =
+        LinearInterpolation::interpolate(currentTime, solution.timeTrajectory_, solution.stateTrajectory_);
+    auto &pinocchioMapping = *centroidalModelMappingPtr_;
+    auto &interface = *pinocchioInterfacePtr_;
+    auto qPinocchio = pinocchioMapping.getPinocchioJointPosition(optimizedState);
+    const auto &model = interface.getModel();
+    auto &data = interface.getData();
+    pinocchio::forwardKinematics(model, data, qPinocchio);
+    pinocchio::updateFramePlacements(model, data);
+    auto &endEffector = *endEffectorKinematicsPtr_;
+    auto positions = endEffector.getPosition(vector_t());
+    return positions;
+}
+
+std::vector<vector3_t> DtcController::getDesiredFeetVelocities(scalar_t currentTime, scalar_t dt) {
+    auto &solution = mrt_.getPolicy();
+    vector_t optimizedState =
+        LinearInterpolation::interpolate(currentTime, solution.timeTrajectory_, solution.stateTrajectory_);
+    vector_t optimizedInput =
+        LinearInterpolation::interpolate(currentTime, solution.timeTrajectory_, solution.inputTrajectory_);
+    auto &pinocchioInterface = *pinocchioInterfacePtr_;
+    auto &pinocchioMapping = *centroidalModelMappingPtr_;
+    auto &modelInfo = pinocchioMapping.getCentroidalModelInfo();
+    vector_t qPinocchio = pinocchioMapping.getPinocchioJointPosition(optimizedState);
+    ocs2::updateCentroidalDynamics(pinocchioInterface, modelInfo, qPinocchio);
+    vector_t vPinocchio = pinocchioMapping.getPinocchioJointVelocity(optimizedState, optimizedInput);
+
+    const auto &model = pinocchioInterface.getModel();
+    auto &data = pinocchioInterface.getData();
+
+    pinocchio::forwardKinematics(model, data, qPinocchio, vPinocchio);
+    pinocchio::updateFramePlacements(model, data);
+
+    auto &endEffector = *endEffectorKinematicsPtr_;
+    auto velocities = endEffector.getVelocity(vector_t(), vector_t());
+    return velocities;
+}
+
+void DtcController::computeBaseKinematicsAndDynamics(scalar_t currentTime, scalar_t dt, vector3_t &basePos,
+                                                     vector3_t &baseOrientation, vector3_t &baseLinearVelocity,
+                                                     vector3_t &baseAngularVelocity, vector3_t &baseLinearAcceleration,
+                                                     vector3_t &baseAngularAcceleration) {
+    auto &solution = mrt_.getPolicy();
+
+    // compute desired MPC state and input
+    vector_t desiredState = LinearInterpolation::interpolate(currentTime + ISAAC_SIM_DT, solution.timeTrajectory_,
+                                                             solution.stateTrajectory_);
+    vector_t desiredInput = LinearInterpolation::interpolate(currentTime + ISAAC_SIM_DT, solution.timeTrajectory_,
+                                                             solution.inputTrajectory_);
+
+    // Calculate desired base kinematics and dynamics
+    using Vector6 = Eigen::Matrix<scalar_t, 6, 1>;
+    Vector6 basePose, baseVelocity, baseAcceleration;
+    vector_t jointAccelerations = vector_t::Zero(12);
+
+    auto &centroidalModelRbdConversions = *centroidalModelRbdConversionsPtr_;
+    centroidalModelRbdConversions.computeBaseKinematicsFromCentroidalModel(
+        desiredState, desiredInput, jointAccelerations, basePose, baseVelocity, baseAcceleration);
+
+    // Unpack data
+    vector3_t desiredBasePosition = basePose.head<3>();
+    vector3_t desiredBaseOrientation = basePose.tail<3>();  // zyx euler angles
+
+    vector3_t desiredBaseLinearVelocity = baseVelocity.head<3>();
+    vector3_t desiredBaseAngularVelocity = baseVelocity.tail<3>();
+
+    vector3_t desiredBaseLinearAcceleration = baseAcceleration.head<3>();
+    vector3_t desiredBaseAngularAcceleration = baseAcceleration.tail<3>();
+
+    basePos = desiredBasePosition;
+    baseOrientation = desiredBaseOrientation;
+    baseLinearVelocity = desiredBaseLinearVelocity;
+    baseAngularVelocity = desiredBaseAngularVelocity;
+    baseLinearAcceleration = desiredBaseLinearAcceleration;
+    baseAngularAcceleration = desiredBaseAngularAcceleration;
+}
+
+vector3_t DtcController::getLinearVelocityObservation(scalar_t currentTime, scalar_t dt) const {
+    const vector_t &rbdState = stateSubscriberPtr_->getLatestRbdState();
+    return rbdState.segment<3>(9) * LIN_VEL_SCALE;  // COM velocity - already expessed in base frame
+}
+
+vector3_t DtcController::getAngularVelocityObservation(scalar_t currentTime, scalar_t dt) const {
+    const vector_t &rbdState = stateSubscriberPtr_->getLatestRbdState();
+    return rbdState.segment<3>(6) * ANG_VEL_SCALE;  // Angular velocity - already expessed in base frame
+}
+
+vector3_t DtcController::getProjectedGravityObservation(scalar_t currentTime, scalar_t dt) const {
+    const vector_t &rbdState = stateSubscriberPtr_->getLatestRbdState();
+    const matrix3_t R_base_world = getRotationMatrixBaseWorld(rbdState);
+    return R_base_world * (vector3_t() << 0.0, 0.0, -1.0).finished() * GRAVITY_SCALE;
+}
+
+vector3_t DtcController::getCommandObservation(scalar_t currentTime, scalar_t dt) {
+    tbai::reference::ReferenceVelocity refvel = refVelGen_->getReferenceVelocity(currentTime, 0.1);
+    return vector3_t(refvel.velocity_x * LIN_VEL_SCALE, refvel.velocity_y * LIN_VEL_SCALE,
+                     refvel.yaw_rate * ANG_VEL_SCALE);
+}
+
+vector_t DtcController::getDofPosObservation(scalar_t currentTime, scalar_t dt) const {
+    const vector_t &rbdState = stateSubscriberPtr_->getLatestRbdState();
+    const vector_t jointAngles = rbdState.segment<12>(12);
+    return (jointAngles - defaultJointAngles_) * DOF_POS_SCALE;
+}
+
+vector_t DtcController::getDofVelObservation(scalar_t currentTime, scalar_t dt) const {
+    const vector_t &rbdState = stateSubscriberPtr_->getLatestRbdState();
+    const vector_t jointVelocities = rbdState.segment<12>(24);
+    return jointVelocities * DOF_VEL_SCALE;
+}
+
+vector_t DtcController::getPastActionObservation(scalar_t currentTime, scalar_t dt) const {
+    return pastAction_ * PAST_ACTION_SCALE;
+}
+
+vector_t DtcController::getPlanarFootholdsObservation(scalar_t currentTime, scalar_t dt) {
+    auto &solution = mrt_.getPolicy();
+    auto &modeSchedule = solution.modeSchedule_;
+    auto timeLeftInPhase = getTimeLeftInPhase(currentTime, dt);
+
+    std::vector<vector3_t> feetPositions = getCurrentFeetPositions(currentTime, dt);
+    const auto &rbdState = stateSubscriberPtr_->getLatestRbdState();
+    vector_t out = vector_t().setZero(8);
+
+    for (int j = 0; j < 4; ++j) {
+        const scalar_t timeLeft = timeLeftInPhase(j);
+
+        auto optimizedState =
+            LinearInterpolation::interpolate(timeLeft, solution.timeTrajectory_, solution.stateTrajectory_);
+
+        // Compute forward kinematics
+        auto &pinocchioMapping = *centroidalModelMappingPtr_;
+        auto &interface = *pinocchioInterfacePtr_;
+        auto qPinocchio = pinocchioMapping.getPinocchioJointPosition(optimizedState);
+        const auto &model = interface.getModel();
+        auto &data = interface.getData();
+        pinocchio::forwardKinematics(model, data, qPinocchio);
+        pinocchio::updateFramePlacements(model, data);
+
+        // Update end effector kinematics
+        auto &endEffector = *endEffectorKinematicsPtr_;
+        auto positions = endEffector.getPosition(vector_t());
+
+        // Update desired footholds
+        matrix3_t R_base_world_yaw = getRotationMatrixBaseWorldYaw(rbdState);
+        vector_t footholdDesired = positions[j];
+        vector_t footholdCurrent = feetPositions[j];
+
+        // This section here is different from env.py
+        // footholdInBase(2) = 0.0; // TODO: Is this necessary? I don't think so
+        // footholdCurrent(2) = 0.0; // TODO: Is this necessary? I don't think so
+        vector_t footholdInBase = R_base_world_yaw * (footholdDesired - footholdCurrent);
+
+        out.segment<2>(2 * j) = footholdInBase.head<2>();
     }
-    startIdx += 12;
 
-    // Joint velocities
-    for (int i = 0; i < 12; ++i) {
-        tensor[startIdx + i] = obsJointVelocities_(i) * DOF_VEL_SCALE;
+    return out;
+}
+
+vector_t DtcController::getDesiredJointAnglesObservation(scalar_t currentTime, scalar_t dt) {
+    auto &solution = mrt_.getPolicy();
+    auto &modeSchedule = solution.modeSchedule_;
+    auto timeLeftInPhase = getTimeLeftInPhase(currentTime, dt);
+    vector_t out = vector_t().setZero(12);
+
+    for (int j = 0; j < 4; ++j) {
+        const scalar_t timeLeft = timeLeftInPhase(j);
+        auto optimizedState =
+            LinearInterpolation::interpolate(timeLeft, solution.timeTrajectory_, solution.stateTrajectory_);
+        auto optimizedJointAngles = optimizedState.segment<12>(12);
+        out.segment<3>(3 * j) = optimizedJointAngles.segment<3>(3 * j);
     }
-    startIdx += 12;
 
-    // Last action
-    for (int i = 0; i < 12; ++i) {
-        tensor[startIdx + i] = obsPastAction_(i);
-    }
-    startIdx += 12;
+    // Subtract default joint angles - this is different from env.py
+    out -= defaultJointAngles_;
 
-    // Planar footholds
-    for (int i = 0; i < 8; ++i) {
-        tensor[startIdx + i] = obsDesiredFootholds_(i);
-    }
-    startIdx += 8;
+    return out;
+}
 
-    // Desired joint angles
-    for (int i = 0; i < 12; ++i) {
-        tensor[startIdx + i] = obsDesiredJointAngles_(i);
-    }
-    startIdx += 12;
+vector_t DtcController::getCurrentDesiredJointAnglesObservation(scalar_t currentTime, scalar_t dt) {
+    auto &solution = mrt_.getPolicy();
+    auto optimizedState = LinearInterpolation::interpolate(currentTime + ISAAC_SIM_DT, solution.timeTrajectory_,
+                                                           solution.stateTrajectory_);
+    auto optimizedJointAngles = optimizedState.segment<12>(12);
+    vector_t out = optimizedJointAngles - defaultJointAngles_;
+    return out;
+}
 
-    // Current desired joint angles
-    for (int i = 0; i < 12; ++i) {
-        tensor[startIdx + i] = obsCurrentDesiredJointAngles_(i);
-    }
-    startIdx += 12;
-
-    // Desired contacts
+vector_t DtcController::getDesiredContactsObservation(scalar_t currentTime, scalar_t dt) {
+    auto desiredContacts = getDesiredContactFlags(currentTime, dt);
+    vector_t out = vector_t().setZero(4);
     for (int i = 0; i < 4; ++i) {
-        tensor[startIdx + i] = obsDesiredContacts_(i);
+        out(i) = static_cast<scalar_t>(desiredContacts[i]);
     }
-    std::cout << obsDesiredContacts_.transpose() << std::endl;
-    startIdx += 4;
+    return out;
+}
 
-    // Time left in phase
-    for (int i = 0; i < 4; ++i) {
-        tensor[startIdx + i] = obsTimeLeftInPhase_(i);
+vector_t DtcController::getTimeLeftInPhaseObservation(scalar_t currentTime, scalar_t dt) {
+    return getTimeLeftInPhase(currentTime, dt);
+}
+
+vector_t DtcController::getDesiredBasePosObservation(scalar_t currentTime, scalar_t dt) {
+    vector3_t basePos, baseOrientation, baseLinearVelocity, baseAngularVelocity, baseLinearAcceleration,
+        baseAngularAcceleration;
+    computeBaseKinematicsAndDynamics(currentTime, dt, basePos, baseOrientation, baseLinearVelocity, baseAngularVelocity,
+                                     baseLinearAcceleration, baseAngularAcceleration);
+    const auto &rbdState = stateSubscriberPtr_->getLatestRbdState();
+    vector3_t basePosCurrent = rbdState.segment<3>(3);
+    vector3_t basePosDesired = basePos;
+    matrix3_t R_base_world_yaw = getRotationMatrixBaseWorldYaw(rbdState);
+    vector3_t out = R_base_world_yaw * (basePosDesired - basePosCurrent);
+    return out;
+}
+
+vector_t DtcController::getOrientationDiffObservation(scalar_t currentTime, scalar_t dt) {
+    vector3_t basePos, baseOrientation, baseLinearVelocity, baseAngularVelocity, baseLinearAcceleration,
+        baseAngularAcceleration;
+    computeBaseKinematicsAndDynamics(currentTime, dt, basePos, baseOrientation, baseLinearVelocity, baseAngularVelocity,
+                                     baseLinearAcceleration, baseAngularAcceleration);
+    const auto &rbdState = stateSubscriberPtr_->getLatestRbdState();
+
+    vector3_t eulerAnglesZyxCurrent = getOcs2ZyxEulerAngles(rbdState);
+    vector3_t eulerAnglesZyxDesired = baseOrientation;
+
+    // Convert euler angles to quaternions
+    quaternion_t quatCurrent = this->getQuaternionFromEulerAnglesZyx(eulerAnglesZyxCurrent);
+    quaternion_t quatDesired = this->getQuaternionFromEulerAnglesZyx(eulerAnglesZyxDesired);
+
+    // Invert current quaternion
+    quaternion_t quatCurrentInverse = quatCurrent.conjugate();
+
+    // Compute the difference
+    quaternion_t quatDiff = quatDesired * quatCurrentInverse;
+
+    const scalar_t x = quatDiff.x();
+    const scalar_t y = quatDiff.y();
+    const scalar_t z = quatDiff.z();
+    const scalar_t w = quatDiff.w();
+
+    vector_t orientationDiff = (vector_t(4) << x, y, z, w).finished();
+
+    return orientationDiff;
+}
+
+vector_t DtcController::getDesiredBaseLinVelObservation(scalar_t currentTime, scalar_t dt) {
+    vector3_t basePos, baseOrientation, baseLinearVelocity, baseAngularVelocity, baseLinearAcceleration,
+        baseAngularAcceleration;
+    computeBaseKinematicsAndDynamics(currentTime, dt, basePos, baseOrientation, baseLinearVelocity, baseAngularVelocity,
+                                     baseLinearAcceleration, baseAngularAcceleration);
+    const auto &rbdState = stateSubscriberPtr_->getLatestRbdState();
+    matrix3_t R_base_world = getRotationMatrixBaseWorld(rbdState);
+    vector3_t baseLinVelDesiredWorld = baseLinearVelocity;
+    vector3_t baseLinVelDesiredBase = R_base_world * baseLinVelDesiredWorld;
+    return baseLinVelDesiredBase;
+}
+
+vector_t DtcController::getDesiredBaseAngVelObservation(scalar_t currentTime, scalar_t dt) {
+    vector3_t basePos, baseOrientation, baseLinearVelocity, baseAngularVelocity, baseLinearAcceleration,
+        baseAngularAcceleration;
+    computeBaseKinematicsAndDynamics(currentTime, dt, basePos, baseOrientation, baseLinearVelocity, baseAngularVelocity,
+                                     baseLinearAcceleration, baseAngularAcceleration);
+    const auto &rbdState = stateSubscriberPtr_->getLatestRbdState();
+    matrix3_t R_base_world = getRotationMatrixBaseWorld(rbdState);
+    vector3_t baseAngVelDesiredWorld = baseAngularVelocity;
+    vector3_t baseAngVelDesiredBase = R_base_world * baseAngVelDesiredWorld;
+    return baseAngVelDesiredBase;
+}
+
+vector_t DtcController::getDesiredBaseLinAccObservation(scalar_t currentTime, scalar_t dt) {
+    vector3_t basePos, baseOrientation, baseLinearVelocity, baseAngularVelocity, baseLinearAcceleration,
+        baseAngularAcceleration;
+    computeBaseKinematicsAndDynamics(currentTime, dt, basePos, baseOrientation, baseLinearVelocity, baseAngularVelocity,
+                                     baseLinearAcceleration, baseAngularAcceleration);
+    const auto &rbdState = stateSubscriberPtr_->getLatestRbdState();
+    matrix3_t R_base_world = getRotationMatrixBaseWorld(rbdState);
+    vector3_t baseLinAccDesiredWorld = baseLinearAcceleration;
+    vector3_t baseLinAccDesiredBase = R_base_world * baseLinAccDesiredWorld;
+    return baseLinAccDesiredBase;
+}
+
+vector_t DtcController::getDesiredBaseAngAccObservation(scalar_t currentTime, scalar_t dt) {
+    vector3_t basePos, baseOrientation, baseLinearVelocity, baseAngularVelocity, baseLinearAcceleration,
+        baseAngularAcceleration;
+    computeBaseKinematicsAndDynamics(currentTime, dt, basePos, baseOrientation, baseLinearVelocity, baseAngularVelocity,
+                                     baseLinearAcceleration, baseAngularAcceleration);
+    const auto &rbdState = stateSubscriberPtr_->getLatestRbdState();
+    matrix3_t R_base_world = getRotationMatrixBaseWorld(rbdState);
+    vector3_t baseAngAccDesiredWorld = baseAngularAcceleration;
+    vector3_t baseAngAccDesiredBase = R_base_world * baseAngAccDesiredWorld;
+    return baseAngAccDesiredBase;
+}
+
+vector_t DtcController::getCpgObservation(scalar_t currentTime, scalar_t dt) {
+    auto &solution = mrt_.getPolicy();
+    auto &modeSchedule = solution.modeSchedule_;
+
+    auto desiredContacts = getDesiredContactFlags(currentTime, dt);
+
+    auto contactPhases = ocs2::legged_robot::getContactPhasePerLeg(currentTime, modeSchedule);
+    auto swingPhases = ocs2::legged_robot::getSwingPhasePerLeg(currentTime, modeSchedule);
+
+    vector_t phases = vector_t::Zero(4);
+
+    // LH, RF - phase in [0, PI]
+    // LF, RH - phase in [PI, 2*PI]
+    // Basically when LF lifts off the phase is 0
+    constexpr scalar_t PI = 3.14159265358979323846;
+    for (int j = 0; j < 4; ++j) {
+        if (desiredContacts[j]) {
+            phases(j) = PI + contactPhases[j].phase * PI;
+        } else {
+            phases(j) = swingPhases[j].phase * PI;
+        }
+
+        if (phases(j) > 2 * PI) phases(j) -= 2 * PI;
+        if (phases(j) < 0) phases(j) += 2 * PI;
     }
-    startIdx += 4;
 
-    // Desired base pos
-    for (int i = 0; i < 3; ++i) {
-        tensor[startIdx + i] = obsDesiredBasePosition_(i);
+    // Perform swap - LF, RF, LH, RH -> LF, LH, RF, RH
+    std::swap(phases(1), phases(2));
+
+    // Compute cpg obs
+    vector_t out = vector_t::Zero(8);
+    for (int j = 0; j < 4; ++j) {
+        const scalar_t phase = phases(j);
+        const scalar_t c = std::cos(phase);
+        const scalar_t s = std::sin(phase);
+        out(j) = c;
+        out(j + 4) = s;
     }
-    startIdx += 3;
 
-    // Desired base orientation
-    for (int i = 0; i < 4; ++i) {
-        tensor[startIdx + i] = obsDesiredBaseOrientation_(i);
-    }
-    startIdx += 4;
+    return out;
+}
 
-    // Desired base linear velocity
-    for (int i = 0; i < 3; ++i) {
-        tensor[startIdx + i] = obsDesiredBaseLinearVelocity_(i);
-    }
-    startIdx += 3;
+vector_t DtcController::getDesiredFootPositionsObservation(scalar_t currentTime, scalar_t dt) {
+    auto desiredFootPositions = getDesiredFeetPositions(currentTime, dt);
+    auto currentFootPositions = getCurrentFeetPositions(currentTime, dt);
 
-    // Desired base angular velocity
-    for (int i = 0; i < 3; ++i) {
-        tensor[startIdx + i] = obsDesiredBaseAngularVelocity_(i);
-    }
-    startIdx += 3;
+    matrix3_t R_base_world_yaw = getRotationMatrixBaseWorldYaw(stateSubscriberPtr_->getLatestRbdState());
 
-    // Desired base linear acceleration
-    for (int i = 0; i < 3; ++i) {
-        tensor[startIdx + i] = obsDesiredBaseLinearAcceleration_(i);
-    }
-    startIdx += 3;
+    vector_t lf_pos = -R_base_world_yaw * (desiredFootPositions[0] - currentFootPositions[0]);
+    vector_t rf_pos = -R_base_world_yaw * (desiredFootPositions[1] - currentFootPositions[1]);
+    vector_t lh_pos = -R_base_world_yaw * (desiredFootPositions[2] - currentFootPositions[2]);
+    vector_t rh_pos = -R_base_world_yaw * (desiredFootPositions[3] - currentFootPositions[3]);
 
-    // Desired base angular acceleration
-    for (int i = 0; i < 3; ++i) {
-        tensor[startIdx + i] = obsDesiredBaseAngularAcceleration_(i);
-    }
-    startIdx += 3;
+    vector_t out(4 * 3);
+    out << lf_pos, lh_pos, rf_pos, rh_pos;
+    return out;
+}
+vector_t DtcController::getDesiredFootVelocitiesObservation(scalar_t currentTime, scalar_t dt) {
+    auto desiredFootVelocities = getDesiredFeetVelocities(currentTime, dt);
+    auto currentFootVelocities = getCurrentFeetVelocities(currentTime, dt);
 
-    TBAI_ASSERT(startIdx == MODEL_INPUT_SIZE, "Invalid tensor size");
+    matrix3_t R_base_world_yaw = getRotationMatrixBaseWorldYaw(stateSubscriberPtr_->getLatestRbdState());
+
+    vector_t lf_vel = -R_base_world_yaw * (desiredFootVelocities[0] - currentFootVelocities[0]);
+    vector_t rf_vel = -R_base_world_yaw * (desiredFootVelocities[1] - currentFootVelocities[1]);
+    vector_t lh_vel = -R_base_world_yaw * (desiredFootVelocities[2] - currentFootVelocities[2]);
+    vector_t rh_vel = -R_base_world_yaw * (desiredFootVelocities[3] - currentFootVelocities[3]);
+
+    vector_t out(4 * 3);
+    out << lf_vel, lh_vel, rf_vel, rh_vel;
+    return out;
 }
 
 void DtcController::visualize() {
-    std::cout << "Visualizing..." << std::endl;
-    visualizer_->update(generateSystemObservation(), mrt_.getPolicy(), mrt_.getCommand());
+    mrt_.spinMRT();
+    mrt_.updatePolicy();
+    visualizerPtr_->update(generateSystemObservation(), mrt_.getPolicy(), mrt_.getCommand());
 }
 
 void DtcController::changeController(const std::string &controllerType, scalar_t currentTime) {
@@ -377,83 +702,52 @@ bool DtcController::isSupported(const std::string &controllerType) {
     return controllerType == "DTC";
 }
 
-ocs2::SystemObservation DtcController::generateSystemObservation() const {
-    const tbai::vector_t &rbdState = stateSubscriberPtr_->getLatestRbdState();
+ocs2::SystemObservation DtcController::generateSystemObservation() {
+    // Unpack latest rbc state
+    const vector_t &rbdState = stateSubscriberPtr_->getLatestRbdState();
+    const scalar_t observationTime = stateSubscriberPtr_->getLatestRbdStamp().toSec() - initTime_;
+    const size_t mode = ocs2::legged_robot::stanceLeg2ModeNumber(stateSubscriberPtr_->getContactFlags());
+
+    const matrix3_t R_world_base = getRotationMatrixWorldBase(rbdState);  // TODO: room for optimization
+    const matrix3_t R_base_world = getRotationMatrixBaseWorld(rbdState);  // TODO: room for optimization
+    const vector3_t eulerAnglesZyx = getOcs2ZyxEulerAngles(rbdState);     // TOD: room for optimization
+    const vector_t jointAngles = rbdState.segment<12>(12);
+    const vector_t jointVelocities = rbdState.segment<12>(24);
 
     // Set observation time
     ocs2::SystemObservation observation;
-    observation.time = stateSubscriberPtr_->getLatestRbdStamp().toSec() - initTime_;
+    observation.time = observationTime;
+    observation.mode = mode;
+    observation.input = vector_t().setZero(24);
+    observation.input.tail<12>() = jointVelocities;
 
-    // Set mode
-    observation.mode = 14;  // This is not important
-
-    vector3_t rpyocs2 = (vector3_t() << rbdState(0), rbdState(1), rbdState(2)).finished();
-    // matrix3_t R_world_base = tbai::core::rpy2mat(rpy);
-    matrix3_t R_world_base = tbai::core::ocs2rpy2quat(rpyocs2).toRotationMatrix();
-    vector3_t rpy = tbai::core::mat2rpy(R_world_base);
-    matrix3_t R_base_world = R_world_base.transpose();
-
-    vector_t state = vector_t().setZero(24);
-
-    // state.segment<3>(0) = R_world_base * rbdState.segment<3>(9);  // v_com in world frame
-    // state.segment<3>(3) = vector_t().setZero(3);                  // normalized angular momentum
-    state.segment<3>(6) = rbdState.segment<3>(3);      // com position
-    state.segment<3>(9) = rpy.reverse();               // ypr
-    state.segment<12>(12) = rbdState.segment<12>(12);  // joint angles
-
-    TBAI_ASSERT(state.segment<3>(3).norm() < 1e5, "COM position is too large");
-
-    vector_t input = vector_t().setZero(24);
-    // input.segment<12>(0) = vector_t().setZero(12);     // ground reaction forces
-    input.segment<12>(12) = rbdState.segment<12>(24);  // joint velocities
-
-    TBAI_ASSERT(input.segment<12>(0).norm() < 1e5, "GRF is too large");
-
-    observation.state = std::move(state);
-    observation.input = std::move(input);
+    // 3 normalized linear momentum, 3 normalized angular momentum, 3 com position, 3 ypr, 12 joint angles
+    observation.state = vector_t().setZero(3 + 3 + 3 + 3 + 12);
+    observation.state.segment<3>(0) = R_world_base * rbdState.segment<3>(9);  // v_com in world frame
+    observation.state.segment<3>(3) = vector_t().setZero(3);                  // normalized angular momentum (not used)
+    observation.state.segment<3>(6) = rbdState.segment<3>(3);                 // com position
+    observation.state.segment<3>(9) = eulerAnglesZyx;                         // ypr
+    observation.state.segment<12>(12) = jointAngles;                          // LF, LH, RF, RH
 
     return observation;
 }
 
-void DtcController::setupPinocchioModel() {
-    // Load urdf model path
-    std::string urdfFile;
-    ros::param::get("urdfFile", urdfFile);
-
-    // Prepare world -> base joint model
-    pinocchio::JointModelComposite jointComposite(2);
-    jointComposite.addJoint(pinocchio::JointModelTranslation());
-    jointComposite.addJoint(pinocchio::JointModelSphericalZYX());
-
-    // Load model
-    pinocchio::urdf::buildModel(urdfFile, jointComposite, model_);
-
-    // Prepare data
-    data_ = pinocchio::Data(model_);
-}
-
 void DtcController::resetMpc() {
-    // Generate initial observation
+    // Wait to receive observation
     stateSubscriberPtr_->waitTillInitialized();
-    auto initialObservation = generateSystemObservation();
-    // initialObservation.state.segment<3>(0) = vector_t::Zero(3);
-    initialObservation.state.segment<3>(3) = vector_t::Zero(3);
-    initialObservation.state(6 + 2) = 0.54;
-    initialObservation.state.segment<12>(12) = defaultDofPositions_;
-    initialObservation.input.segment<24>(0) = vector_t::Zero(24);
 
-    const ocs2::TargetTrajectories initTargetTrajectories({0.0}, {initialObservation.state},
-                                                          {initialObservation.input});
+    // Prepare initial observation for MPC
+    ocs2::SystemObservation mpcObservation = generateSystemObservation();
+
+    // Prepare target trajectory
+    ocs2::TargetTrajectories initTargetTrajectories({0.0}, {mpcObservation.state}, {mpcObservation.input});
     mrt_.resetMpcNode(initTargetTrajectories);
-
-    initialObservation = generateSystemObservation();
 
     while (!mrt_.initialPolicyReceived() && ros::ok()) {
         ROS_INFO("Waiting for initial policy...");
         ros::spinOnce();
         mrt_.spinMRT();
-        initialObservation = generateSystemObservation();
-        mrt_.setCurrentObservation(initialObservation);
+        mrt_.setCurrentObservation(generateSystemObservation());
         ros::Duration(0.1).sleep();
     }
 
@@ -464,269 +758,48 @@ void DtcController::setObservation() {
     mrt_.setCurrentObservation(generateSystemObservation());
 }
 
-void DtcController::computeObservation(const ocs2::PrimalSolution &policy, scalar_t time) {
-    auto &state = stateSubscriberPtr_->getLatestRbdState();
+torch::Tensor vector2torch(const vector_t &v) {
+    const long rows = static_cast<long>(v.rows());
+    auto out = torch::empty({rows});
+    float *data = out.data_ptr<float>();
 
-    obsLinearVelocity_ = state.segment<3>(9);   // COM velocity - already expessed in base frame
-    obsAngularVelocity_ = state.segment<3>(6);  // Angular velocity - already expessed in base frame
+    Eigen::Map<Eigen::VectorXf> map(data, rows);
+    map = v.cast<float>();
 
-    // Compute projected gravity
-    auto rpy = state.segment<3>(0);
-    auto R_world_base = tbai::core::ocs2rpy2quat(rpy).toRotationMatrix();
-    auto R_base_world = R_world_base.transpose();
-    obsProjectedGravity_ = R_base_world * vector3_t(0, 0, -1.0);
-
-    // Current joint positions
-    obsJointPositions_ = state.segment<12>(12) - defaultDofPositions_;
-
-    // Current joint velocities
-    obsJointVelocities_ = state.segment<12>(24);
-
-    // Update obsPastAction_ during model evaluation
-    obsPastAction_ = vector_t().setZero(12);
-    for (int i = 0; i < 12; ++i) {
-        obsPastAction_(i) = action_[i].item<float>();
-    }
-
-    computeCommandObservation(time);
-
-    // Compute desired contacts
-    computeDesiredContacts(time);
-
-    // Compute time left in phases
-    computeTimeLeftInPhases(time);
-
-    // Compute desired footholds
-    computeDesiredFootholds(time);
-
-    computeCurrentDesiredJointAngles(time + 1 / 50);  // TODO: time + some time delta
-    computeBaseObservation(time + 1 / 50);            // TODO: time + some time delta ?????
+    return out;
 }
 
-void DtcController::computeCommandObservation(scalar_t time) {
-    auto refvel = refVelGen_->getReferenceVelocity(time, 0.1);
-    obsCommand_(0) = refvel.velocity_x;
-    obsCommand_(1) = refvel.velocity_y;
-    obsCommand_(2) = refvel.yaw_rate;
+torch::Tensor matrix2torch(const matrix_t &m) {
+    const long rows = static_cast<long>(m.rows());
+    const long cols = static_cast<long>(m.cols());
+    auto out = torch::empty({rows, cols});
+    float *data = out.data_ptr<float>();
 
-    std::cout << "Command: " << obsCommand_.transpose() << std::endl;
+    Eigen::Map<Eigen::MatrixXf> map(data, cols, rows);  // "view" it as a [cols x rows] matrix
+    map = m.transpose().cast<float>();
+
+    return out;
 }
 
-void DtcController::computeDesiredContacts(scalar_t time) {
-    auto &solution = mrt_.getPolicy();
-    auto &modeSchedule = solution.modeSchedule_;
-    size_t mode = modeSchedule.modeAtTime(time);
-    auto contactFlags = ocs2::legged_robot::modeNumber2StanceLeg(mode);
-    std::swap(contactFlags[1], contactFlags[2]);
-    TBAI_ASSERT(contactFlags.size() == 4, "Contact flags must have size 4");
-    for (int i = 0; i < 4; ++i) {
-        obsDesiredContacts_(i) = contactFlags[i];  // Assume LF, LH, RF, RH ordering
-    }
+vector_t torch2vector(const torch::Tensor &t) {
+    const size_t rows = t.size(0);
+    float *t_data = t.data_ptr<float>();
+
+    vector_t out(rows);
+    Eigen::Map<Eigen::VectorXf> map(t_data, rows);
+    out = map.cast<scalar_t>();
+    return out;
 }
 
-void DtcController::computeTimeLeftInPhases(scalar_t time) {
-    auto &solution = mrt_.getPolicy();
-    auto &modeSchedule = solution.modeSchedule_;
+matrix_t torch2matrix(const torch::Tensor &t) {
+    const size_t rows = t.size(0);
+    const size_t cols = t.size(1);
+    float *t_data = t.data_ptr<float>();
 
-    auto currentContacts = obsDesiredContacts_;
-    auto contactPhases = ocs2::legged_robot::getContactPhasePerLeg(time, modeSchedule);
-    auto swingPhases = ocs2::legged_robot::getSwingPhasePerLeg(time, modeSchedule);
-
-    TBAI_ASSERT(contactPhases.size() == 4, "Contact phases must have size 4");
-    TBAI_ASSERT(swingPhases.size() == 4, "Swing phases must have size 4");
-
-    for (int i = 0; i < 4; ++i) {
-        if (currentContacts(i)) {
-            auto legPhase = contactPhases[i];
-            obsTimeLeftInPhase_(i) = (1.0 - legPhase.phase) * legPhase.duration;
-        } else {
-            auto legPhase = swingPhases[i];
-            obsTimeLeftInPhase_(i) = (1.0 - legPhase.phase) * legPhase.duration;
-        }
-
-        if (std::isnan(obsTimeLeftInPhase_(i))) {
-            obsTimeLeftInPhase_(i) = 0.0;
-        }
-    }
-}
-
-void DtcController::computeDesiredFootholds(scalar_t time) {
-    auto &solution = mrt_.getPolicy();
-    auto &modeSchedule = solution.modeSchedule_;
-
-    // current state
-    auto currentRbdState = stateSubscriberPtr_->getLatestRbdState();
-    auto rpy = tbai::core::mat2rpy(tbai::core::ocs2rpy2quat(currentRbdState.segment<3>(0)).toRotationMatrix());
-    auto currentJointAngles = currentRbdState.segment<12>(12);
-    // set roll and pitch to zero
-
-    rpy[0] = 0.0;
-    rpy[1] = 0.0;
-    auto R_world_base = tbai::core::rpy2mat(rpy);
-    auto R_base_world = R_world_base.transpose();
-    vector3_t basePosition = currentRbdState.segment<3>(3);
-
-    obsDesiredJointAngles_ = -currentJointAngles;
-
-    for (int i = 0; i < 4; ++i) {
-        float timeLeft = obsTimeLeftInPhase_(i);
-        auto state = ocs2::LinearInterpolation::interpolate(time + timeLeft, solution.timeTrajectory_,
-                                                            solution.stateTrajectory_);
-        auto jointAngles = state.segment<12>(12);
-
-        // Update desired joint angles
-        obsDesiredJointAngles_.segment<3>(3 * i) += jointAngles.segment<3>(3 * i);
-
-        // Compute forward kinematics
-        auto &pinocchioMapping = *centroidalModelMapping_;
-        auto &interface = *pinocchioInterface_;
-        auto q = pinocchioMapping.getPinocchioJointPosition(state);
-        pinocchio::forwardKinematics(interface.getModel(), interface.getData(), q);
-        pinocchio::updateFramePlacements(interface.getModel(), interface.getData());
-
-        // Update end effector kinematics
-        auto &endEffector = *endEffectorKinematics_;
-        auto positions = endEffector.getPosition(vector_t());
-
-        // Update desired footholds
-        vector3_t temp = R_base_world * (positions[i] - basePosition);
-        obsDesiredFootholds_.segment<2>(2 * i) = temp.head<2>();  // take only x and y
-    }
-
-    std::cout << obsDesiredFootholds_.transpose() << std::endl;
-}
-
-void DtcController::computeCurrentDesiredJointAngles(scalar_t time) {
-    // Compute desired joint angles
-    auto &solution = mrt_.getPolicy();
-    // std::cout << "Current time: " << time << std::endl;
-    // std::cout << "Solution time: " << solution.timeTrajectory_.front() << std::endl;
-    // std::cout << std::endl;
-    auto state = ocs2::LinearInterpolation::interpolate(time, solution.timeTrajectory_, solution.stateTrajectory_);
-    auto jointAngles = state.segment<12>(12);
-    obsCurrentDesiredJointAngles_ = jointAngles - defaultDofPositions_;
-    kk_ = defaultDofPositions_;
-}
-
-void DtcController::computeBaseObservation(scalar_t time) {
-    auto &solution = mrt_.getPolicy();
-    auto state = stateSubscriberPtr_->getLatestRbdState();
-    vector3_t rpy = state.segment<3>(0);
-    matrix3_t R_world_base = tbai::core::ocs2rpy2quat(rpy).toRotationMatrix();
-    matrix3_t R_base_world = R_world_base.transpose();
-    quaternion_t quatCurrent = tbai::core::ocs2rpy2quat(rpy);
-
-    vector3_t rpyZero = tbai::core::mat2rpy(R_world_base);
-    rpy[0] = 0.0;
-    rpy[1] = 0.0;
-    matrix3_t R_world_base_zero = tbai::core::rpy2mat(rpy);
-    matrix3_t R_base_world_zero = R_world_base_zero.transpose();
-
-    // Desired base position
-    vector3_t desiredBasePosition =
-        ocs2::LinearInterpolation::interpolate(time, solution.timeTrajectory_, solution.stateTrajectory_).segment<3>(6);
-    vector3_t currentBasePosition = state.segment<3>(3);
-    vector3_t basePositionDiff = desiredBasePosition - currentBasePosition;
-    obsDesiredBasePosition_ = R_base_world_zero * basePositionDiff;  // expressed in base frame
-
-    // Desired base orientation
-    vector3_t desiredBaseEulerAngles =
-        ocs2::LinearInterpolation::interpolate(time, solution.timeTrajectory_, solution.stateTrajectory_).segment<3>(9);
-    quaternion_t quatDesired =
-        Eigen::AngleAxis<scalar_t>(desiredBaseEulerAngles(0), Eigen::Matrix<scalar_t, 3, 1>::UnitZ()) *
-        Eigen::AngleAxis<scalar_t>(desiredBaseEulerAngles(1), Eigen::Matrix<scalar_t, 3, 1>::UnitY()) *
-        Eigen::AngleAxis<scalar_t>(desiredBaseEulerAngles(2), Eigen::Matrix<scalar_t, 3, 1>::UnitX());
-    quaternion_t check_q = tbai::core::rpy2quat(desiredBaseEulerAngles.reverse());  // reverse because we want rpy order
-
-    if (check_q.x() != quatDesired.x() || check_q.y() != quatDesired.y() || check_q.z() != quatDesired.z() ||
-        check_q.w() != quatDesired.w()) {
-        std::cout << "Desired quaternion: " << quatDesired.x() << " " << quatDesired.y() << " " << quatDesired.z()
-                  << " " << quatDesired.w() << std::endl;
-        std::cout << "Check quaternion: " << check_q.x() << " " << check_q.y() << " " << check_q.z() << " "
-                  << check_q.w() << std::endl;
-    }
-
-    quaternion_t quatDiff =
-        quatDesired *
-        quatCurrent.conjugate();  // conjugate is enough, the quaternion is normalized <=> conjugate == inverse
-    obsDesiredBaseOrientation_ =
-        (vector_t(4) << quatDiff.x(), quatDiff.y(), quatDiff.z(), quatDiff.w()).finished();  // x, y, z, w
-
-    // Get desired state and input
-    vector_t desiredState =
-        ocs2::LinearInterpolation::interpolate(time, solution.timeTrajectory_, solution.stateTrajectory_);
-    vector_t desiredInput =
-        ocs2::LinearInterpolation::interpolate(time, solution.timeTrajectory_, solution.inputTrajectory_);
-
-    // Update centroidal dynamics
-    auto &pinocchioInterface = *pinocchioInterface_;
-    auto &pinocchioMapping = *centroidalModelMapping_;
-    auto &modelInfo = pinocchioMapping.getCentroidalModelInfo();
-    vector_t q = pinocchioMapping.getPinocchioJointPosition(desiredState);
-    ocs2::updateCentroidalDynamics(pinocchioInterface, modelInfo, q);
-
-    // Compute desired base linear velocity
-    vector3_t desiredBaseLinearVelocity =
-        R_base_world * pinocchioMapping.getPinocchioJointVelocity(desiredState, desiredInput).segment<3>(0);
-    obsDesiredBaseLinearVelocity_ =
-        desiredBaseLinearVelocity;  // desired base linear velocity expressed in the base frame
-
-    // Compute desired base angular velocity
-    vector3_t desiredEulerAngleDerivatives = pinocchioMapping.getPinocchioJointVelocity(desiredState, desiredInput)
-                                                 .segment<3>(3);  // TODO: convert to local frame
-    vector3_t desiredBaseAngularVelocity =
-        R_base_world * ocs2::getGlobalAngularVelocityFromEulerAnglesZyxDerivatives<scalar_t>(
-                           desiredBaseEulerAngles, desiredEulerAngleDerivatives);
-    obsDesiredBaseAngularVelocity_ = desiredBaseAngularVelocity;  // base angular velocity expressed in the base frame
-
-    // Compute desired base linear acceleration
-    const scalar_t robotMass = modelInfo.robotMass;
-    auto Ag =
-        ocs2::getCentroidalMomentumMatrix(pinocchioInterface);  // centroidal momentum matrix as in (h = A * q_dot)
-    vector_t h_dot_normalized = ocs2::getNormalizedCentroidalMomentumRate(pinocchioInterface, modelInfo, desiredInput);
-    vector_t h_dot = robotMass * h_dot_normalized;
-
-    // pinocchio position and velocity
-    vector_t v = pinocchioMapping.getPinocchioJointVelocity(desiredState, desiredInput);
-    matrix_t Ag_dot = pinocchio::dccrba(pinocchioInterface.getModel(), pinocchioInterface.getData(), q, v);
-
-    Eigen::Matrix<scalar_t, 6, 6> Ag_base = Ag.template leftCols<6>();
-    auto Ag_base_inv = ocs2::computeFloatingBaseCentroidalMomentumMatrixInverse(Ag_base);
-
-    // TODO: Is this calculation correct?
-    vector_t baseAcceleration =
-        Ag_base_inv * (h_dot - Ag_dot.template leftCols<6>() * v.head<6>());  // - A_j * q_joint_ddot
-    vector3_t baseLinearAcceleration = R_base_world * baseAcceleration.head<3>();
-    obsDesiredBaseLinearAcceleration_ = baseLinearAcceleration;  // base linear acceleration expressed in the base frame
-
-    vector3_t eulerZyxAcceleration = baseAcceleration.segment<3>(3);  // euler zyx acceleration
-    vector3_t baseAngularAcceleration =
-        R_base_world * ocs2::getGlobalAngularAccelerationFromEulerAnglesZyxDerivatives(
-                           desiredBaseEulerAngles, desiredEulerAngleDerivatives, eulerZyxAcceleration);
-    obsDesiredBaseAngularAcceleration_ =
-        baseAngularAcceleration;  // base angular acceleration expressed in the base frame
-}
-
-void DtcController::initializeObservations() {
-    obsCommand_ = vector_t().setZero(3);
-    obsLinearVelocity_ = vector_t().setZero(3);
-    obsAngularVelocity_ = vector_t().setZero(3);
-    obsProjectedGravity_ = vector_t().setZero(3);
-    obsJointPositions_ = vector_t().setZero(12);
-    obsJointVelocities_ = vector_t().setZero(12);
-    obsPastAction_ = vector_t().setZero(12);
-    obsDesiredContacts_ = vector_t().setZero(4);
-    obsTimeLeftInPhase_ = vector_t().setZero(4);
-    obsDesiredFootholds_ = vector_t().setZero(8);
-    obsDesiredJointAngles_ = vector_t().setZero(12);
-    obsCurrentDesiredJointAngles_ = vector_t().setZero(12);
-
-    obsDesiredBasePosition_ = vector_t().setZero(3);
-    obsDesiredBaseOrientation_ = vector_t().setZero(4);  // this is a quaternion
-    obsDesiredBaseLinearVelocity_ = vector_t().setZero(3);
-    obsDesiredBaseAngularVelocity_ = vector_t().setZero(3);
-    obsDesiredBaseLinearAcceleration_ = vector_t().setZero(3);
-    obsDesiredBaseAngularAcceleration_ = vector_t().setZero(3);
+    matrix_t out(cols, rows);
+    Eigen::Map<Eigen::MatrixXf> map(t_data, cols, rows);
+    out = map.cast<scalar_t>();
+    return out.transpose();
 }
 
 }  // namespace dtc
