@@ -5,6 +5,7 @@
 
 #include "ocs2_legged_robot_ros/visualization/LeggedRobotVisualizer.h"
 #include <ocs2_centroidal_model/CentroidalModelPinocchioMapping.h>
+#include <ocs2_centroidal_model/CentroidalModelRbdConversions.h>
 #include <ocs2_centroidal_model/PinocchioCentroidalDynamics.h>
 #include <ocs2_core/reference/TargetTrajectories.h>
 #include <ocs2_legged_robot/LeggedRobotInterface.h>
@@ -16,6 +17,8 @@
 #include <pinocchio/algorithm/kinematics.hpp>
 #include <pinocchio/multibody/data.hpp>
 #include <pinocchio/multibody/model.hpp>
+#include <tbai_core/Rotations.hpp>
+#include <tbai_core/Types.hpp>
 #include <tbai_core/control/Controller.hpp>
 #include <tbai_core/control/StateSubscriber.hpp>
 #include <tbai_reference/ReferenceVelocityGenerator.hpp>
@@ -23,6 +26,11 @@
 
 namespace tbai {
 namespace dtc {
+
+using namespace ocs2;
+using namespace ocs2::legged_robot;
+using namespace tbai::core;
+using namespace tbai;
 
 class DtcController final : public tbai::core::Controller {
    public:
@@ -46,83 +54,128 @@ class DtcController final : public tbai::core::Controller {
     // Torchscript model
     torch::jit::script::Module dtcModel_;
 
-    ocs2::SystemObservation generateSystemObservation() const;
+    ocs2::SystemObservation generateSystemObservation();
+
+    // Helper functions
+    inline vector_t getRpyAngles(const vector_t &state) const {
+        vector_t rpyocs2 = state.head<3>();
+        return tbai::core::mat2rpy(tbai::core::ocs2rpy2quat(rpyocs2).toRotationMatrix());
+    }
+    inline vector_t getOcs2ZyxEulerAngles(const vector_t &state) {
+        vector_t rpy = getRpyAngles(state);
+        rpy(2) = ocs2::moduloAngleWithReference(rpy(2), yawLast_);
+        yawLast_ = rpy(2);
+        return rpy.reverse();
+    }
+    inline matrix3_t getRotationMatrixWorldBase(const vector_t &state) const {
+        return tbai::core::rpy2mat(getRpyAngles(state));
+    }
+    inline matrix3_t getRotationMatrixBaseWorld(const vector_t &state) const {
+        return getRotationMatrixWorldBase(state).transpose();
+    }
+    inline matrix3_t getRotationMatrixWorldBaseYaw(const vector_t &state) const {
+        vector_t rpy = getRpyAngles(state);
+        rpy.head<2>().setZero();
+        return tbai::core::rpy2mat(rpy);
+    }
+    inline matrix3_t getRotationMatrixBaseWorldYaw(const vector_t &state) const {
+        return getRotationMatrixWorldBaseYaw(state).transpose();
+    }
+    inline quaternion_t getQuaternionFromEulerAnglesZyx(const vector3_t &eulerAnglesZyx) const {
+        return ocs2::getQuaternionFromEulerAnglesZyx(eulerAnglesZyx);
+    }
 
     void resetMpc();
     void setObservation();
+
+    // Helper functions
+    contact_flag_t getDesiredContactFlags(scalar_t currentTime, scalar_t dt);
+    vector_t getTimeLeftInPhase(scalar_t currentTime, scalar_t dt);
+    TargetTrajectories generateTargetTrajectories(scalar_t currentTime, scalar_t dt, const vector3_t &command);
+    std::vector<vector3_t> getCurrentFeetPositions(scalar_t currentTime, scalar_t dt);
+    std::vector<vector3_t> getCurrentFeetVelocities(scalar_t currentTime, scalar_t dt);
+    std::vector<vector3_t> getDesiredFeetPositions(scalar_t currentTime, scalar_t dt);
+    std::vector<vector3_t> getDesiredFeetVelocities(scalar_t currentTime, scalar_t dt);
+    void computeBaseKinematicsAndDynamics(scalar_t currentTime, scalar_t dt, vector3_t &basePos,
+                                          vector3_t &baseOrientation, vector3_t &baseLinearVelocity,
+                                          vector3_t &baseAngularVelocity, vector3_t &baseLinearAcceleration,
+                                          vector3_t &baseAngularAcceleration);
+
+    // Observations
+    vector3_t getLinearVelocityObservation(scalar_t currentTime, scalar_t dt) const;
+    vector3_t getAngularVelocityObservation(scalar_t currentTime, scalar_t dt) const;
+    vector3_t getProjectedGravityObservation(scalar_t currentTime, scalar_t dt) const;
+    vector3_t getCommandObservation(scalar_t currentTime, scalar_t dt);
+    vector_t getDofPosObservation(scalar_t currentTime, scalar_t dt) const;
+    vector_t getDofVelObservation(scalar_t currentTime, scalar_t dt) const;
+    vector_t getPastActionObservation(scalar_t currentTime, scalar_t dt) const;
+    vector_t getPlanarFootholdsObservation(scalar_t currentTime, scalar_t dt);
+    vector_t getDesiredJointAnglesObservation(scalar_t currentTime, scalar_t dt);
+    vector_t getCurrentDesiredJointAnglesObservation(scalar_t currentTime, scalar_t dt);
+    vector_t getDesiredContactsObservation(scalar_t currentTime, scalar_t dt);
+    vector_t getTimeLeftInPhaseObservation(scalar_t currentTime, scalar_t dt);
+    vector_t getDesiredBasePosObservation(scalar_t currentTime, scalar_t dt);
+    vector_t getOrientationDiffObservation(scalar_t currentTime, scalar_t dt);
+    vector_t getDesiredBaseLinVelObservation(scalar_t currentTime, scalar_t dt);
+    vector_t getDesiredBaseAngVelObservation(scalar_t currentTime, scalar_t dt);
+    vector_t getDesiredBaseLinAccObservation(scalar_t currentTime, scalar_t dt);
+    vector_t getDesiredBaseAngAccObservation(scalar_t currentTime, scalar_t dt);
+    vector_t getCpgObservation(scalar_t currentTime, scalar_t dt);
+    vector_t getDesiredFootPositionsObservation(scalar_t currentTime, scalar_t dt);
+    vector_t getDesiredFootVelocitiesObservation(scalar_t currentTime, scalar_t dt);
 
     std::shared_ptr<tbai::core::StateSubscriber> stateSubscriberPtr_;
 
     const scalar_t LIN_VEL_SCALE = 2.0;
     const scalar_t ANG_VEL_SCALE = 0.25;
+    const scalar_t COMMAND_SCALE = 1.0;
+    const scalar_t GRAVITY_SCALE = 1.0;
     const scalar_t DOF_POS_SCALE = 1.0;
     const scalar_t DOF_VEL_SCALE = 0.05;
+    const scalar_t PAST_ACTION_SCALE = 1.0;
 
-    const size_t MODEL_INPUT_SIZE = 107;
+    const scalar_t ISAAC_SIM_DT = 1 / 50;
 
+    const long MODEL_INPUT_SIZE = 139;
+
+    scalar_t yawLast_ = 0.0;
+
+    // Use this to multiply the NN output before using it to generate the command message
     const scalar_t ACTION_SCALE = 0.5;
-
-    void setupPinocchioModel();
 
     scalar_t initTime_;
 
     ocs2::MRT_ROS_Interface mrt_;
     bool mrt_initialized_ = false;
 
-    pinocchio::Model model_;
-    pinocchio::Data data_;
-
-    scalar_t mpcRate_ = 2.5;
-    scalar_t timeSinceLastMpcUpdate_ = 1e5;
-
-    std::unique_ptr<ocs2::legged_robot::LeggedRobotInterface> leggedInterface_;
-    std::unique_ptr<ocs2::PinocchioInterface> pinocchioInterface_;
-    std::unique_ptr<ocs2::CentroidalModelPinocchioMapping> centroidalModelMapping_;
-    std::unique_ptr<ocs2::PinocchioEndEffectorKinematics> endEffectorKinematics_;
-    std::unique_ptr<ocs2::legged_robot::LeggedRobotVisualizer> visualizer_;
-
     std::unique_ptr<tbai::reference::ReferenceVelocityGenerator> refVelGen_;
-    void publishReference(scalar_t currentTime, scalar_t dt);
+    void publishReference(const TargetTrajectories &targetTrajectories);
     ros::Publisher refPub_;
 
-    vector_t defaultDofPositions_;
+    vector_t defaultJointAngles_;
+    std::vector<std::string> jointNames_;
 
-    vector_t obsCommand_;
-    vector_t obsLinearVelocity_;
-    vector_t obsAngularVelocity_;
-    vector_t obsProjectedGravity_;
-    vector_t obsJointPositions_;
-    vector_t obsJointVelocities_;
-    vector_t obsPastAction_;
-    vector_t obsDesiredContacts_;
-    vector_t obsTimeLeftInPhase_;
-    vector_t obsDesiredFootholds_;
-    vector_t obsDesiredJointAngles_;
-    vector_t obsCurrentDesiredJointAngles_;
-    vector_t obsDesiredBasePosition_;
-    vector_t obsDesiredBaseOrientation_;
-    vector_t obsDesiredBaseLinearVelocity_;
-    vector_t obsDesiredBaseAngularVelocity_;
-    vector_t obsDesiredBaseLinearAcceleration_;
-    vector_t obsDesiredBaseAngularAcceleration_;
+    vector_t pastAction_;
 
-    vector_t kk_;
+    std::unique_ptr<LeggedRobotInterface> interfacePtr_;
+    std::unique_ptr<PinocchioInterface> pinocchioInterfacePtr_;
+    std::unique_ptr<PinocchioEndEffectorKinematics> endEffectorKinematicsPtr_;
+    std::unique_ptr<CentroidalModelPinocchioMapping> centroidalModelMappingPtr_;
+    std::unique_ptr<CentroidalModelRbdConversions> centroidalModelRbdConversionsPtr_;
+    std::unique_ptr<ocs2::legged_robot::LeggedRobotVisualizer> visualizerPtr_;
 
-    torch::Tensor action_;
-
-    void initializeObservations();
-
-    // Helper functions for observation generation
-    void computeObservation(const ocs2::PrimalSolution &policy, scalar_t time);
-    void computeCommandObservation(scalar_t time);
-    void computeDesiredContacts(scalar_t time);
-    void computeTimeLeftInPhases(scalar_t time);
-    void computeDesiredFootholds(scalar_t time);
-    void computeCurrentDesiredJointAngles(scalar_t time);
-    void computeBaseObservation(scalar_t time);
-
-    void fillObsTensor(torch::Tensor &tensor);
+    scalar_t horizon_;
+    scalar_t mpcRate_ = 2.5;
+    scalar_t timeSinceLastMpcUpdate_ = 1e5;
 };
+
+/** Torch -> Eigen*/
+vector_t torch2vector(const torch::Tensor &t);
+matrix_t torch2matrix(const torch::Tensor &t);
+
+/** Eigen -> Torch */
+torch::Tensor vector2torch(const vector_t &v);
+torch::Tensor matrix2torch(const matrix_t &m);
 
 }  // namespace dtc
 }  // namespace tbai
