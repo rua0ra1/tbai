@@ -44,7 +44,7 @@
     <param name="taskFile"          value="$(find tbai_dtc)/config/task.info" />
     <param name="referenceFile"     value="$(find tbai_dtc)/config/reference.info" />
     <param name="gaitCommandFile"   value="$(find tbai_dtc)/config/gait.info"/>
-    <param name="dtcModelFile"      value="$(find tbai_dtc)/models/dtc_wbc_jitted.pt"/>
+    <param name="dtcModelFile"      value="$(find tbai_dtc)/models/dtc_wbc_jitted_wbc07.pt"/>
     <param name="urdfFile"          value="$(find ocs2_robotic_assets)/resources/anymal_d/urdf/anymal.urdf" />
 
     <node pkg="ocs2_legged_robot_ros" type="legged_robot_sqp_mpc" name="legged_robot_sqp_mpc"
