@@ -60,12 +60,13 @@ def main():
     command_topic = "/cmd_vel"
     state_subscriber = StateSubscriber(state_topic)
     twist_publisher = rospy.Publisher(command_topic, Twist, queue_size=1)
-    change_publisher = rospy.Publisher("/anymal_d/controller_change", String, queue_size=1)
+    change_publisher = rospy.Publisher("/anymal_d/change_controller", String, queue_size=1)
 
     ## Main loop
     rate = rospy.Rate(10)
+    controller = "WBC"
     while not rospy.is_shutdown():
-        rospy.loginfo("Running")
+        # rospy.loginfo("Running")
         rate.sleep()
 
         # Get new twist command
@@ -83,13 +84,26 @@ def main():
         if change_controller:
             print("Slips detected, changing to RL controller")
             change_publisher.publish(String("RL"))
+            controller = "RL"
 
         # Update phase
         phase = track_follower.update_phase(xyz, phase)
 
         # Print stats
-        statistician.update(phase)
-        print(phase)
+        wp_reached = statistician.update(phase)
+
+        if wp_reached and controller == "RL":
+            print("Waypoint reached, changing to WBC controller")
+            # Stop and change to WBC
+            for i in range(3):
+                twist_publisher.publish(Twist())
+                rate.sleep()
+            change_publisher.publish(String("WBC"))
+            controller = "WBC"
+
+
+
+        # print(phase)
 
 
 if __name__ == "__main__":

@@ -249,12 +249,14 @@ class Statistician:
                 break
         p = self.track_model.waypoints[i]
         if p == self.wp:
-            return
+            return False
         t_now = rospy.Time.now()
         t_diff_s = (t_now - self.t_start).to_sec()
         print("Time taken to reach waypoint: ", t_diff_s)
         self.wp = p
         self.t_start = t_now
+
+        return True
 
 
 class TrackFollower:
@@ -281,7 +283,7 @@ class TrackFollower:
         if np.abs(yaw_diff) >= np.pi / 3:
             lin_vel = 0.0
         else:
-            lin_vel = 0.4
+            lin_vel = 0.7
 
         twist = Twist()
         twist.linear.x = lin_vel
