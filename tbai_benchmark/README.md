@@ -16,3 +16,10 @@ https://github.com/lnotspotl/tbai/assets/82883398/4c2b398c-04ed-4534-8e62-4b0e01
 
 https://github.com/lnotspotl/tbai/assets/82883398/1d07b358-187b-423f-b7b5-d3c9251ad7f5
 
+## Example - context-aware controller
+- Our context-aware controller switches between two of the implemented controllers, namely `rl_blind` and `mpc_perceptive`.
+- In case a foot slip is detected, the context-aware controller changes the active controller from `mpc_perceptive` to `rl_blind`.
+- Once a checkpoint has been reached, the active controller is changed to the `mpc_perceptive` controller again.
+
+https://github.com/lnotspotl/tbai/assets/82883398/955b83fa-256b-492e-a959-1ddf97fbe860
+
