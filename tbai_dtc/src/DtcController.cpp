@@ -116,7 +116,7 @@ DtcController::DtcController(const std::shared_ptr<tbai::core::StateSubscriber> 
 
     horizon_ = interface.mpcSettings().timeHorizon_;
     // mpcRate_ = interface.mpcSettings().mpcDesiredFrequency_;
-    mpcRate_ = 10.0;
+    mpcRate_ = 30.0;
     pastAction_ = vector_t().setZero(12);
 
     if (!blind_) {
@@ -168,47 +168,55 @@ tbai_msgs::JointCommandArray DtcController::getCommandMessage(scalar_t currentTi
     vector_t dofVelObservation = getDofVelObservation(currentTime, dt);
     vector_t pastActionObservation = getPastActionObservation(currentTime, dt);
     vector_t planarFootholdsObservation = getPlanarFootholdsObservation(currentTime, dt);
-    // vector_t desiredJointAnglesObservation = getDesiredJointAnglesObservation(currentTime, dt);
-    // vector_t currentDesiredJointAnglesObservation = getCurrentDesiredJointAnglesObservation(currentTime, dt);
-    // vector_t desiredContactsObservation = getDesiredContactsObservation(currentTime, dt);
-    // vector_t timeLeftInPhaseObservation = getTimeLeftInPhaseObservation(currentTime, dt);
-    // vector_t desiredBasePosObservation = getDesiredBasePosObservation(currentTime, dt);
-    // vector_t orientationDiffObservation = getOrientationDiffObservation(currentTime, dt);
-    // vector_t desiredBaseLinVelObservation = getDesiredBaseLinVelObservation(currentTime, dt);
-    // vector_t desiredBaseAngVelObservation = getDesiredBaseAngVelObservation(currentTime, dt);
-    // vector_t desiredBaseLinAccObservation = getDesiredBaseLinAccObservation(currentTime, dt);
-    // vector_t desiredBaseAngAccObservation = getDesiredBaseAngAccObservation(currentTime, dt);
-    // vector_t cpgObservation = getCpgObservation(currentTime, dt);
-    // vector_t desiredFootPositionsObservation = getDesiredFootPositionsObservation(currentTime, dt);
-    // vector_t desiredFootVelocitiesObservation = getDesiredFootVelocitiesObservation(currentTime, dt);
+    vector_t desiredJointAnglesObservation = getDesiredJointAnglesObservation(currentTime, dt);
+    vector_t currentDesiredJointAnglesObservation = getCurrentDesiredJointAnglesObservation(currentTime, dt);
+    vector_t desiredContactsObservation = getDesiredContactsObservation(currentTime, dt);
+    vector_t timeLeftInPhaseObservation = getTimeLeftInPhaseObservation(currentTime, dt);
+    vector_t desiredBasePosObservation = getDesiredBasePosObservation(currentTime, dt);
+    vector_t orientationDiffObservation = getOrientationDiffObservation(currentTime, dt);
+    vector_t desiredBaseLinVelObservation = getDesiredBaseLinVelObservation(currentTime, dt);
+    vector_t desiredBaseAngVelObservation = getDesiredBaseAngVelObservation(currentTime, dt);
+    vector_t desiredBaseLinAccObservation = getDesiredBaseLinAccObservation(currentTime, dt);
+    vector_t desiredBaseAngAccObservation = getDesiredBaseAngAccObservation(currentTime, dt);
+    vector_t cpgObservation = getCpgObservation(currentTime, dt);
+    std::cout << cpgObservation.transpose() << std::endl;
+    vector_t desiredFootPositionsObservation = getDesiredFootPositionsObservation(currentTime, dt);
+    vector_t desiredFootVelocitiesObservation = getDesiredFootVelocitiesObservation(currentTime, dt);
+    vector_t heightSamplesObservation = getHeightSamplesObservation(currentTime, dt);
+    // std::cout << heightSamplesObservation.transpose() << std::endl;
 
-    // vector_t eigenObservation = vector_t(MODEL_INPUT_SIZE);
-    // eigenObservation << linearVelocityObservation, angularVelocityObservation, projectedGravityObservation,
-    //     commandObservation, dofPosObservation, dofVelObservation, pastActionObservation, planarFootholdsObservation,
-    //     desiredJointAnglesObservation, currentDesiredJointAnglesObservation, desiredContactsObservation,
-    //     timeLeftInPhaseObservation, desiredBasePosObservation, orientationDiffObservation,
-    //     desiredBaseLinVelObservation, desiredBaseAngVelObservation, desiredBaseLinAccObservation,
-    //     desiredBaseAngAccObservation, cpgObservation, desiredFootPositionsObservation,
-    //     desiredFootVelocitiesObservation;
+    vector_t eigenObservation = vector_t(MODEL_INPUT_SIZE);
+    eigenObservation << linearVelocityObservation, angularVelocityObservation, projectedGravityObservation,
+        commandObservation, dofPosObservation, dofVelObservation, pastActionObservation, planarFootholdsObservation,
+        desiredJointAnglesObservation, currentDesiredJointAnglesObservation, desiredContactsObservation,
+        timeLeftInPhaseObservation, desiredBasePosObservation, orientationDiffObservation,
+        desiredBaseLinVelObservation, desiredBaseAngVelObservation, desiredBaseLinAccObservation,
+        desiredBaseAngAccObservation, cpgObservation, desiredFootPositionsObservation,
+        desiredFootVelocitiesObservation, heightSamplesObservation;
 
-    // torch::Tensor torchObservation = vector2torch(eigenObservation).view({1, -1});
-    // torch::Tensor torchAction = dtcModel_.forward({torchObservation}).toTensor().view({-1});
+    // std::cout << eigenObservation << std::endl;
+    // throw std::runtime_error("Stop here");
 
-    // pastAction_ = torch2vector(torchAction);
+    torch::Tensor torchObservation = vector2torch(eigenObservation).view({1, -1});
+    torch::Tensor torchAction = dtcModel_.forward({torchObservation}).toTensor().view({-1});
 
-    // vector_t commandedJointAngles = defaultJointAngles_ + pastAction_ * ACTION_SCALE;
+    pastAction_ = torch2vector(torchAction);
+
+    vector_t commandedJointAngles = defaultJointAngles_ + pastAction_ * ACTION_SCALE;
 
     // tbai_msgs::JointCommandArray jointCommandArray;
     // jointCommandArray.joint_commands.resize(jointNames_.size());
-    // for (int i = 0; i < jointNames_.size(); ++i) {
-    //     auto &command = jointCommandArray.joint_commands[i];
-    //     command.joint_name = jointNames_[i];
-    //     command.desired_position = commandedJointAngles[i];
-    //     command.desired_velocity = 0.0;
-    //     command.torque_ff = 0.0;
-    //     command.kp = 80;
-    //     command.kd = 2;
-    // }
+    for (int i = 0; i < jointNames_.size(); ++i) {
+        auto &command = jointCommandArray.joint_commands[i];
+        command.joint_name = jointNames_[i];
+        command.desired_position = commandedJointAngles[i];
+        command.desired_velocity = 0.0;
+        command.torque_ff = 0.0;
+        command.kp = 80;
+        command.kd = 2;
+    }
+
+    // std::cout << "Commanded joint angles: " << commandedJointAngles.transpose() << std::endl;
 
     timeSinceLastMpcUpdate_ += dt;
     if (timeSinceLastMpcUpdate_ > 1.0 / mpcRate_) {
@@ -647,9 +655,9 @@ vector_t DtcController::getCpgObservation(scalar_t currentTime, scalar_t dt) {
     auto &modeSchedule = solution.modeSchedule_;
 
     auto desiredContacts = getDesiredContactFlags(currentTime, dt);
+    auto timeLeftInPhase = getTimeLeftInPhase(currentTime, dt);
 
-    auto contactPhases = ocs2::legged_robot::getContactPhasePerLeg(currentTime, modeSchedule);
-    auto swingPhases = ocs2::legged_robot::getSwingPhasePerLeg(currentTime, modeSchedule);
+    constexpr scalar_t tp = 0.35;
 
     vector_t phases = vector_t::Zero(4);
 
@@ -658,10 +666,11 @@ vector_t DtcController::getCpgObservation(scalar_t currentTime, scalar_t dt) {
     // Basically when LF lifts off the phase is 0
     constexpr scalar_t PI = 3.14159265358979323846;
     for (int j = 0; j < 4; ++j) {
+        scalar_t phase = 1.0 - timeLeftInPhase(j) / tp;
         if (desiredContacts[j]) {
-            phases(j) = PI + contactPhases[j].phase * PI;
+            phases(j) = phase * PI;
         } else {
-            phases(j) = swingPhases[j].phase * PI;
+            phases(j) = phase * PI + PI;
         }
 
         if (phases(j) > 2 * PI) phases(j) -= 2 * PI;
@@ -732,7 +741,7 @@ vector_t DtcController::getHeightSamplesObservation(scalar_t currentTime, scalar
         vector3_t futureFootPosition = kin.footPositionInOriginFrame(legidx, basePoseOcs2, jointAnglesOcs2);
         vector3_t currentFootPosition = currentFootPositions[legidx];
 
-        vector3_t diff = futureFootPosition - currentFootPosition;
+        vector3_t diff = currentFootPosition - futureFootPosition;
         scalar_t dalpha = 1.0 / (10 - 1);
         for(int i = 0; i < 10; ++i) {
             scalar_t alpha = dalpha * i;

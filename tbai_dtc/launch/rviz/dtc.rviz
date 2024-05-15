@@ -6,6 +6,8 @@ Panels:
       Expanded:
         - /Global Options1
         - /Status1
+        - /MarkerArray1
+        - /GridMap1
       Splitter Ratio: 0.5
     Tree Height: 480
   - Class: rviz/Selection
@@ -493,13 +495,35 @@ Visualization Manager:
       Visual Enabled: true
     - Class: rviz/MarkerArray
       Enabled: true
-      Marker Topic: /legged_robot/optimizedStateTrajectory
+      Marker Topic: /ocs2_anymal/optimizedStateTrajectory
       Name: MarkerArray
       Namespaces:
-        CoM Trajectory: true
-        EE Trajectories: true
-        Future footholds: true
+        {}
       Queue Size: 100
+      Value: true
+    - Alpha: 1
+      Autocompute Intensity Bounds: true
+      Class: grid_map_rviz_plugin/GridMap
+      Color: 200; 200; 200
+      Color Layer: elevation
+      Color Transformer: GridMapLayer
+      ColorMap: default
+      Enabled: true
+      Grid Cell Decimation: 1
+      Grid Line Thickness: 0.10000000149011612
+      Height Layer: elevation
+      Height Transformer: GridMapLayer
+      History Length: 1
+      Invert ColorMap: false
+      Max Color: 255; 255; 255
+      Max Intensity: 10
+      Min Color: 0; 0; 0
+      Min Intensity: 0
+      Name: GridMap
+      Show Grid Lines: true
+      Topic: /convex_plane_decomposition_ros/filtered_map
+      Unreliable: false
+      Use ColorMap: true
       Value: true
   Enabled: true
   Global Options:
@@ -529,7 +553,7 @@ Visualization Manager:
   Views:
     Current:
       Class: rviz/Orbit
-      Distance: 3.8563945293426514
+      Distance: 6.068111419677734
       Enable Stereo Rendering:
         Stereo Eye Separation: 0.05999999865889549
         Stereo Focal Distance: 1
@@ -566,4 +590,4 @@ Window Geometry:
     collapsed: false
   Width: 1200
   X: 60
-  Y: 29
+  Y: 0

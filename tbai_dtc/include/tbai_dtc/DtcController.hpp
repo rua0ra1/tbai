@@ -151,9 +151,9 @@ class DtcController final : public tbai::core::Controller {
     const scalar_t DOF_VEL_SCALE = 0.05;
     const scalar_t PAST_ACTION_SCALE = 1.0;
 
-    const scalar_t ISAAC_SIM_DT = 1 / 50 / 4;
+    const scalar_t ISAAC_SIM_DT = 1 / 50;
 
-    const long MODEL_INPUT_SIZE = 139;
+    const long MODEL_INPUT_SIZE = 179;
 
     scalar_t yawLast_ = 0.0;
 
