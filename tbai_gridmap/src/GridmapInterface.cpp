@@ -11,7 +11,8 @@ namespace gridmap {
 /**********************************************************************************************************************/
 /**********************************************************************************************************************/
 /**********************************************************************************************************************/
-GridmapInterface::GridmapInterface(ros::NodeHandle &nh, const std::string &topic) {
+GridmapInterface::GridmapInterface(ros::NodeHandle &nh, const std::string &topic, const std::string &layer)
+    : layer_(layer) {
     subscriber_ = nh.subscribe(topic, 1, &GridmapInterface::callback, this);
 }
 
@@ -34,7 +35,7 @@ void GridmapInterface::atPositions(matrix_t &sampled) {
 void GridmapInterface::callback(const grid_map_msgs::GridMap &msg) {
     // Convert ROS message to grid map
     std::unique_ptr<grid_map::GridMap> mapPtr(new grid_map::GridMap);
-    std::vector<std::string> layers = {"elevation_inpainted"};
+    std::vector<std::string> layers = {layer_};
     grid_map::GridMapRosConverter::fromMessage(msg, *mapPtr, layers, false, false);
 
     // Swap terrain map pointers
@@ -59,8 +60,9 @@ void GridmapInterface::waitTillInitialized() {
 std::unique_ptr<GridmapInterface> getGridmapInterfaceUnique() {
     ros::NodeHandle nh;
     auto topic = tbai::core::fromRosConfig<std::string>("gridmap_topic");
+    auto layer = tbai::core::fromRosConfig<std::string>("gridmap_layer");
 
-    return std::unique_ptr<GridmapInterface>(new GridmapInterface(nh, topic));
+    return std::unique_ptr<GridmapInterface>(new GridmapInterface(nh, topic, layer));
 }
 
 /**********************************************************************************************************************/

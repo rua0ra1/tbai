@@ -5,6 +5,16 @@ project(tbai_dtc)
 add_compile_options(-std=c++17)
 set(CMAKE_CXX_STANDARD 17)
 
+find_package(catkin REQUIRED COMPONENTS
+  tbai_core
+)
+
+set(Torch_DIR ${LIBTORCH_CMAKE_DIR})
+find_package(Torch)
+if (NOT Torch_FOUND)
+    message(FATAL_ERROR "PyTorch Not Found! Move your libtorch to the ${LIBTORCH_DIR} folder. You can a symlink if you want. See the 'Installing libtorch C++' section in the README.md file.")
+endif()
+
 
 find_package(catkin REQUIRED COMPONENTS
   roscpp
@@ -21,13 +31,11 @@ find_package(catkin REQUIRED COMPONENTS
   ocs2_msgs
   ocs2_ros_interfaces
   tbai_reference
+  tbai_gridmap
+  ocs2_quadruped_interface
+  ocs2_anymal_mpc
+  ocs2_switched_model_interface
 )
-
-set(Torch_DIR ${LIBTORCH_CMAKE_DIR})
-find_package(Torch)
-if (NOT Torch_FOUND)
-    message(FATAL_ERROR "PyTorch Not Found! Move your libtorch to the ${LIBTORCH_DIR} folder. You can a symlink if you want. See the 'Installing libtorch C++' section in the README.md file.")
-endif()
 
 catkin_package(
   INCLUDE_DIRS include

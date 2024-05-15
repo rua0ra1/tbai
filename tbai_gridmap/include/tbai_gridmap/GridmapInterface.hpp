@@ -18,8 +18,16 @@ class GridmapInterface {
      *
      * @param nh : ROS node handle
      * @param topic : ROS topic to subscribe to that publishes Gridmap messages
+     * @param layer : Layer of the gridmap to use
      */
-    GridmapInterface(ros::NodeHandle &nh, const std::string &topic);
+    GridmapInterface(ros::NodeHandle &nh, const std::string &topic, const std::string &layer);
+
+    /**
+     * @brief Get the Map object
+     *
+     * @return const grid_map::GridMap& : reference to the gridmap
+     */
+    const grid_map::GridMap &getMap() const { return *mapPtr_; }
 
     /**
      * @brief Check if first Gridmap message has been received
@@ -42,13 +50,13 @@ class GridmapInterface {
      * @param y : y coordinate
      * @return scalar_t : height at position x, y
      */
-    inline scalar_t atPosition(scalar_t x, scalar_t y) {
+    inline scalar_t atPosition(scalar_t x, scalar_t y) const {
         grid_map::Position position(x, y);
         if (!(mapPtr_->isInside(position))) {
             std::cerr << "Position " << x << " " << y << " is outside the map. Returning 0.0" << std::endl;
             return 0.0;
         }
-        auto height = mapPtr_->atPosition("elevation_inpainted", position);
+        auto height = mapPtr_->atPosition(layer_, position);
         if (std::isnan(height) || std::isinf(height)) {
             std::cerr << "NAN or inf at position " << x << " " << y << " " << height << ". Replacing with 0.0"
                       << std::endl;
@@ -74,6 +82,8 @@ class GridmapInterface {
 
     /** Pointer to latest gridmap */
     std::unique_ptr<grid_map::GridMap> mapPtr_;
+
+    const std::string layer_;
 };
 
 /**

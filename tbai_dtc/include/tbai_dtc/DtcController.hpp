@@ -21,8 +21,23 @@
 #include <tbai_core/Types.hpp>
 #include <tbai_core/control/Controller.hpp>
 #include <tbai_core/control/StateSubscriber.hpp>
+#include <tbai_gridmap/GridmapInterface.hpp>
 #include <tbai_reference/ReferenceVelocityGenerator.hpp>
 #include <torch/script.h>
+
+// Perceptive DTC
+#include <ocs2_anymal_models/FrameDeclaration.h>
+
+// This is a bit hacky :/
+#define private public
+#define protected public
+#include <ocs2_anymal_models/QuadrupedCom.h>
+#undef private
+#undef protected
+#include <ocs2_anymal_mpc/AnymalInterface.h>
+#include <ocs2_quadruped_interface/QuadrupedVisualizer.h>
+#include <ocs2_anymal_commands/ReferenceExtrapolation.h>
+#include <ocs2_switched_model_interface/core/Rotations.h>
 
 namespace tbai {
 namespace dtc {
@@ -31,6 +46,7 @@ using namespace ocs2;
 using namespace ocs2::legged_robot;
 using namespace tbai::core;
 using namespace tbai;
+using namespace switched_model;
 
 class DtcController final : public tbai::core::Controller {
    public:
@@ -97,7 +113,7 @@ class DtcController final : public tbai::core::Controller {
     std::vector<vector3_t> getDesiredFeetPositions(scalar_t currentTime, scalar_t dt);
     std::vector<vector3_t> getDesiredFeetVelocities(scalar_t currentTime, scalar_t dt);
     void computeBaseKinematicsAndDynamics(scalar_t currentTime, scalar_t dt, vector3_t &basePos,
-                                          vector3_t &baseOrientation, vector3_t &baseLinearVelocity,
+                                          vector_t &baseOrientation, vector3_t &baseLinearVelocity,
                                           vector3_t &baseAngularVelocity, vector3_t &baseLinearAcceleration,
                                           vector3_t &baseAngularAcceleration);
 
@@ -123,6 +139,7 @@ class DtcController final : public tbai::core::Controller {
     vector_t getCpgObservation(scalar_t currentTime, scalar_t dt);
     vector_t getDesiredFootPositionsObservation(scalar_t currentTime, scalar_t dt);
     vector_t getDesiredFootVelocitiesObservation(scalar_t currentTime, scalar_t dt);
+    vector_t getHeightSamplesObservation(scalar_t currentTime, scalar_t dt);
 
     std::shared_ptr<tbai::core::StateSubscriber> stateSubscriberPtr_;
 
@@ -134,7 +151,7 @@ class DtcController final : public tbai::core::Controller {
     const scalar_t DOF_VEL_SCALE = 0.05;
     const scalar_t PAST_ACTION_SCALE = 1.0;
 
-    const scalar_t ISAAC_SIM_DT = 1 / 50;
+    const scalar_t ISAAC_SIM_DT = 1 / 50 / 4;
 
     const long MODEL_INPUT_SIZE = 139;
 
@@ -167,6 +184,31 @@ class DtcController final : public tbai::core::Controller {
     scalar_t horizon_;
     scalar_t mpcRate_ = 2.5;
     scalar_t timeSinceLastMpcUpdate_ = 1e5;
+
+    bool blind_ = false;
+    std::unique_ptr<tbai::gridmap::GridmapInterface> gridmap_;
+    std::unique_ptr<switched_model::QuadrupedInterface> quadrupedInterface_;
+    std::unique_ptr<switched_model::ComModelBase<scalar_t>> comModel_;
+    std::unique_ptr<switched_model::KinematicsModelBase<scalar_t>> kinematicsModel_;
+    std::unique_ptr<switched_model::QuadrupedVisualizer> visualizer_;
+
+    BaseReferenceHorizon getBaseReferenceHorizon(scalar_t time) { return {0.1, 10}; }
+
+    BaseReferenceState getBaseReferenceState(scalar_t time) {
+        scalar_t observationTime = time;
+        auto currentObservation = generateSystemObservation();
+        Eigen::Vector3d positionInWorld = currentObservation.state.segment<3>(3);
+        Eigen::Vector3d eulerXyz = currentObservation.state.segment<3>(0);
+        return {observationTime, positionInWorld, eulerXyz};
+    }
+
+    BaseReferenceCommand getBaseReferenceCommand(scalar_t time, const vector_t &command) {
+        scalar_t vx = command(0) / LIN_VEL_SCALE;
+        scalar_t vy = command(1) / LIN_VEL_SCALE;
+        scalar_t wz = command(2) / ANG_VEL_SCALE;
+        scalar_t comHeight = 0.53;
+        return {vx, vy, wz, comHeight};
+    }
 };
 
 /** Torch -> Eigen*/
