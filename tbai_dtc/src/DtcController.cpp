@@ -79,42 +79,11 @@ DtcController::DtcController(const std::shared_ptr<tbai::core::StateSubscriber> 
     std::cout << "Input: " << input.view({1, -1}) << std::endl;
     std::cout << "Output: " << output.view({1, -1}) << std::endl;
 
-    DTC_PRINT("Setting up legged interface");
-    interfacePtr_ = std::make_unique<LeggedRobotInterface>(taskFile, urdfFile, referenceFile);
-    auto &interface = *interfacePtr_;
-
-    DTC_PRINT("Setting up pinocchio interface");
-    pinocchioInterfacePtr_ = std::make_unique<PinocchioInterface>(interface.getPinocchioInterface());
-    auto &pinocchioInterface = *pinocchioInterfacePtr_;
-
-    DTC_PRINT("Setting up centroidal model mapping");
-    centroidalModelMappingPtr_ = std::make_unique<CentroidalModelPinocchioMapping>(interface.getCentroidalModelInfo());
-    auto &pinocchioMapping = *centroidalModelMappingPtr_;
-    pinocchioMapping.setPinocchioInterface(pinocchioInterface);
-
-    DTC_PRINT("Setting up end effector kinematics");
-    endEffectorKinematicsPtr_ = std::make_unique<PinocchioEndEffectorKinematics>(
-        pinocchioInterface, *centroidalModelMappingPtr_, interface.modelSettings().contactNames3DoF);
-    auto &endEffectorKinematics = *endEffectorKinematicsPtr_;
-    endEffectorKinematics.setPinocchioInterface(pinocchioInterface);
-
-    DTC_PRINT("Setting up RBD conversions");
-    PinocchioInterface pinint_temp(interface.getPinocchioInterface());
-    centroidalModelRbdConversionsPtr_ =
-        std::make_unique<CentroidalModelRbdConversions>(pinint_temp, interface.getCentroidalModelInfo());
-
     DTC_PRINT("Setting up reference velocity generator");
     refVelGen_ = tbai::reference::getReferenceVelocityGeneratorUnique(nh);
     refPub_ = nh.advertise<ocs2_msgs::mpc_target_trajectories>("anymal_mpc_target", 1, false);
 
-    DTC_PRINT("Setting up visualizer");
-    CentroidalModelPinocchioMapping cmpmVisualizer(interface.getCentroidalModelInfo());
-    PinocchioEndEffectorKinematics eeVisualizer(interface.getPinocchioInterface(), cmpmVisualizer,
-                                                interface.modelSettings().contactNames3DoF);
-    visualizerPtr_ = std::make_unique<LeggedRobotVisualizer>(
-        interface.getPinocchioInterface(), interface.getCentroidalModelInfo(), endEffectorKinematics, nh);
-
-    horizon_ = interface.mpcSettings().timeHorizon_;
+    horizon_ = 1.0;
     // mpcRate_ = interface.mpcSettings().mpcDesiredFrequency_;
     mpcRate_ = 30.0;
     pastAction_ = vector_t().setZero(12);
@@ -148,18 +117,6 @@ tbai_msgs::JointCommandArray DtcController::getCommandMessage(scalar_t currentTi
     mrt_.spinMRT();
     mrt_.updatePolicy();
 
-    tbai_msgs::JointCommandArray jointCommandArray;
-    jointCommandArray.joint_commands.resize(jointNames_.size());
-    for (int i = 0; i < jointNames_.size(); ++i) {
-        auto &command = jointCommandArray.joint_commands[i];
-        command.joint_name = jointNames_[i];
-        command.desired_position = defaultJointAngles_[i];
-        command.desired_velocity = 0.0;
-        command.torque_ff = 0.0;
-        command.kp = 400;
-        command.kd = 20;
-    }
-
     vector3_t linearVelocityObservation = getLinearVelocityObservation(currentTime, dt);
     vector3_t angularVelocityObservation = getAngularVelocityObservation(currentTime, dt);
     vector3_t projectedGravityObservation = getProjectedGravityObservation(currentTime, dt);
@@ -179,33 +136,52 @@ tbai_msgs::JointCommandArray DtcController::getCommandMessage(scalar_t currentTi
     vector_t desiredBaseLinAccObservation = getDesiredBaseLinAccObservation(currentTime, dt);
     vector_t desiredBaseAngAccObservation = getDesiredBaseAngAccObservation(currentTime, dt);
     vector_t cpgObservation = getCpgObservation(currentTime, dt);
-    std::cout << cpgObservation.transpose() << std::endl;
     vector_t desiredFootPositionsObservation = getDesiredFootPositionsObservation(currentTime, dt);
     vector_t desiredFootVelocitiesObservation = getDesiredFootVelocitiesObservation(currentTime, dt);
     vector_t heightSamplesObservation = getHeightSamplesObservation(currentTime, dt);
-    // std::cout << heightSamplesObservation.transpose() << std::endl;
 
     vector_t eigenObservation = vector_t(MODEL_INPUT_SIZE);
-    eigenObservation << linearVelocityObservation, angularVelocityObservation, projectedGravityObservation,
-        commandObservation, dofPosObservation, dofVelObservation, pastActionObservation, planarFootholdsObservation,
-        desiredJointAnglesObservation, currentDesiredJointAnglesObservation, desiredContactsObservation,
-        timeLeftInPhaseObservation, desiredBasePosObservation, orientationDiffObservation,
-        desiredBaseLinVelObservation, desiredBaseAngVelObservation, desiredBaseLinAccObservation,
-        desiredBaseAngAccObservation, cpgObservation, desiredFootPositionsObservation,
-        desiredFootVelocitiesObservation, heightSamplesObservation;
 
-    // std::cout << eigenObservation << std::endl;
+    // clang-format off
+    eigenObservation << linearVelocityObservation,
+                        angularVelocityObservation,
+                        projectedGravityObservation,
+                        commandObservation,
+                        dofPosObservation,
+                        dofVelObservation,
+                        pastActionObservation,
+                        planarFootholdsObservation,
+                        desiredJointAnglesObservation,
+                        currentDesiredJointAnglesObservation,
+                        desiredContactsObservation,
+                        timeLeftInPhaseObservation,
+                        desiredBasePosObservation,
+                        orientationDiffObservation,
+                        desiredBaseLinVelObservation,
+                        desiredBaseAngVelObservation,
+                        desiredBaseLinAccObservation,
+                        desiredBaseAngAccObservation,
+                        cpgObservation,
+                        desiredFootPositionsObservation,
+                        heightSamplesObservation;
+    // clang-format on
+
     // throw std::runtime_error("Stop here");
 
     torch::Tensor torchObservation = vector2torch(eigenObservation).view({1, -1});
     torch::Tensor torchAction = dtcModel_.forward({torchObservation}).toTensor().view({-1});
 
+    std::cout << "Torch action: " << torchAction << std::endl;
+
     pastAction_ = torch2vector(torchAction);
+
+    std::cout << "Past action: " << pastAction_.transpose() << std::endl;
+    std::cout << std::endl;
 
     vector_t commandedJointAngles = defaultJointAngles_ + pastAction_ * ACTION_SCALE;
 
-    // tbai_msgs::JointCommandArray jointCommandArray;
-    // jointCommandArray.joint_commands.resize(jointNames_.size());
+    tbai_msgs::JointCommandArray jointCommandArray;
+    jointCommandArray.joint_commands.resize(jointNames_.size());
     for (int i = 0; i < jointNames_.size(); ++i) {
         auto &command = jointCommandArray.joint_commands[i];
         command.joint_name = jointNames_[i];
@@ -406,7 +382,9 @@ void DtcController::computeBaseKinematicsAndDynamics(scalar_t currentTime, scala
 
     // Unpack data
     vector3_t desiredBasePosition = basePoseOcs2.tail<3>();
-    vector_t desiredBaseOrientation = desiredBaseOrientationQuat.coeffs();  // zyx euler angles
+    vector_t desiredBaseOrientation = (vector_t(4) << desiredBaseOrientationQuat.x(), desiredBaseOrientationQuat.y(),
+                                       desiredBaseOrientationQuat.z(), desiredBaseOrientationQuat.w())
+                                          .finished();  // zyx euler angles
 
     vector3_t desiredBaseLinearVelocity = rotationWorldBase * baseVelocityOcs2.tail<3>();
     vector3_t desiredBaseAngularVelocity = rotationWorldBase * baseVelocityOcs2.head<3>();
@@ -484,7 +462,9 @@ vector_t DtcController::getPlanarFootholdsObservation(scalar_t currentTime, scal
 
         // Update desired footholds
         matrix3_t R_base_world = getRotationMatrixBaseWorld(rbdState);
-        vector_t footholdInBase = R_base_world * (futureFootPosition - currentFootPosition);
+        vector_t footholdInBase = futureFootPosition - currentFootPosition;
+        footholdInBase(2) = 0.0;
+        footholdInBase = R_base_world * footholdInBase;
 
         out.segment<2>(2 * legidx) = footholdInBase.head<2>();
     }
@@ -500,8 +480,8 @@ vector_t DtcController::getDesiredJointAnglesObservation(scalar_t currentTime, s
 
     for (int j = 0; j < 4; ++j) {
         const scalar_t timeLeft = timeLeftInPhase(j);
-        auto optimizedState =
-            LinearInterpolation::interpolate(currentTime + timeLeft, solution.timeTrajectory_, solution.stateTrajectory_);
+        auto optimizedState = LinearInterpolation::interpolate(currentTime + timeLeft, solution.timeTrajectory_,
+                                                               solution.stateTrajectory_);
 
         auto *quadcomPtr = dynamic_cast<anymal::QuadrupedCom *>(comModel_.get());
         auto &quadcom = *quadcomPtr;
@@ -552,8 +532,7 @@ vector_t DtcController::getTimeLeftInPhaseObservation(scalar_t currentTime, scal
 }
 
 vector_t DtcController::getDesiredBasePosObservation(scalar_t currentTime, scalar_t dt) {
-    vector3_t basePos, baseLinearVelocity, baseAngularVelocity, baseLinearAcceleration,
-        baseAngularAcceleration;
+    vector3_t basePos, baseLinearVelocity, baseAngularVelocity, baseLinearAcceleration, baseAngularAcceleration;
     vector_t baseOrientation;
     computeBaseKinematicsAndDynamics(currentTime, dt, basePos, baseOrientation, baseLinearVelocity, baseAngularVelocity,
                                      baseLinearAcceleration, baseAngularAcceleration);
@@ -566,8 +545,7 @@ vector_t DtcController::getDesiredBasePosObservation(scalar_t currentTime, scala
 }
 
 vector_t DtcController::getOrientationDiffObservation(scalar_t currentTime, scalar_t dt) {
-    vector3_t basePos, baseLinearVelocity, baseAngularVelocity, baseLinearAcceleration,
-        baseAngularAcceleration;
+    vector3_t basePos, baseLinearVelocity, baseAngularVelocity, baseLinearAcceleration, baseAngularAcceleration;
     vector_t baseOrientation;
     computeBaseKinematicsAndDynamics(currentTime, dt, basePos, baseOrientation, baseLinearVelocity, baseAngularVelocity,
                                      baseLinearAcceleration, baseAngularAcceleration);
@@ -599,8 +577,7 @@ vector_t DtcController::getOrientationDiffObservation(scalar_t currentTime, scal
 }
 
 vector_t DtcController::getDesiredBaseLinVelObservation(scalar_t currentTime, scalar_t dt) {
-    vector3_t basePos, baseLinearVelocity, baseAngularVelocity, baseLinearAcceleration,
-        baseAngularAcceleration;
+    vector3_t basePos, baseLinearVelocity, baseAngularVelocity, baseLinearAcceleration, baseAngularAcceleration;
     vector_t baseOrientation;
     computeBaseKinematicsAndDynamics(currentTime, dt, basePos, baseOrientation, baseLinearVelocity, baseAngularVelocity,
                                      baseLinearAcceleration, baseAngularAcceleration);
@@ -612,8 +589,7 @@ vector_t DtcController::getDesiredBaseLinVelObservation(scalar_t currentTime, sc
 }
 
 vector_t DtcController::getDesiredBaseAngVelObservation(scalar_t currentTime, scalar_t dt) {
-    vector3_t basePos, baseLinearVelocity, baseAngularVelocity, baseLinearAcceleration,
-        baseAngularAcceleration;
+    vector3_t basePos, baseLinearVelocity, baseAngularVelocity, baseLinearAcceleration, baseAngularAcceleration;
     vector_t baseOrientation;
     computeBaseKinematicsAndDynamics(currentTime, dt, basePos, baseOrientation, baseLinearVelocity, baseAngularVelocity,
                                      baseLinearAcceleration, baseAngularAcceleration);
@@ -625,8 +601,7 @@ vector_t DtcController::getDesiredBaseAngVelObservation(scalar_t currentTime, sc
 }
 
 vector_t DtcController::getDesiredBaseLinAccObservation(scalar_t currentTime, scalar_t dt) {
-    vector3_t basePos, baseLinearVelocity, baseAngularVelocity, baseLinearAcceleration,
-        baseAngularAcceleration;
+    vector3_t basePos, baseLinearVelocity, baseAngularVelocity, baseLinearAcceleration, baseAngularAcceleration;
     vector_t baseOrientation;
     computeBaseKinematicsAndDynamics(currentTime, dt, basePos, baseOrientation, baseLinearVelocity, baseAngularVelocity,
                                      baseLinearAcceleration, baseAngularAcceleration);
@@ -638,8 +613,7 @@ vector_t DtcController::getDesiredBaseLinAccObservation(scalar_t currentTime, sc
 }
 
 vector_t DtcController::getDesiredBaseAngAccObservation(scalar_t currentTime, scalar_t dt) {
-    vector3_t basePos, baseLinearVelocity, baseAngularVelocity, baseLinearAcceleration,
-        baseAngularAcceleration;
+    vector3_t basePos, baseLinearVelocity, baseAngularVelocity, baseLinearAcceleration, baseAngularAcceleration;
     vector_t baseOrientation;
     computeBaseKinematicsAndDynamics(currentTime, dt, basePos, baseOrientation, baseLinearVelocity, baseAngularVelocity,
                                      baseLinearAcceleration, baseAngularAcceleration);
@@ -670,7 +644,7 @@ vector_t DtcController::getCpgObservation(scalar_t currentTime, scalar_t dt) {
         if (desiredContacts[j]) {
             phases(j) = phase * PI;
         } else {
-            phases(j) = phase * PI + PI;
+            phases(j) = phase * PI;
         }
 
         if (phases(j) > 2 * PI) phases(j) -= 2 * PI;
@@ -728,8 +702,8 @@ vector_t DtcController::getHeightSamplesObservation(scalar_t currentTime, scalar
     auto &solution = mrt_.getPolicy();
     auto currentFootPositions = getCurrentFeetPositions(currentTime, dt);
     auto timeLeftInPhase = getTimeLeftInPhase(currentTime, dt);
-    vector_t out(4*10);
-    for(int legidx = 0; legidx < 4; ++legidx) {
+    vector_t out(4 * 10);
+    for (int legidx = 0; legidx < 4; ++legidx) {
         scalar_t timeLeft = timeLeftInPhase(legidx);
         scalar_t eventTime = currentTime + timeLeft;
         vector_t optimizedState =
@@ -741,21 +715,20 @@ vector_t DtcController::getHeightSamplesObservation(scalar_t currentTime, scalar
         vector3_t futureFootPosition = kin.footPositionInOriginFrame(legidx, basePoseOcs2, jointAnglesOcs2);
         vector3_t currentFootPosition = currentFootPositions[legidx];
 
-        vector3_t diff = currentFootPosition - futureFootPosition;
+        vector3_t diff = futureFootPosition - currentFootPosition;
         scalar_t dalpha = 1.0 / (10 - 1);
-        for(int i = 0; i < 10; ++i) {
+        for (int i = 0; i < 10; ++i) {
             scalar_t alpha = dalpha * i;
             vector3_t pos = currentFootPosition + diff * alpha;
             scalar_t x = pos(0);
             scalar_t y = pos(1);
-            scalar_t height = gridmap_->atPosition(x,y);
+            scalar_t height = gridmap_->atPosition(x, y);
             scalar_t height_diff = height - currentFootPosition(2);
             out(legidx * 10 + i) = height_diff;
         }
     }
     return out;
 }
-
 
 void DtcController::visualize() {
     mrt_.spinMRT();

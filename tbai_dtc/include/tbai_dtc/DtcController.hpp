@@ -84,7 +84,7 @@ class DtcController final : public tbai::core::Controller {
         return rpy.reverse();
     }
     inline matrix3_t getRotationMatrixWorldBase(const vector_t &state) const {
-        return tbai::core::rpy2mat(getRpyAngles(state));
+        return tbai::core::ocs2rpy2quat(state.head<3>()).toRotationMatrix();
     }
     inline matrix3_t getRotationMatrixBaseWorld(const vector_t &state) const {
         return getRotationMatrixWorldBase(state).transpose();
@@ -153,7 +153,7 @@ class DtcController final : public tbai::core::Controller {
 
     const scalar_t ISAAC_SIM_DT = 1 / 50;
 
-    const long MODEL_INPUT_SIZE = 179;
+    const long MODEL_INPUT_SIZE = 167;
 
     scalar_t yawLast_ = 0.0;
 
@@ -174,13 +174,6 @@ class DtcController final : public tbai::core::Controller {
 
     vector_t pastAction_;
 
-    std::unique_ptr<LeggedRobotInterface> interfacePtr_;
-    std::unique_ptr<PinocchioInterface> pinocchioInterfacePtr_;
-    std::unique_ptr<PinocchioEndEffectorKinematics> endEffectorKinematicsPtr_;
-    std::unique_ptr<CentroidalModelPinocchioMapping> centroidalModelMappingPtr_;
-    std::unique_ptr<CentroidalModelRbdConversions> centroidalModelRbdConversionsPtr_;
-    std::unique_ptr<ocs2::legged_robot::LeggedRobotVisualizer> visualizerPtr_;
-
     scalar_t horizon_;
     scalar_t mpcRate_ = 2.5;
     scalar_t timeSinceLastMpcUpdate_ = 1e5;
@@ -195,8 +188,8 @@ class DtcController final : public tbai::core::Controller {
     BaseReferenceHorizon getBaseReferenceHorizon(scalar_t time) { return {0.1, 10}; }
 
     BaseReferenceState getBaseReferenceState(scalar_t time) {
-        scalar_t observationTime = time;
         auto currentObservation = generateSystemObservation();
+        auto observationTime = stateSubscriberPtr_->getLatestRbdStamp().toSec() - initTime_;
         Eigen::Vector3d positionInWorld = currentObservation.state.segment<3>(3);
         Eigen::Vector3d eulerXyz = currentObservation.state.segment<3>(0);
         return {observationTime, positionInWorld, eulerXyz};
