@@ -307,9 +307,9 @@ at::Tensor BobController::getNNInput(const State &state, scalar_t currentTime, s
 /***********************************************************************************************************************/
 void BobController::fillCommand(at::Tensor &input, scalar_t currentTime, scalar_t dt) {
     auto command = refVelGen_->getReferenceVelocity(currentTime, dt);
-    input[0] = command.velocity_x;
-    input[1] = command.velocity_y;
-    input[2] = command.yaw_rate;
+    input[0] = command.velocity_x * 2;
+    input[1] = command.velocity_y * 2;
+    input[2] = command.yaw_rate * 2;
 }
 
 /***********************************************************************************************************************/

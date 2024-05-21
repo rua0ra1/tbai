@@ -7,6 +7,7 @@ state_topic: "anymal_d/state"
 command_topic: "anymal_d/command"
 change_controller_topic: "anymal_d/change_controller"
 gridmap_topic: "elevation_mapping/elevation_map_raw"
+gridmap_layer: "elevation"
 
 marker_topic: "markers"
 odom_frame: "odom"

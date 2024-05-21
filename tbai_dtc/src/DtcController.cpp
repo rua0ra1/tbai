@@ -85,7 +85,7 @@ DtcController::DtcController(const std::shared_ptr<tbai::core::StateSubscriber> 
 
     horizon_ = 1.0;
     // mpcRate_ = interface.mpcSettings().mpcDesiredFrequency_;
-    mpcRate_ = 30.0;
+    mpcRate_ = 100;
     pastAction_ = vector_t().setZero(12);
 
     if (!blind_) {
@@ -163,20 +163,42 @@ tbai_msgs::JointCommandArray DtcController::getCommandMessage(scalar_t currentTi
                         desiredBaseAngAccObservation,
                         cpgObservation,
                         desiredFootPositionsObservation,
+                        desiredFootVelocitiesObservation,
                         heightSamplesObservation;
     // clang-format on
+
+    // Print all observations, one by one
+    // std::cout << "Linear velocity: " << linearVelocityObservation.transpose() << std::endl;
+    // std::cout << "Angular velocity: " << angularVelocityObservation.transpose() << std::endl;
+    // std::cout << "Projected gravity: " << projectedGravityObservation.transpose() << std::endl;
+    // std::cout << "Command: " << commandObservation.transpose() << std::endl;
+    // std::cout << "Dof pos: " << dofPosObservation.transpose() << std::endl;
+    // std::cout << "Dof vel: " << dofVelObservation.transpose() << std::endl;
+    // std::cout << "Past action: " << pastActionObservation.transpose() << std::endl;
+    // std::cout << "Planar footholds: " << planarFootholdsObservation.transpose() << std::endl;
+    // std::cout << "Desired joint angles: " << desiredJointAnglesObservation.transpose() << std::endl;
+    // std::cout << "Current desired joint angles: " << currentDesiredJointAnglesObservation.transpose() << std::endl;
+    // std::cout << "Desired contacts: " << desiredContactsObservation.transpose() << std::endl;
+    // std::cout << "Time left in phase: " << timeLeftInPhaseObservation.transpose() << std::endl;
+    // std::cout << "Desired base pos: " << desiredBasePosObservation.transpose() << std::endl;
+    // std::cout << "Orientation diff: " << orientationDiffObservation.transpose() << std::endl;
+    // std::cout << "Desired base lin vel: " << desiredBaseLinVelObservation.transpose() << std::endl;
+    // std::cout << "Desired base ang vel: " << desiredBaseAngVelObservation.transpose() << std::endl;
+    // std::cout << "Desired base lin acc: " << desiredBaseLinAccObservation.transpose() << std::endl;
+    // std::cout << "Desired base ang acc: " << desiredBaseAngAccObservation.transpose() << std::endl;
+    // std::cout << "Cpg: " << cpgObservation.transpose() << std::endl;
+    // std::cout << "Desired foot positions: " << desiredFootPositionsObservation.transpose() << std::endl;
+    // std::cout << "Desired foot velocities: " << desiredFootVelocitiesObservation.transpose() << std::endl;
+    // std::cout << "Height samples: " << heightSamplesObservation.transpose() << std::endl;
+    // std::cout << "=========================" << std::endl;
+    // std::cout << std::endl;
 
     // throw std::runtime_error("Stop here");
 
     torch::Tensor torchObservation = vector2torch(eigenObservation).view({1, -1});
     torch::Tensor torchAction = dtcModel_.forward({torchObservation}).toTensor().view({-1});
 
-    std::cout << "Torch action: " << torchAction << std::endl;
-
     pastAction_ = torch2vector(torchAction);
-
-    std::cout << "Past action: " << pastAction_.transpose() << std::endl;
-    std::cout << std::endl;
 
     vector_t commandedJointAngles = defaultJointAngles_ + pastAction_ * ACTION_SCALE;
 
@@ -195,11 +217,19 @@ tbai_msgs::JointCommandArray DtcController::getCommandMessage(scalar_t currentTi
     // std::cout << "Commanded joint angles: " << commandedJointAngles.transpose() << std::endl;
 
     timeSinceLastMpcUpdate_ += dt;
+    timeSinceLastMpcUpdate2_ += dt;
     if (timeSinceLastMpcUpdate_ > 1.0 / mpcRate_) {
         setObservation();
-        // TODO: Put this into its own thread
-        publishReference(generateTargetTrajectories(currentTime, dt, commandObservation));
         timeSinceLastMpcUpdate_ = 0.0;
+    }
+
+    if (timeSinceLastMpcUpdate2_ > 1.0 / 4) {
+        timeSinceLastMpcUpdate2_ = 0.0;
+        auto reference = generateTargetTrajectories(currentTime, dt, commandObservation);
+        lastTargetTrajectories_.reset(
+            new TargetTrajectories(reference.timeTrajectory, reference.stateTrajectory, reference.inputTrajectory));
+        publishReference(generateTargetTrajectories(currentTime, dt, commandObservation));
+        // TODO: Put this into its own thread
     }
 
     return jointCommandArray;
@@ -218,7 +248,7 @@ vector_t DtcController::getTimeLeftInPhase(scalar_t currentTime, scalar_t dt) {
     auto &eventTimes = modeSchedule.eventTimes;
     auto it = std::lower_bound(eventTimes.begin(), eventTimes.end(), currentTime);
     if (it == eventTimes.end()) {
-        return vector_t::Zero(4);
+        return vector_t::Ones(4) * 0.35;
     }
     return vector_t::Ones(4) * (*it - currentTime);
 }
@@ -227,7 +257,7 @@ TargetTrajectories DtcController::generateTargetTrajectories(scalar_t currentTim
                                                              const vector3_t &command) {
     switched_model::BaseReferenceTrajectory baseReferenceTrajectory =
         generateExtrapolatedBaseReference(getBaseReferenceHorizon(currentTime), getBaseReferenceState(currentTime),
-                                          getBaseReferenceCommand(currentTime, command), gridmap_->getMap(), 0.53, 0.3);
+                                          getBaseReferenceCommand(currentTime, command), gridmap_->getMap(), 0.3, 0.3);
 
     constexpr size_t STATE_DIM = 6 + 6 + 12;
     constexpr size_t INPUT_DIM = 12 + 12;
@@ -325,7 +355,7 @@ std::vector<vector3_t> DtcController::getDesiredFeetVelocities(scalar_t currentT
     auto basePoseOcs2 = switched_model::getBasePose(optimizedState);
     auto baseTwistOcs2 = switched_model::getBaseLocalVelocities(optimizedState);
     auto jointAnglesOcs2 = switched_model::getJointPositions(optimizedState);
-    auto jointVelocitiesOcs2 = switched_model::getJointVelocities(optimizedState);  // TODO: Bug, this should be input
+    auto jointVelocitiesOcs2 = switched_model::getJointVelocities(optimizedInput);  // TODO: Bug, this should be input
     std::vector<vector3_t> feetVelocities(4);
     for (int legidx = 0; legidx < 4; ++legidx) {
         auto footVelocity =
@@ -347,11 +377,17 @@ void DtcController::computeBaseKinematicsAndDynamics(scalar_t currentTime, scala
     vector_t desiredInput = LinearInterpolation::interpolate(currentTime + ISAAC_SIM_DT, solution.timeTrajectory_,
                                                              solution.inputTrajectory_);
 
-    auto &quadcom = *comModel_;
+    auto *quadcomPtr = dynamic_cast<anymal::QuadrupedCom *>(comModel_.get());
+    auto &quadcom = *quadcomPtr;
     auto &kin = *kinematicsModel_;
 
     auto basePoseOcs2 = switched_model::getBasePose(desiredState);
+    auto jointAnglesOcs2 = switched_model::getJointPositions(desiredState);
     auto baseVelocityOcs2 = switched_model::getBaseLocalVelocities(desiredState);
+    auto jointVelocitiesOcs2 = switched_model::getJointVelocities(desiredInput);
+
+    auto qPinocchio = quadcom.getPinnochioConfiguration(basePoseOcs2, jointAnglesOcs2);
+    auto vPinocchio = quadcom.getPinnochioVelocity(baseVelocityOcs2, jointVelocitiesOcs2);
 
     // Desired base orinetation as a quaternion
     quaternion_t desiredBaseOrientationQuat = ocs2rpy2quat(basePoseOcs2.head<3>());  // ocs2 xyz to quaternion
@@ -382,14 +418,13 @@ void DtcController::computeBaseKinematicsAndDynamics(scalar_t currentTime, scala
 
     // Unpack data
     vector3_t desiredBasePosition = basePoseOcs2.tail<3>();
-    vector_t desiredBaseOrientation = (vector_t(4) << desiredBaseOrientationQuat.x(), desiredBaseOrientationQuat.y(),
-                                       desiredBaseOrientationQuat.z(), desiredBaseOrientationQuat.w())
-                                          .finished();  // zyx euler angles
+    vector_t desiredBaseOrientation = desiredBaseOrientationQuat.coeffs();  // zyx euler angles
 
     vector3_t desiredBaseLinearVelocity = rotationWorldBase * baseVelocityOcs2.tail<3>();
     vector3_t desiredBaseAngularVelocity = rotationWorldBase * baseVelocityOcs2.head<3>();
 
-    vector3_t desiredBaseLinearAcceleration = rotationWorldBase * baseAccelerationLocal.tail<3>();
+    matrix_t R_base_world = getRotationMatrixBaseWorld(stateSubscriberPtr_->getLatestRbdState());
+    vector3_t desiredBaseLinearAcceleration = rotationWorldBase * (baseAccelerationLocal.tail<3>());
     vector3_t desiredBaseAngularAcceleration = rotationWorldBase * baseAccelerationLocal.head<3>();
 
     // Update desired base
@@ -490,8 +525,11 @@ vector_t DtcController::getDesiredJointAnglesObservation(scalar_t currentTime, s
         auto basePoseOcs2 = switched_model::getBasePose(optimizedState);
         auto jointAnglesOcs2 = switched_model::getJointPositions(optimizedState);
 
-        auto qPinocchio = quadcom.getPinnochioConfiguration(basePoseOcs2, jointAnglesOcs2);
-        auto optimizedJointAngles = qPinocchio.tail<12>();
+        std::swap(jointAnglesOcs2(3 + 0), jointAnglesOcs2(3 + 3));
+        std::swap(jointAnglesOcs2(3 + 1), jointAnglesOcs2(3 + 4));
+        std::swap(jointAnglesOcs2(3 + 2), jointAnglesOcs2(3 + 5));
+
+        auto optimizedJointAngles = jointAnglesOcs2;
 
         out.segment<3>(3 * j) = optimizedJointAngles.segment<3>(3 * j);
     }
@@ -513,9 +551,11 @@ vector_t DtcController::getCurrentDesiredJointAnglesObservation(scalar_t current
     auto basePoseOcs2 = switched_model::getBasePose(optimizedState);
     auto jointAnglesOcs2 = switched_model::getJointPositions(optimizedState);
 
-    auto qPinocchio = quadcom.getPinnochioConfiguration(basePoseOcs2, jointAnglesOcs2);
-    auto jointAngles = qPinocchio.tail<12>();
-    return jointAngles - defaultJointAngles_;
+    std::swap(jointAnglesOcs2(3 + 0), jointAnglesOcs2(3 + 3));
+    std::swap(jointAnglesOcs2(3 + 1), jointAnglesOcs2(3 + 4));
+    std::swap(jointAnglesOcs2(3 + 2), jointAnglesOcs2(3 + 5));
+
+    return jointAnglesOcs2 - defaultJointAngles_;
 }
 
 vector_t DtcController::getDesiredContactsObservation(scalar_t currentTime, scalar_t dt) {
@@ -644,7 +684,7 @@ vector_t DtcController::getCpgObservation(scalar_t currentTime, scalar_t dt) {
         if (desiredContacts[j]) {
             phases(j) = phase * PI;
         } else {
-            phases(j) = phase * PI;
+            phases(j) = phase * PI + PI;
         }
 
         if (phases(j) > 2 * PI) phases(j) -= 2 * PI;
@@ -731,8 +771,6 @@ vector_t DtcController::getHeightSamplesObservation(scalar_t currentTime, scalar
 }
 
 void DtcController::visualize() {
-    mrt_.spinMRT();
-    mrt_.updatePolicy();
     visualizer_->update(generateSystemObservation(), mrt_.getPolicy(), mrt_.getCommand());
 }
 
@@ -743,6 +781,21 @@ void DtcController::changeController(const std::string &controllerType, scalar_t
     if (!blind_) {
         gridmap_->waitTillInitialized();
     }
+    pastAction_ = vector_t::Zero(12);
+    lastTargetTrajectories_.reset();
+}
+
+bool DtcController::checkStability() const {
+    const auto &state = stateSubscriberPtr_->getLatestRbdState();
+    scalar_t roll = state[0];
+    if (roll >= 1.57 || roll <= -1.57) {
+        return false;
+    }
+    scalar_t pitch = state[1];
+    if (pitch >= 1.57 || pitch <= -1.57) {
+        return false;
+    }
+    return true;
 }
 
 bool DtcController::isSupported(const std::string &controllerType) {

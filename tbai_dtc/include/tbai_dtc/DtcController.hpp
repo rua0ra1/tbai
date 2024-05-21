@@ -64,7 +64,7 @@ class DtcController final : public tbai::core::Controller {
 
     scalar_t getRate() const override { return 50.0; }
 
-    bool checkStability() const override { return true; }
+    bool checkStability() const override;
 
    private:
     // Torchscript model
@@ -153,7 +153,9 @@ class DtcController final : public tbai::core::Controller {
 
     const scalar_t ISAAC_SIM_DT = 1 / 50;
 
-    const long MODEL_INPUT_SIZE = 167;
+    const long MODEL_INPUT_SIZE = 179;
+
+    std::unique_ptr<TargetTrajectories> lastTargetTrajectories_;
 
     scalar_t yawLast_ = 0.0;
 
@@ -177,6 +179,7 @@ class DtcController final : public tbai::core::Controller {
     scalar_t horizon_;
     scalar_t mpcRate_ = 2.5;
     scalar_t timeSinceLastMpcUpdate_ = 1e5;
+    scalar_t timeSinceLastMpcUpdate2_ = 1e5;
 
     bool blind_ = false;
     std::unique_ptr<tbai::gridmap::GridmapInterface> gridmap_;
@@ -185,13 +188,26 @@ class DtcController final : public tbai::core::Controller {
     std::unique_ptr<switched_model::KinematicsModelBase<scalar_t>> kinematicsModel_;
     std::unique_ptr<switched_model::QuadrupedVisualizer> visualizer_;
 
+
     BaseReferenceHorizon getBaseReferenceHorizon(scalar_t time) { return {0.1, 10}; }
 
     BaseReferenceState getBaseReferenceState(scalar_t time) {
         auto currentObservation = generateSystemObservation();
-        auto observationTime = stateSubscriberPtr_->getLatestRbdStamp().toSec() - initTime_;
-        Eigen::Vector3d positionInWorld = currentObservation.state.segment<3>(3);
-        Eigen::Vector3d eulerXyz = currentObservation.state.segment<3>(0);
+        auto observationTime = currentObservation.time;
+
+        Eigen::Vector3d positionInWorld;
+        if(lastTargetTrajectories_.get() == nullptr) {
+            positionInWorld = currentObservation.state.segment<3>(3);
+        } else {
+            positionInWorld = lastTargetTrajectories_->getDesiredState(time).segment<3>(3);
+
+            auto currentPos = currentObservation.state.segment<3>(3);
+            if((positionInWorld - currentPos).norm() > 0.1) {
+                positionInWorld = currentPos;
+            }
+        }
+
+        Eigen::Vector3d eulerXyz = currentObservation.state.head<3>(0);
         return {observationTime, positionInWorld, eulerXyz};
     }
 
