@@ -78,3 +78,23 @@ Your `dependencies` folder should not look as follows:
   <img src="https://github.com/lnotspotl/tbai/assets/82883398/657d8681-1abd-4dae-b4c2-15347ed542fd" />
 </p>
 That's it. You should now be able to compile the entire project. Enjoy 🤗
+
+## Credits
+This project stands on the shoulders of giants.
+None of this would have been possible were it not for many amazing open-source projects.
+Here are a couple that most inspiration was drawn from and that were instrumental during the development:
+
+- https://github.com/leggedrobotics/ocs2
+- https://github.com/qiayuanl/legged_control
+- https://github.com/leggedrobotics/legged_gym
+- https://github.com/leggedrobotics/rsl_rl
+- https://github.com/ANYbotics/elevation_mapping
+- https://github.com/leggedrobotics/elevation_mapping_cupy
+- https://github.com/bernhardpg/quadruped_locomotion
+- https://github.com/stack-of-tasks/pinocchio
+- https://x-io.co.uk/open-source-imu-and-ahrs-algorithms/
+- https://github.com/mayataka/robotoc
+- https://github.com/mayataka/legged_state_estimator
+- hundreds of others ...
+
+Thank you all 🤗
