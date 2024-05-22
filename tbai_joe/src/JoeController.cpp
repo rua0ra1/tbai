@@ -3,7 +3,7 @@
 // clang-format on
 
 #include <tbai_core/config/YamlConfig.hpp>
-#include "tbai_dtc/DtcController.hpp"
+#include "tbai_joe/JoeController.hpp"
 
 #include <pinocchio/parsers/urdf.hpp>
 #include <ocs2_legged_robot/gait/LegLogic.h>
@@ -30,13 +30,13 @@
 
 #include <tbai_core/Utils.hpp>
 
-#define DTC_PRINT(message) std::cout << "[Dtc controller] | " << message << std::endl
+#define JOE_PRINT(message) std::cout << "[Joe controller] | " << message << std::endl
 
 namespace tbai {
 
-namespace dtc {
+namespace joe {
 
-DtcController::DtcController(const std::shared_ptr<tbai::core::StateSubscriber> &stateSubscriber)
+JoeController::JoeController(const std::shared_ptr<tbai::core::StateSubscriber> &stateSubscriber)
     : stateSubscriberPtr_(stateSubscriber), mrt_("anymal") {
     // Load initial time - the epoch
     initTime_ = tbai::core::getEpochStart();
@@ -52,47 +52,47 @@ DtcController::DtcController(const std::shared_ptr<tbai::core::StateSubscriber> 
     TBAI_STD_THROW_IF(!nh.getParam("referenceFile", referenceFile), "Reference file not found");
 
     // Load default joint angles
-    DTC_PRINT("[DtcController] Loading default joint angles");
+    JOE_PRINT("[JoeController] Loading default joint angles");
     defaultJointAngles_ = tbai::core::fromRosConfig<vector_t>("static_controller/stand_controller/joint_angles");
 
     // Load joint names
-    DTC_PRINT("[DtcController] Loading joint names");
+    JOE_PRINT("[JoeController] Loading joint names");
     jointNames_ = tbai::core::fromRosConfig<std::vector<std::string>>("joint_names");
 
-    // Load DTC model
-    std::string dtcModelFile;
-    TBAI_STD_THROW_IF(!nh.getParam("dtcModelFile", dtcModelFile), "DTC model file not found");
+    // Load JOE model
+    std::string joeModelFile;
+    TBAI_STD_THROW_IF(!nh.getParam("joeModelFile", joeModelFile), "JOE model file not found");
     try {
-        DTC_PRINT("Loading torch model");
-        dtcModel_ = torch::jit::load(dtcModelFile);
+        JOE_PRINT("Loading torch model");
+        joeModel_ = torch::jit::load(joeModelFile);
     } catch (const c10::Error &e) {
-        std::cerr << "Could not load model from: " << dtcModelFile << std::endl;
+        std::cerr << "Could not load model from: " << joeModelFile << std::endl;
         throw std::runtime_error("Could not load model");
     }
-    DTC_PRINT("Torch model loaded");
+    JOE_PRINT("Torch model loaded");
 
     // Do basic ff check
     torch::Tensor input = torch::empty({MODEL_INPUT_SIZE});
     for (int i = 0; i < MODEL_INPUT_SIZE; ++i) input[i] = static_cast<float>(i);
-    torch::Tensor output = dtcModel_.forward({input.view({1, -1})}).toTensor().view({-1});
+    torch::Tensor output = joeModel_.forward({input.view({1, -1})}).toTensor().view({-1});
     std::cout << "Basic forward pass check...";
     std::cout << "Input: " << input.view({1, -1}) << std::endl;
     std::cout << "Output: " << output.view({1, -1}) << std::endl;
 
-    DTC_PRINT("Setting up reference velocity generator");
+    JOE_PRINT("Setting up reference velocity generator");
     refVelGen_ = tbai::reference::getReferenceVelocityGeneratorUnique(nh);
     refPub_ = nh.advertise<ocs2_msgs::mpc_target_trajectories>("anymal_mpc_target", 1, false);
 
-    horizon_ = 1.0;  // TODO: Load from config
-    mpcRate_ = 30;   // TODO: Load from config
+    horizon_ = 1.0; // TODO:  Load this parameter from the config file
+    mpcRate_ = 30; // TODO:  Load this parameter from the config file
     pastAction_ = vector_t().setZero(12);
 
     if (!blind_) {
-        DTC_PRINT("Initializing gridmap interface");
+        JOE_PRINT("Initializing gridmap interface");
         gridmap_ = tbai::gridmap::getGridmapInterfaceUnique();
     }
 
-    DTC_PRINT("Initializing quadruped interface");
+    JOE_PRINT("Initializing quadruped interface");
     std::string urdf, taskFolder;
     ros::param::get("robot_description", urdf);
     ros::param::get("task_folder", taskFolder);
@@ -104,16 +104,16 @@ DtcController::DtcController(const std::shared_ptr<tbai::core::StateSubscriber> 
                                                               quadrupedInterface.getJointNames(),
                                                               quadrupedInterface.getBaseName(), nh));
 
-    DTC_PRINT("Initialization done");
-    DTC_PRINT(defaultJointAngles_.transpose());
+    JOE_PRINT("Initialization done");
+    JOE_PRINT(defaultJointAngles_.transpose());
 }
 
-void DtcController::publishReference(const TargetTrajectories &targetTrajectories) {
+void JoeController::publishReference(const TargetTrajectories &targetTrajectories) {
     const auto mpcTargetTrajectoriesMsg = ocs2::ros_msg_conversions::createTargetTrajectoriesMsg(targetTrajectories);
     refPub_.publish(mpcTargetTrajectoriesMsg);
 }
 
-tbai_msgs::JointCommandArray DtcController::getCommandMessage(scalar_t currentTime, scalar_t dt) {
+tbai_msgs::JointCommandArray JoeController::getCommandMessage(scalar_t currentTime, scalar_t dt) {
     mrt_.spinMRT();
     mrt_.updatePolicy();
 
@@ -152,18 +152,30 @@ tbai_msgs::JointCommandArray DtcController::getCommandMessage(scalar_t currentTi
                         pastActionObservation,
                         planarFootholdsObservation,
                         desiredJointAnglesObservation,
+                        currentDesiredJointAnglesObservation,
                         desiredContactsObservation,
                         timeLeftInPhaseObservation,
+                        desiredBasePosObservation,
+                        orientationDiffObservation,
+                        desiredBaseLinVelObservation,
+                        desiredBaseAngVelObservation,
+                        desiredBaseLinAccObservation,
+                        desiredBaseAngAccObservation,
                         cpgObservation,
+                        desiredFootPositionsObservation,
+                        desiredFootVelocitiesObservation,
                         heightSamplesObservation;
     // clang-format on
 
     torch::Tensor torchObservation = vector2torch(eigenObservation).view({1, -1});
-    torch::Tensor torchAction = dtcModel_.forward({torchObservation}).toTensor().view({-1});
+    torch::Tensor torchAction = joeModel_.forward({torchObservation}).toTensor().view({-1});
 
     pastAction_ = torch2vector(torchAction);
 
-    vector_t commandedJointAngles = defaultJointAngles_ + pastAction_ * ACTION_SCALE;
+    vector_t commandedJointAngles = defaultJointAngles_;
+    for(int i = 0; i < 12; ++i) {
+        commandedJointAngles[i] += torchAction[i].item<float>() * ACTION_SCALE;
+    }
 
     tbai_msgs::JointCommandArray jointCommandArray;
     jointCommandArray.joint_commands.resize(jointNames_.size());
@@ -188,7 +200,7 @@ tbai_msgs::JointCommandArray DtcController::getCommandMessage(scalar_t currentTi
         timeSinceLastMpcUpdate2_ = 0.0;
         auto reference = generateTargetTrajectories(currentTime, dt, commandObservation);
         // lastTargetTrajectories_.reset(
-        //     new TargetTrajectories(reference.timeTrajectory, reference.stateTrajectory, reference.inputTrajectory));
+            // new TargetTrajectories(reference.timeTrajectory, reference.stateTrajectory, reference.inputTrajectory));
         // TODO: Put this into its own thread
         publishReference(generateTargetTrajectories(currentTime, dt, commandObservation));
     }
@@ -196,14 +208,14 @@ tbai_msgs::JointCommandArray DtcController::getCommandMessage(scalar_t currentTi
     return jointCommandArray;
 }
 
-contact_flag_t DtcController::getDesiredContactFlags(scalar_t currentTime, scalar_t dt) {
+contact_flag_t JoeController::getDesiredContactFlags(scalar_t currentTime, scalar_t dt) {
     auto &solution = mrt_.getPolicy();
     auto &modeSchedule = solution.modeSchedule_;
     size_t mode = modeSchedule.modeAtTime(currentTime);
     return ocs2::legged_robot::modeNumber2StanceLeg(mode);
 }
 
-vector_t DtcController::getTimeLeftInPhase(scalar_t currentTime, scalar_t dt) {
+vector_t JoeController::getTimeLeftInPhase(scalar_t currentTime, scalar_t dt) {
     auto &solution = mrt_.getPolicy();
     auto &modeSchedule = solution.modeSchedule_;
     auto &eventTimes = modeSchedule.eventTimes;
@@ -214,7 +226,7 @@ vector_t DtcController::getTimeLeftInPhase(scalar_t currentTime, scalar_t dt) {
     return vector_t::Ones(4) * (*it - currentTime);
 }
 
-TargetTrajectories DtcController::generateTargetTrajectories(scalar_t currentTime, scalar_t dt,
+TargetTrajectories JoeController::generateTargetTrajectories(scalar_t currentTime, scalar_t dt,
                                                              const vector3_t &command) {
     switched_model::BaseReferenceTrajectory baseReferenceTrajectory =
         generateExtrapolatedBaseReference(getBaseReferenceHorizon(currentTime), getBaseReferenceState(currentTime),
@@ -255,7 +267,7 @@ TargetTrajectories DtcController::generateTargetTrajectories(scalar_t currentTim
                               std::move(desiredInputTrajectory));
 }
 
-std::vector<vector3_t> DtcController::getCurrentFeetPositions(scalar_t currentTime, scalar_t dt) {
+std::vector<vector3_t> JoeController::getCurrentFeetPositions(scalar_t currentTime, scalar_t dt) {
     SystemObservation sysobs = generateSystemObservation();
     vector_t currentState = sysobs.state;
     auto &quadcom = *comModel_;
@@ -270,7 +282,7 @@ std::vector<vector3_t> DtcController::getCurrentFeetPositions(scalar_t currentTi
     return feetPositions;
 }
 
-std::vector<vector3_t> DtcController::getCurrentFeetVelocities(scalar_t currentTime, scalar_t dt) {
+std::vector<vector3_t> JoeController::getCurrentFeetVelocities(scalar_t currentTime, scalar_t dt) {
     SystemObservation sysobs = generateSystemObservation();
     vector_t currentState = sysobs.state;
     vector_t currentInput = sysobs.input;
@@ -289,7 +301,7 @@ std::vector<vector3_t> DtcController::getCurrentFeetVelocities(scalar_t currentT
     return feetVelocities;
 }
 
-std::vector<vector3_t> DtcController::getDesiredFeetPositions(scalar_t currentTime, scalar_t dt) {
+std::vector<vector3_t> JoeController::getDesiredFeetPositions(scalar_t currentTime, scalar_t dt) {
     auto &solution = mrt_.getPolicy();
     vector_t optimizedState =
         LinearInterpolation::interpolate(currentTime, solution.timeTrajectory_, solution.stateTrajectory_);
@@ -305,7 +317,7 @@ std::vector<vector3_t> DtcController::getDesiredFeetPositions(scalar_t currentTi
     return feetPositions;
 }
 
-std::vector<vector3_t> DtcController::getDesiredFeetVelocities(scalar_t currentTime, scalar_t dt) {
+std::vector<vector3_t> JoeController::getDesiredFeetVelocities(scalar_t currentTime, scalar_t dt) {
     auto &solution = mrt_.getPolicy();
     vector_t optimizedState =
         LinearInterpolation::interpolate(currentTime, solution.timeTrajectory_, solution.stateTrajectory_);
@@ -326,7 +338,7 @@ std::vector<vector3_t> DtcController::getDesiredFeetVelocities(scalar_t currentT
     return feetVelocities;
 }
 
-void DtcController::computeBaseKinematicsAndDynamics(scalar_t currentTime, scalar_t dt, vector3_t &basePos,
+void JoeController::computeBaseKinematicsAndDynamics(scalar_t currentTime, scalar_t dt, vector3_t &basePos,
                                                      vector_t &baseOrientation, vector3_t &baseLinearVelocity,
                                                      vector3_t &baseAngularVelocity, vector3_t &baseLinearAcceleration,
                                                      vector3_t &baseAngularAcceleration) {
@@ -397,45 +409,45 @@ void DtcController::computeBaseKinematicsAndDynamics(scalar_t currentTime, scala
     baseAngularAcceleration = desiredBaseAngularAcceleration;
 }
 
-vector3_t DtcController::getLinearVelocityObservation(scalar_t currentTime, scalar_t dt) const {
+vector3_t JoeController::getLinearVelocityObservation(scalar_t currentTime, scalar_t dt) const {
     const vector_t &rbdState = stateSubscriberPtr_->getLatestRbdState();
-    return rbdState.segment<3>(9) * LIN_VEL_SCALE;  // COM velocity - already expessed in base frame
+    return (rbdState.segment<3>(9) + (vector_t::Ones(3) * (-0.12))) * LIN_VEL_SCALE;  // COM velocity - already expessed in base frame
 }
 
-vector3_t DtcController::getAngularVelocityObservation(scalar_t currentTime, scalar_t dt) const {
+vector3_t JoeController::getAngularVelocityObservation(scalar_t currentTime, scalar_t dt) const {
     const vector_t &rbdState = stateSubscriberPtr_->getLatestRbdState();
-    return rbdState.segment<3>(6) * ANG_VEL_SCALE;  // Angular velocity - already expessed in base frame
+    return (rbdState.segment<3>(6) + (vector_t::Ones(3) * (-0.22))) * ANG_VEL_SCALE;  // Angular velocity - already expessed in base frame
 }
 
-vector3_t DtcController::getProjectedGravityObservation(scalar_t currentTime, scalar_t dt) const {
+vector3_t JoeController::getProjectedGravityObservation(scalar_t currentTime, scalar_t dt) const {
     const vector_t &rbdState = stateSubscriberPtr_->getLatestRbdState();
     const matrix3_t R_base_world = getRotationMatrixBaseWorld(rbdState);
-    return R_base_world * (vector3_t() << 0.0, 0.0, -1.0).finished() * GRAVITY_SCALE;
+    return (R_base_world * (vector3_t() << 0.0, 0.0, -1.0).finished() + (vector_t::Ones(3) * (-0.06))) * GRAVITY_SCALE;
 }
 
-vector3_t DtcController::getCommandObservation(scalar_t currentTime, scalar_t dt) {
+vector3_t JoeController::getCommandObservation(scalar_t currentTime, scalar_t dt) {
     tbai::reference::ReferenceVelocity refvel = refVelGen_->getReferenceVelocity(currentTime, 0.1);
     return vector3_t(refvel.velocity_x * LIN_VEL_SCALE, refvel.velocity_y * LIN_VEL_SCALE,
                      refvel.yaw_rate * ANG_VEL_SCALE);
 }
 
-vector_t DtcController::getDofPosObservation(scalar_t currentTime, scalar_t dt) const {
+vector_t JoeController::getDofPosObservation(scalar_t currentTime, scalar_t dt) const {
     const vector_t &rbdState = stateSubscriberPtr_->getLatestRbdState();
     const vector_t jointAngles = rbdState.segment<12>(12);
-    return (jointAngles - defaultJointAngles_) * DOF_POS_SCALE;
+    return (jointAngles - defaultJointAngles_ + (vector_t::Ones(12) * (-0.1))) * DOF_POS_SCALE;
 }
 
-vector_t DtcController::getDofVelObservation(scalar_t currentTime, scalar_t dt) const {
+vector_t JoeController::getDofVelObservation(scalar_t currentTime, scalar_t dt) const {
     const vector_t &rbdState = stateSubscriberPtr_->getLatestRbdState();
     const vector_t jointVelocities = rbdState.segment<12>(24);
-    return jointVelocities * DOF_VEL_SCALE;
+    return (jointVelocities + (vector_t::Ones(12) * (-1.5))) * DOF_VEL_SCALE;
 }
 
-vector_t DtcController::getPastActionObservation(scalar_t currentTime, scalar_t dt) const {
+vector_t JoeController::getPastActionObservation(scalar_t currentTime, scalar_t dt) const {
     return pastAction_ * PAST_ACTION_SCALE;
 }
 
-vector_t DtcController::getPlanarFootholdsObservation(scalar_t currentTime, scalar_t dt) {
+vector_t JoeController::getPlanarFootholdsObservation(scalar_t currentTime, scalar_t dt) {
     auto &solution = mrt_.getPolicy();
     auto &modeSchedule = solution.modeSchedule_;
     auto timeLeftInPhase = getTimeLeftInPhase(currentTime, dt);
@@ -462,13 +474,13 @@ vector_t DtcController::getPlanarFootholdsObservation(scalar_t currentTime, scal
         footholdInBase(2) = 0.0;
         footholdInBase = R_base_world * footholdInBase;
 
-        out.segment<2>(2 * legidx) = footholdInBase.head<2>();
+        out.segment<2>(2 * legidx) = footholdInBase.head<2>() + vector_t::Ones(2) * (-0.08);
     }
 
     return out;
 }
 
-vector_t DtcController::getDesiredJointAnglesObservation(scalar_t currentTime, scalar_t dt) {
+vector_t JoeController::getDesiredJointAnglesObservation(scalar_t currentTime, scalar_t dt) {
     auto &solution = mrt_.getPolicy();
     auto &modeSchedule = solution.modeSchedule_;
     auto timeLeftInPhase = getTimeLeftInPhase(currentTime, dt);
@@ -501,7 +513,7 @@ vector_t DtcController::getDesiredJointAnglesObservation(scalar_t currentTime, s
     return out;
 }
 
-vector_t DtcController::getCurrentDesiredJointAnglesObservation(scalar_t currentTime, scalar_t dt) {
+vector_t JoeController::getCurrentDesiredJointAnglesObservation(scalar_t currentTime, scalar_t dt) {
     auto &solution = mrt_.getPolicy();
     auto optimizedState = LinearInterpolation::interpolate(currentTime + ISAAC_SIM_DT, solution.timeTrajectory_,
                                                            solution.stateTrajectory_);
@@ -519,7 +531,7 @@ vector_t DtcController::getCurrentDesiredJointAnglesObservation(scalar_t current
     return jointAnglesOcs2 - defaultJointAngles_;
 }
 
-vector_t DtcController::getDesiredContactsObservation(scalar_t currentTime, scalar_t dt) {
+vector_t JoeController::getDesiredContactsObservation(scalar_t currentTime, scalar_t dt) {
     auto desiredContacts = getDesiredContactFlags(currentTime, dt);
     vector_t out = vector_t().setZero(4);
     for (int i = 0; i < 4; ++i) {
@@ -528,11 +540,11 @@ vector_t DtcController::getDesiredContactsObservation(scalar_t currentTime, scal
     return out;
 }
 
-vector_t DtcController::getTimeLeftInPhaseObservation(scalar_t currentTime, scalar_t dt) {
+vector_t JoeController::getTimeLeftInPhaseObservation(scalar_t currentTime, scalar_t dt) {
     return getTimeLeftInPhase(currentTime, dt);
 }
 
-vector_t DtcController::getDesiredBasePosObservation(scalar_t currentTime, scalar_t dt) {
+vector_t JoeController::getDesiredBasePosObservation(scalar_t currentTime, scalar_t dt) {
     vector3_t basePos, baseLinearVelocity, baseAngularVelocity, baseLinearAcceleration, baseAngularAcceleration;
     vector_t baseOrientation;
     computeBaseKinematicsAndDynamics(currentTime, dt, basePos, baseOrientation, baseLinearVelocity, baseAngularVelocity,
@@ -545,7 +557,7 @@ vector_t DtcController::getDesiredBasePosObservation(scalar_t currentTime, scala
     return out;
 }
 
-vector_t DtcController::getOrientationDiffObservation(scalar_t currentTime, scalar_t dt) {
+vector_t JoeController::getOrientationDiffObservation(scalar_t currentTime, scalar_t dt) {
     vector3_t basePos, baseLinearVelocity, baseAngularVelocity, baseLinearAcceleration, baseAngularAcceleration;
     vector_t baseOrientation;
     computeBaseKinematicsAndDynamics(currentTime, dt, basePos, baseOrientation, baseLinearVelocity, baseAngularVelocity,
@@ -577,7 +589,7 @@ vector_t DtcController::getOrientationDiffObservation(scalar_t currentTime, scal
     return orientationDiff;
 }
 
-vector_t DtcController::getDesiredBaseLinVelObservation(scalar_t currentTime, scalar_t dt) {
+vector_t JoeController::getDesiredBaseLinVelObservation(scalar_t currentTime, scalar_t dt) {
     vector3_t basePos, baseLinearVelocity, baseAngularVelocity, baseLinearAcceleration, baseAngularAcceleration;
     vector_t baseOrientation;
     computeBaseKinematicsAndDynamics(currentTime, dt, basePos, baseOrientation, baseLinearVelocity, baseAngularVelocity,
@@ -589,7 +601,7 @@ vector_t DtcController::getDesiredBaseLinVelObservation(scalar_t currentTime, sc
     return baseLinVelDesiredBase;
 }
 
-vector_t DtcController::getDesiredBaseAngVelObservation(scalar_t currentTime, scalar_t dt) {
+vector_t JoeController::getDesiredBaseAngVelObservation(scalar_t currentTime, scalar_t dt) {
     vector3_t basePos, baseLinearVelocity, baseAngularVelocity, baseLinearAcceleration, baseAngularAcceleration;
     vector_t baseOrientation;
     computeBaseKinematicsAndDynamics(currentTime, dt, basePos, baseOrientation, baseLinearVelocity, baseAngularVelocity,
@@ -601,7 +613,7 @@ vector_t DtcController::getDesiredBaseAngVelObservation(scalar_t currentTime, sc
     return baseAngVelDesiredBase;
 }
 
-vector_t DtcController::getDesiredBaseLinAccObservation(scalar_t currentTime, scalar_t dt) {
+vector_t JoeController::getDesiredBaseLinAccObservation(scalar_t currentTime, scalar_t dt) {
     vector3_t basePos, baseLinearVelocity, baseAngularVelocity, baseLinearAcceleration, baseAngularAcceleration;
     vector_t baseOrientation;
     computeBaseKinematicsAndDynamics(currentTime, dt, basePos, baseOrientation, baseLinearVelocity, baseAngularVelocity,
@@ -613,7 +625,7 @@ vector_t DtcController::getDesiredBaseLinAccObservation(scalar_t currentTime, sc
     return baseLinAccDesiredBase;
 }
 
-vector_t DtcController::getDesiredBaseAngAccObservation(scalar_t currentTime, scalar_t dt) {
+vector_t JoeController::getDesiredBaseAngAccObservation(scalar_t currentTime, scalar_t dt) {
     vector3_t basePos, baseLinearVelocity, baseAngularVelocity, baseLinearAcceleration, baseAngularAcceleration;
     vector_t baseOrientation;
     computeBaseKinematicsAndDynamics(currentTime, dt, basePos, baseOrientation, baseLinearVelocity, baseAngularVelocity,
@@ -625,7 +637,7 @@ vector_t DtcController::getDesiredBaseAngAccObservation(scalar_t currentTime, sc
     return baseAngAccDesiredBase;
 }
 
-vector_t DtcController::getCpgObservation(scalar_t currentTime, scalar_t dt) {
+vector_t JoeController::getCpgObservation(scalar_t currentTime, scalar_t dt) {
     auto &solution = mrt_.getPolicy();
     auto &modeSchedule = solution.modeSchedule_;
 
@@ -668,38 +680,38 @@ vector_t DtcController::getCpgObservation(scalar_t currentTime, scalar_t dt) {
     return out;
 }
 
-vector_t DtcController::getDesiredFootPositionsObservation(scalar_t currentTime, scalar_t dt) {
+vector_t JoeController::getDesiredFootPositionsObservation(scalar_t currentTime, scalar_t dt) {
     auto desiredFootPositions = getDesiredFeetPositions(currentTime, dt);
     auto currentFootPositions = getCurrentFeetPositions(currentTime, dt);
 
     matrix3_t R_base_world = getRotationMatrixBaseWorld(stateSubscriberPtr_->getLatestRbdState());
 
-    vector_t lf_pos = -R_base_world * (desiredFootPositions[0] - currentFootPositions[0]);
-    vector_t rf_pos = -R_base_world * (desiredFootPositions[1] - currentFootPositions[1]);
-    vector_t lh_pos = -R_base_world * (desiredFootPositions[2] - currentFootPositions[2]);
-    vector_t rh_pos = -R_base_world * (desiredFootPositions[3] - currentFootPositions[3]);
+    vector_t lf_pos = -R_base_world * (desiredFootPositions[0] - currentFootPositions[0]) + vector_t::Ones(3) * (-0.06);
+    vector_t rf_pos = -R_base_world * (desiredFootPositions[1] - currentFootPositions[1]) + vector_t::Ones(3) * (-0.06);
+    vector_t lh_pos = -R_base_world * (desiredFootPositions[2] - currentFootPositions[2]) + vector_t::Ones(3) * (-0.06);
+    vector_t rh_pos = -R_base_world * (desiredFootPositions[3] - currentFootPositions[3]) + vector_t::Ones(3) * (-0.06);
 
     vector_t out(4 * 3);
     out << lf_pos, lh_pos, rf_pos, rh_pos;
     return out;
 }
-vector_t DtcController::getDesiredFootVelocitiesObservation(scalar_t currentTime, scalar_t dt) {
+vector_t JoeController::getDesiredFootVelocitiesObservation(scalar_t currentTime, scalar_t dt) {
     auto desiredFootVelocities = getDesiredFeetVelocities(currentTime, dt);
     auto currentFootVelocities = getCurrentFeetVelocities(currentTime, dt);
 
     matrix3_t R_base_world = getRotationMatrixBaseWorld(stateSubscriberPtr_->getLatestRbdState());
 
-    vector_t lf_vel = -R_base_world * (desiredFootVelocities[0] - currentFootVelocities[0]);
-    vector_t rf_vel = -R_base_world * (desiredFootVelocities[1] - currentFootVelocities[1]);
-    vector_t lh_vel = -R_base_world * (desiredFootVelocities[2] - currentFootVelocities[2]);
-    vector_t rh_vel = -R_base_world * (desiredFootVelocities[3] - currentFootVelocities[3]);
+    vector_t lf_vel = -R_base_world * (desiredFootVelocities[0] - currentFootVelocities[0]) + vector_t::Ones(3) * (-0.2);
+    vector_t rf_vel = -R_base_world * (desiredFootVelocities[1] - currentFootVelocities[1]) + vector_t::Ones(3) * (-0.2);
+    vector_t lh_vel = -R_base_world * (desiredFootVelocities[2] - currentFootVelocities[2]) + vector_t::Ones(3) * (-0.2);
+    vector_t rh_vel = -R_base_world * (desiredFootVelocities[3] - currentFootVelocities[3]) + vector_t::Ones(3) * (-0.2);
 
     vector_t out(4 * 3);
     out << lf_vel, lh_vel, rf_vel, rh_vel;
     return out;
 }
 
-vector_t DtcController::getHeightSamplesObservation(scalar_t currentTime, scalar_t dt) {
+vector_t JoeController::getHeightSamplesObservation(scalar_t currentTime, scalar_t dt) {
     auto &solution = mrt_.getPolicy();
     auto currentFootPositions = getCurrentFeetPositions(currentTime, dt);
     auto timeLeftInPhase = getTimeLeftInPhase(currentTime, dt);
@@ -731,14 +743,14 @@ vector_t DtcController::getHeightSamplesObservation(scalar_t currentTime, scalar
     return out;
 }
 
-void DtcController::visualize() {
+void JoeController::visualize() {
     visualizer_->update(generateSystemObservation(), mrt_.getPolicy(), mrt_.getCommand());
 }
 
-void DtcController::changeController(const std::string &controllerType, scalar_t currentTime) {
-    DTC_PRINT("Changing controller");
+void JoeController::changeController(const std::string &controllerType, scalar_t currentTime) {
+    JOE_PRINT("Changing controller");
     resetMpc();
-    DTC_PRINT("Controller changed");
+    JOE_PRINT("Controller changed");
     if (!blind_) {
         gridmap_->waitTillInitialized();
     }
@@ -746,7 +758,7 @@ void DtcController::changeController(const std::string &controllerType, scalar_t
     lastTargetTrajectories_.reset();
 }
 
-bool DtcController::checkStability() const {
+bool JoeController::checkStability() const {
     const auto &state = stateSubscriberPtr_->getLatestRbdState();
     scalar_t roll = state[0];
     if (roll >= 1.57 || roll <= -1.57) {
@@ -759,11 +771,11 @@ bool DtcController::checkStability() const {
     return true;
 }
 
-bool DtcController::isSupported(const std::string &controllerType) {
-    return controllerType == "DTC";
+bool JoeController::isSupported(const std::string &controllerType) {
+    return controllerType == "JOE";
 }
 
-ocs2::SystemObservation DtcController::generateSystemObservation() {
+ocs2::SystemObservation JoeController::generateSystemObservation() {
     const tbai::vector_t &rbdState = stateSubscriberPtr_->getLatestRbdState();
 
     // Set observation time
@@ -793,40 +805,40 @@ ocs2::SystemObservation DtcController::generateSystemObservation() {
     return observation;
 }
 
-void DtcController::resetMpc() {
-    DTC_PRINT("Waiting for state subscriber to initialize...");
+void JoeController::resetMpc() {
+    JOE_PRINT("Waiting for state subscriber to initialize...");
 
     // Wait to receive observation
     stateSubscriberPtr_->waitTillInitialized();
 
-    DTC_PRINT("State subscriber initialized");
+    JOE_PRINT("State subscriber initialized");
 
     // Prepare initial observation for MPC
     ocs2::SystemObservation mpcObservation = generateSystemObservation();
 
-    DTC_PRINT("Initial observation generated");
+    JOE_PRINT("Initial observation generated");
 
     // Prepare target trajectory
     ocs2::TargetTrajectories initTargetTrajectories({0.0}, {mpcObservation.state}, {mpcObservation.input});
 
-    DTC_PRINT("Resetting MPC...");
+    JOE_PRINT("Resetting MPC...");
     mrt_.resetMpcNode(initTargetTrajectories);
 
     while (!mrt_.initialPolicyReceived() && ros::ok()) {
         ROS_INFO("Waiting for initial policy...");
-        DTC_PRINT("Waiting for initial policy...");
+        JOE_PRINT("Waiting for initial policy...");
         ros::spinOnce();
         mrt_.spinMRT();
         mrt_.setCurrentObservation(generateSystemObservation());
         ros::Duration(0.1).sleep();
     }
 
-    DTC_PRINT("Initial policy received");
+    JOE_PRINT("Initial policy received");
 
     ROS_INFO("Initial policy received.");
 }
 
-void DtcController::setObservation() {
+void JoeController::setObservation() {
     mrt_.setCurrentObservation(generateSystemObservation());
 }
 
@@ -874,5 +886,5 @@ matrix_t torch2matrix(const torch::Tensor &t) {
     return out.transpose();
 }
 
-}  // namespace dtc
+}  // namespace joe
 }  // namespace tbai

@@ -13,7 +13,6 @@
 #include <ocs2_pinocchio_interface/PinocchioEndEffectorKinematics.h>
 #include <ocs2_pinocchio_interface/PinocchioInterface.h>
 #include <ocs2_ros_interfaces/mrt/MRT_ROS_Interface.h>
-#include <pinocchio/algorithm/frames.hpp>
 #include <pinocchio/algorithm/kinematics.hpp>
 #include <pinocchio/multibody/data.hpp>
 #include <pinocchio/multibody/model.hpp>
@@ -25,7 +24,7 @@
 #include <tbai_reference/ReferenceVelocityGenerator.hpp>
 #include <torch/script.h>
 
-// Perceptive DTC
+// Perceptive Joe
 #include <ocs2_anymal_models/FrameDeclaration.h>
 
 // This is a bit hacky :/
@@ -40,7 +39,7 @@
 #include <ocs2_switched_model_interface/core/Rotations.h>
 
 namespace tbai {
-namespace dtc {
+namespace joe {
 
 using namespace ocs2;
 using namespace ocs2::legged_robot;
@@ -48,9 +47,9 @@ using namespace tbai::core;
 using namespace tbai;
 using namespace switched_model;
 
-class DtcController final : public tbai::core::Controller {
+class JoeController final : public tbai::core::Controller {
    public:
-    DtcController(const std::shared_ptr<tbai::core::StateSubscriber> &stateSubscriber);
+    JoeController(const std::shared_ptr<tbai::core::StateSubscriber> &stateSubscriber);
 
     tbai_msgs::JointCommandArray getCommandMessage(scalar_t currentTime, scalar_t dt) override;
 
@@ -68,7 +67,7 @@ class DtcController final : public tbai::core::Controller {
 
    private:
     // Torchscript model
-    torch::jit::script::Module dtcModel_;
+    torch::jit::script::Module joeModel_;
 
     ocs2::SystemObservation generateSystemObservation();
 
@@ -153,7 +152,8 @@ class DtcController final : public tbai::core::Controller {
 
     const scalar_t ISAAC_SIM_DT = 1 / 50;
 
-    const long MODEL_INPUT_SIZE = 124;
+    const long MODEL_INPUT_SIZE = 179;
+    // const long MODEL_INPUT_SIZE = 124;
 
     std::unique_ptr<TargetTrajectories> lastTargetTrajectories_;
 
@@ -228,5 +228,5 @@ matrix_t torch2matrix(const torch::Tensor &t);
 torch::Tensor vector2torch(const vector_t &v);
 torch::Tensor matrix2torch(const matrix_t &m);
 
-}  // namespace dtc
+}  // namespace joe
 }  // namespace tbai
