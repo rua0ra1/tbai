@@ -51,7 +51,8 @@ https://github.com/lnotspotl/tbai/assets/82883398/43354e1b-b451-4fed-a09a-af8a49
 
 ## System architecture
 
-![architecture](https://github.com/lnotspotl/tbai/assets/82883398/3a21ead9-75dd-4e27-9a8c-c59526a45ae5)
+![overview_01](https://github.com/lnotspotl/tbai/assets/82883398/2c17f08d-6994-4982-8739-2b8246dfcb32)
+
 
 ## Installing libtorch C++
 There are two steps to installing `libtorch`. First, you need to download a suitable `libtorch` version.
