@@ -10,8 +10,8 @@ Towards better athletic intelligence
  ┣ 📂tbai_mpc_blind            # Blind NMPC controller [1]
  ┣ 📂tbai_rl_perceptive        # Perceptive RL controller [2]
  ┣ 📂tbai_rl_blind             # Blind RL controller [2]
- ┣ 📂tbai_dtc_perceptive       # Perceptive DTC controller [3]
- ┣ 📂tbai_dtc_blind            # Blind DTC controller [3]
+ ┣ 📂tbai_dtc                  # DTC controller (perceptive) [3]
+ ┣ 📂tbai_joe                  # Perceptive NMPC controller with NN-based tracking controller [1],[3]
 
  [1] Perceptive Locomotion through Nonlinear Model Predictive Control
      https://arxiv.org/abs/2208.08373
