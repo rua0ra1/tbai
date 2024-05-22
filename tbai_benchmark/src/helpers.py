@@ -214,7 +214,8 @@ class TrackModel:
         return self.Waypoint(x, y)
 
     @staticmethod
-    def benchmark_track():
+    def benchmark_track(start_waypoint: int = 1):
+        assert start_waypoint >= 1, "Start waypoint out of bounds"
         # These values were copied from the benchmark's sdf file
         t = [
             "0.037268 0.557564",
@@ -229,8 +230,12 @@ class TrackModel:
             "-13.0383 6.07977",
             "-10.1211 7.49309",
             "-0.030184 7.41345",
+            "0.037268 0.557564",
+            "0.037268 -10.557564",
         ]
+        assert start_waypoint <= len(t), "Start waypoint out of bounds"
         waypoints = [TrackModel.Waypoint(float(x), float(y)) for s in t for x, y in [s.split()]]
+        waypoints = waypoints[start_waypoint-1:]
         track = TrackModel(waypoints)
         return track
 

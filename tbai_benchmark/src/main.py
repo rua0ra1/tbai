@@ -24,6 +24,7 @@ def parse_args() -> argparse.Namespace:
         action="store_true",
         help="Detect slips and change to the RL controller when needed",
     )
+    parser.add_argument("--start_waypoint", type=int, default=1, help="Start waypoint")
     return parser.parse_args()
 
 
@@ -41,7 +42,7 @@ def main():
     )
 
     ## Benchmark track
-    track = TrackModel.benchmark_track()
+    track = TrackModel.benchmark_track(args.start_waypoint)
 
     ## Autonomous controller
     track_follower = TrackFollower(track)
@@ -100,8 +101,6 @@ def main():
                 rate.sleep()
             change_publisher.publish(String("WBC"))
             controller = "WBC"
-
-
 
         # print(phase)
 

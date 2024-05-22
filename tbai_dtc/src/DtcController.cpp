@@ -184,7 +184,7 @@ tbai_msgs::JointCommandArray DtcController::getCommandMessage(scalar_t currentTi
         timeSinceLastMpcUpdate_ = 0.0;
     }
 
-    if (timeSinceLastMpcUpdate2_ > 1.0 / 4) {
+    if (timeSinceLastMpcUpdate2_ > 1.0 / mpcRate_) {
         timeSinceLastMpcUpdate2_ = 0.0;
         auto reference = generateTargetTrajectories(currentTime, dt, commandObservation);
         // lastTargetTrajectories_.reset(
@@ -416,7 +416,7 @@ vector3_t DtcController::getProjectedGravityObservation(scalar_t currentTime, sc
 vector3_t DtcController::getCommandObservation(scalar_t currentTime, scalar_t dt) {
     tbai::reference::ReferenceVelocity refvel = refVelGen_->getReferenceVelocity(currentTime, 0.1);
     return vector3_t(refvel.velocity_x * LIN_VEL_SCALE, refvel.velocity_y * LIN_VEL_SCALE,
-                     refvel.yaw_rate * ANG_VEL_SCALE);
+                     refvel.yaw_rate * ANG_VEL_SCALE * 2);
 }
 
 vector_t DtcController::getDofPosObservation(scalar_t currentTime, scalar_t dt) const {
