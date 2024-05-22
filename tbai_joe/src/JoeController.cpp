@@ -200,7 +200,7 @@ tbai_msgs::JointCommandArray JoeController::getCommandMessage(scalar_t currentTi
         timeSinceLastMpcUpdate2_ = 0.0;
         auto reference = generateTargetTrajectories(currentTime, dt, commandObservation);
         // lastTargetTrajectories_.reset(
-            // new TargetTrajectories(reference.timeTrajectory, reference.stateTrajectory, reference.inputTrajectory));
+        //     new TargetTrajectories(reference.timeTrajectory, reference.stateTrajectory, reference.inputTrajectory));
         // TODO: Put this into its own thread
         publishReference(generateTargetTrajectories(currentTime, dt, commandObservation));
     }
@@ -411,36 +411,36 @@ void JoeController::computeBaseKinematicsAndDynamics(scalar_t currentTime, scala
 
 vector3_t JoeController::getLinearVelocityObservation(scalar_t currentTime, scalar_t dt) const {
     const vector_t &rbdState = stateSubscriberPtr_->getLatestRbdState();
-    return (rbdState.segment<3>(9) + (vector_t::Ones(3) * (-0.12))) * LIN_VEL_SCALE;  // COM velocity - already expessed in base frame
+    return (rbdState.segment<3>(9) + (vector_t::Zero(3) * (-0.12))) * LIN_VEL_SCALE;  // COM velocity - already expessed in base frame
 }
 
 vector3_t JoeController::getAngularVelocityObservation(scalar_t currentTime, scalar_t dt) const {
     const vector_t &rbdState = stateSubscriberPtr_->getLatestRbdState();
-    return (rbdState.segment<3>(6) + (vector_t::Ones(3) * (-0.22))) * ANG_VEL_SCALE;  // Angular velocity - already expessed in base frame
+    return (rbdState.segment<3>(6) + (vector_t::Zero(3) * (-0.22))) * ANG_VEL_SCALE;  // Angular velocity - already expessed in base frame
 }
 
 vector3_t JoeController::getProjectedGravityObservation(scalar_t currentTime, scalar_t dt) const {
     const vector_t &rbdState = stateSubscriberPtr_->getLatestRbdState();
     const matrix3_t R_base_world = getRotationMatrixBaseWorld(rbdState);
-    return (R_base_world * (vector3_t() << 0.0, 0.0, -1.0).finished() + (vector_t::Ones(3) * (-0.06))) * GRAVITY_SCALE;
+    return (R_base_world * (vector3_t() << 0.0, 0.0, -1.0).finished() + (vector_t::Zero(3) * (-0.06))) * GRAVITY_SCALE;
 }
 
 vector3_t JoeController::getCommandObservation(scalar_t currentTime, scalar_t dt) {
     tbai::reference::ReferenceVelocity refvel = refVelGen_->getReferenceVelocity(currentTime, 0.1);
     return vector3_t(refvel.velocity_x * LIN_VEL_SCALE, refvel.velocity_y * LIN_VEL_SCALE,
-                     refvel.yaw_rate * ANG_VEL_SCALE);
+                     refvel.yaw_rate * ANG_VEL_SCALE * 2);
 }
 
 vector_t JoeController::getDofPosObservation(scalar_t currentTime, scalar_t dt) const {
     const vector_t &rbdState = stateSubscriberPtr_->getLatestRbdState();
     const vector_t jointAngles = rbdState.segment<12>(12);
-    return (jointAngles - defaultJointAngles_ + (vector_t::Ones(12) * (-0.1))) * DOF_POS_SCALE;
+    return (jointAngles - defaultJointAngles_ + (vector_t::Zero(12) * (-0.1))) * DOF_POS_SCALE;
 }
 
 vector_t JoeController::getDofVelObservation(scalar_t currentTime, scalar_t dt) const {
     const vector_t &rbdState = stateSubscriberPtr_->getLatestRbdState();
     const vector_t jointVelocities = rbdState.segment<12>(24);
-    return (jointVelocities + (vector_t::Ones(12) * (-1.5))) * DOF_VEL_SCALE;
+    return (jointVelocities + (vector_t::Zero(12) * (-1.5))) * DOF_VEL_SCALE;
 }
 
 vector_t JoeController::getPastActionObservation(scalar_t currentTime, scalar_t dt) const {
@@ -474,7 +474,7 @@ vector_t JoeController::getPlanarFootholdsObservation(scalar_t currentTime, scal
         footholdInBase(2) = 0.0;
         footholdInBase = R_base_world * footholdInBase;
 
-        out.segment<2>(2 * legidx) = footholdInBase.head<2>() + vector_t::Ones(2) * (-0.08);
+        out.segment<2>(2 * legidx) = footholdInBase.head<2>() + vector_t::Zero(2) * (-0.08);
     }
 
     return out;
@@ -686,10 +686,10 @@ vector_t JoeController::getDesiredFootPositionsObservation(scalar_t currentTime,
 
     matrix3_t R_base_world = getRotationMatrixBaseWorld(stateSubscriberPtr_->getLatestRbdState());
 
-    vector_t lf_pos = -R_base_world * (desiredFootPositions[0] - currentFootPositions[0]) + vector_t::Ones(3) * (-0.06);
-    vector_t rf_pos = -R_base_world * (desiredFootPositions[1] - currentFootPositions[1]) + vector_t::Ones(3) * (-0.06);
-    vector_t lh_pos = -R_base_world * (desiredFootPositions[2] - currentFootPositions[2]) + vector_t::Ones(3) * (-0.06);
-    vector_t rh_pos = -R_base_world * (desiredFootPositions[3] - currentFootPositions[3]) + vector_t::Ones(3) * (-0.06);
+    vector_t lf_pos = -R_base_world * (desiredFootPositions[0] - currentFootPositions[0]) + vector_t::Zero(3) * (-0.06);
+    vector_t rf_pos = -R_base_world * (desiredFootPositions[1] - currentFootPositions[1]) + vector_t::Zero(3) * (-0.06);
+    vector_t lh_pos = -R_base_world * (desiredFootPositions[2] - currentFootPositions[2]) + vector_t::Zero(3) * (-0.06);
+    vector_t rh_pos = -R_base_world * (desiredFootPositions[3] - currentFootPositions[3]) + vector_t::Zero(3) * (-0.06);
 
     vector_t out(4 * 3);
     out << lf_pos, lh_pos, rf_pos, rh_pos;
@@ -701,10 +701,10 @@ vector_t JoeController::getDesiredFootVelocitiesObservation(scalar_t currentTime
 
     matrix3_t R_base_world = getRotationMatrixBaseWorld(stateSubscriberPtr_->getLatestRbdState());
 
-    vector_t lf_vel = -R_base_world * (desiredFootVelocities[0] - currentFootVelocities[0]) + vector_t::Ones(3) * (-0.2);
-    vector_t rf_vel = -R_base_world * (desiredFootVelocities[1] - currentFootVelocities[1]) + vector_t::Ones(3) * (-0.2);
-    vector_t lh_vel = -R_base_world * (desiredFootVelocities[2] - currentFootVelocities[2]) + vector_t::Ones(3) * (-0.2);
-    vector_t rh_vel = -R_base_world * (desiredFootVelocities[3] - currentFootVelocities[3]) + vector_t::Ones(3) * (-0.2);
+    vector_t lf_vel = -R_base_world * (desiredFootVelocities[0] - currentFootVelocities[0]) + vector_t::Zero(3) * (-0.2);
+    vector_t rf_vel = -R_base_world * (desiredFootVelocities[1] - currentFootVelocities[1]) + vector_t::Zero(3) * (-0.2);
+    vector_t lh_vel = -R_base_world * (desiredFootVelocities[2] - currentFootVelocities[2]) + vector_t::Zero(3) * (-0.2);
+    vector_t rh_vel = -R_base_world * (desiredFootVelocities[3] - currentFootVelocities[3]) + vector_t::Zero(3) * (-0.2);
 
     vector_t out(4 * 3);
     out << lf_vel, lh_vel, rf_vel, rh_vel;
@@ -737,7 +737,7 @@ vector_t JoeController::getHeightSamplesObservation(scalar_t currentTime, scalar
             scalar_t y = pos(1);
             scalar_t height = gridmap_->atPosition(x, y);
             scalar_t height_diff = height - currentFootPosition(2);
-            out(legidx * 10 + i) = height_diff;
+            out(legidx * 10 + i) = std::max(-0.5, std::min(0.5,height_diff));
         }
     }
     return out;

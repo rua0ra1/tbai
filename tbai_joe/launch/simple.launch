@@ -46,7 +46,7 @@
     <param name="taskFile"          value="$(find tbai_joe)/config/task.info" />
     <param name="referenceFile"     value="$(find tbai_joe)/config/reference.info" />
     <param name="gaitCommandFile"   value="$(find tbai_joe)/config/gait.info"/>
-    <param name="joeModelFile"      value="$(find tbai_joe)/models/joe_08.pt"/>
+    <param name="joeModelFile"      value="$(find tbai_joe)/models/sjoe.pt"/>
     <param name="urdfFile"          value="$(find ocs2_robotic_assets)/resources/anymal_d/urdf/anymal.urdf" />
 
     <!-- Launch Gait command node -->
