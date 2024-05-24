@@ -12,5 +12,6 @@ rostopic pub /anymal_d/change_controller std_msgs/String "data: 'DTC'"
 
 
 
-https://github.com/lnotspotl/tbai/assets/82883398/19a4185f-0b82-4cac-b961-186789db3875
+
+https://github.com/lnotspotl/tbai/assets/82883398/0ecef030-1581-4400-9e6a-9df2fadb3d3a
 
