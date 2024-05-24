@@ -117,6 +117,29 @@ Your `dependencies` folder should not look as follows:
 </p>
 That's it. You should now be able to compile the entire project. Enjoy 🤗
 
+## Installing tbai
+```bash
+# Install dependencies
+sudo apt install libmpfr-dev
+
+# Download project
+mkdir -p <your-file>/src && cd <your-file> && catkin init && cd src
+git clone git@github.com:lnotspotl/tbai.git --recursive
+
+# Install other dependencies using rosdep
+cd .. && rosdep install --from-paths src --ignore-src -r -y && cd src/tbai
+
+# !! Now install libtorch by following the installation guideline above
+
+# Build tbai
+catkin config -DCMAKE_BUILD_TYPE=Release
+bash ./tbai.bash --build  # This will only build the necessary packages
+
+# Source tbai
+cd ../.. && source devel/setup.bash
+```
+If any of the steps throws an error for you, please let use know and we will try to extend this guideline with a fix as soon as possible. Thanks 🤗
+
 ## Credits
 This project stands on the shoulders of giants.
 None of this would have been possible were it not for many amazing open-source projects.
