@@ -71,6 +71,25 @@ https://github.com/lnotspotl/tbai/assets/82883398/e3455dd3-10e8-41da-bb02-87fbdf
 
 ![overview_01](https://github.com/lnotspotl/tbai/assets/82883398/2c17f08d-6994-4982-8739-2b8246dfcb32)
 
+## Controller architectures
+
+## Mpc 
+![mpc_03](https://github.com/lnotspotl/tbai/assets/82883398/daabb2c2-8ced-4ffd-956e-35279b78563b)
+
+
+## Rl (Bob)
+
+![bob_03](https://github.com/lnotspotl/tbai/assets/82883398/3ea71f1c-b58c-4028-93d3-971592aa364d)
+
+
+## Dtc
+
+![dtc_03](https://github.com/lnotspotl/tbai/assets/82883398/10b3481d-7782-4a0e-ac31-24e2786c3402)
+
+## Joe
+
+![joe_03](https://github.com/lnotspotl/tbai/assets/82883398/0139df20-d2ce-4de1-884f-ce37e770ee08)
+
 
 ## Installing libtorch C++
 There are two steps to installing `libtorch`. First, you need to download a suitable `libtorch` version.
