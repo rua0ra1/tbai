@@ -22,3 +22,6 @@
 [submodule "dependencies/message_logger"]
 	path = dependencies/message_logger
 	url = git@github.com:ANYbotics/message_logger.git
+[submodule "dependencies/elevation_mapping_cupy"]
+	path = dependencies/elevation_mapping_cupy
+	url = git@github.com:lnotspotl/elevation_mapping_cupy.git
