@@ -24,30 +24,48 @@ Towards better athletic intelligence
 ## Perceptive MPC
 
 
-https://github.com/lnotspotl/tbai/assets/82883398/ced1724a-73b3-4aa4-86bd-f9dfa2160ca8
+
+https://github.com/lnotspotl/tbai/assets/82883398/f451c12d-7525-4606-b722-726f63d852ca
+
+
 
 
 ## Blind MPC
 
 
-https://github.com/lnotspotl/tbai/assets/82883398/f1ce4b7e-87ed-49a7-acb7-9fe580bbdcea
+
+https://github.com/lnotspotl/tbai/assets/82883398/1bf86da1-a3d4-44db-88c4-877ec78b06cc
+
+
 
 
 ## Perceptive RL
 
 
-https://github.com/lnotspotl/tbai/assets/82883398/ff93c5c5-3129-459f-b1b4-30c9cb928301
+
+https://github.com/lnotspotl/tbai/assets/82883398/7f6bdefa-4299-454b-a0ef-55e463e0c88d
+
+
 
 
 ## Blind RL
 
 
-https://github.com/lnotspotl/tbai/assets/82883398/43354e1b-b451-4fed-a09a-af8a49fe80d0
+https://github.com/lnotspotl/tbai/assets/82883398/ebc2d90d-5c03-4207-a868-2e9436c140d4
 
 
-## Perceptive DTC
 
-## Blind DTC
+## Dtc
+
+
+https://github.com/lnotspotl/tbai/assets/82883398/6cf672db-b737-4724-a6da-afa0c8dd19d5
+
+
+## Joe
+
+
+https://github.com/lnotspotl/tbai/assets/82883398/e3455dd3-10e8-41da-bb02-87fbdf3de041
+
 
 ## System architecture
 
