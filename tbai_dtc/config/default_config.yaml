@@ -8,6 +8,8 @@ command_topic: "anymal_d/command"
 change_controller_topic: "anymal_d/change_controller"
 gridmap_topic: "/convex_plane_decomposition_ros/filtered_map"
 gridmap_layer: "smooth_planar"
+contact_topics: ["/lf_foot_contact", "/rf_foot_contact", "/lh_foot_contact","/rh_foot_contact"] 
+
 
 state_publisher:
   update_rate: 400 # Hz

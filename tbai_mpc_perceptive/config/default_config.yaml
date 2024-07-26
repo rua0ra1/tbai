@@ -6,6 +6,8 @@ base_name: "base"
 state_topic: "anymal_d/state"
 command_topic: "anymal_d/command"
 change_controller_topic: "anymal_d/change_controller"
+contact_topics: ["/lf_foot_contact", "/rf_foot_contact", "/lh_foot_contact","/rh_foot_contact"] 
+
 
 state_publisher:
   update_rate: 400 # Hz
