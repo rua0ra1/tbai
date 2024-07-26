@@ -44,9 +44,8 @@ void StatePublisher::Load(physics::ModelPtr robot, sdf::ElementPtr sdf) {
     rate_ = config.get<double>("state_publisher/update_rate");
     period_ = 1.0 / rate_;
 
-    // Setup contact flags - TODO(lnotspotl): This is a bit hacky, remove hardcoding!
-    std::vector<std::string> contactTopics = {"/lf_foot_contact", "/rf_foot_contact", "/lh_foot_contact",
-                                              "/rh_foot_contact"};
+    // get contact topics
+    auto contactTopics = config.get<std::vector<std::string>>("contact_topics");
     for (int i = 0; i < contactTopics.size(); ++i) {
         contactFlags_[i] = false;
         auto callback = [this, i](const std_msgs::Bool::ConstPtr &msg) { contactFlags_[i] = msg->data; };
