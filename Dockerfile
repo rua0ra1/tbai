@@ -37,6 +37,6 @@ WORKDIR /root/catkin_ws
 #RUN /bin/bash -c "source /opt/ros/noetic/setup.bash && catkin_make"
 
 # Set the default command to be executed in the container
-CMD ["/bin/bash"]
+#CMD ["/bin/bash"]
 
 
