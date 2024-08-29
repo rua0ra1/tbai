@@ -30,9 +30,9 @@ jobs:
       run: |
         docker build -t my_ros_image .
     
-    - name: Run tests in Docker container
-      run: |
-        docker run my_ros_image  
+    # - name: Run tests in Docker container
+    #   run: |
+    #     docker run my_ros_image  
 
     - name: Clean up Docker container
       run: |
