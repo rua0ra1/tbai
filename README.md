@@ -1,5 +1,11 @@
 # tbai
-Towards better athletic intelligence
+
+<p align="center">
+  <img src="https://github.com/user-attachments/assets/e9d13556-b493-4fd4-82c6-87bb09bc051f" width=350 />
+</p>
+<p align="center">
+  Towards better athletic intelligence
+</p>
 
 ## Implemented controllers
 
