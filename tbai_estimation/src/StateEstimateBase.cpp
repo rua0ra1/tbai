@@ -9,7 +9,8 @@
 #include <ocs2_robotic_tools/common/RotationDerivativesTransforms.h>
 
 namespace tbai {
-    namespace estimation{
+namespace estimation{
+
 using namespace legged_robot;
 
 StateEstimateBase::StateEstimateBase(PinocchioInterface pinocchioInterface, CentroidalModelInfo info,
@@ -72,6 +73,6 @@ void StateEstimateBase::publishMsgs(const nav_msgs::Odometry& odom) {
   }
 }
 
-    } // namespace estimation
+} // namespace estimation
 
 }  // namespace tbai

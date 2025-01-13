@@ -93,5 +93,5 @@ class HybridJointInterface : public hardware_interface::HardwareResourceManager<
 
 
 
-    } // namesoace legged_common
+    } // namespace legged_common
 } // namespace tbai
