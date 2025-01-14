@@ -38,4 +38,14 @@
 	<node name="controller_spawner" pkg="controller_manager" type="spawner"
       respawn="false" output="screen" ns="$(arg controllers_ns)" args="$(arg controllers_args)"/>
 
+	<!-- publishing joint state for state estimation -->
+	<!-- Joint State Publisher -->
+  <node
+    name="joint_state_publisher"
+    pkg="joint_state_publisher"
+    type="joint_state_publisher">
+    <!-- Remap the topic name -->
+    <remap from="/joint_states" to="/anymal_joint_states" />
+  </node>
+
 </launch>
