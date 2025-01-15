@@ -46,3 +46,8 @@ target_compile_options(StatePublisher PRIVATE ${OCS2_CXX_FLAGS})
 add_library(ContactSensor SHARED src/ContactSensor.cpp)
 target_link_libraries(ContactSensor ${catkin_LIBRARIES} ${gazebo_LIBRARIES})
 target_compile_options(ContactSensor PRIVATE ${OCS2_CXX_FLAGS})
+
+#Joint states and contact publisher for state estimation
+add_library(JointStatesContactPublisher src/JointStatesContactPublisher.cpp)
+target_link_libraries(JointStatesContactPublisher ${gazebo_LIBRARIES} ${catkin_LIBRARIES})
+target_compile_options(JointStatesContactPublisher PRIVATE ${OCS2_CXX_FLAGS})

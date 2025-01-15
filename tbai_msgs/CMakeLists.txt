@@ -14,6 +14,8 @@ add_message_files(
     JointCommand.msg
     JointCommandArray.msg
     RbdState.msg
+    Contacts.msg
+    JointStates.msg
 )
 
 generate_messages(

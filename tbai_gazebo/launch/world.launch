@@ -40,12 +40,11 @@
 
 	<!-- publishing joint state for state estimation -->
 	<!-- Joint State Publisher -->
-  <node
+  <!-- <node
     name="joint_state_publisher"
     pkg="joint_state_publisher"
     type="joint_state_publisher">
-    <!-- Remap the topic name -->
     <remap from="/joint_states" to="/anymal_joint_states" />
-  </node>
+  </node> -->
 
 </launch>

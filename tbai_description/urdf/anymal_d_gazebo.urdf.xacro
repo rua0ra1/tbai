@@ -40,6 +40,11 @@
   <plugin filename="libStatePublisher.so" name="StatePublisher"/>
 </gazebo>
 
+<!-- joint states and contact publisher for state estimation -->
+<gazebo>
+  <plugin filename="libJointStatesContactPublisher.so" name="JointStatesContactPublisher"/>
+</gazebo>
+
  <joint name="face_front_to_depth_camera_front_camera" type="fixed">
         <parent link="face_front"/>
         <child link="depth_camera_front_camera"/>

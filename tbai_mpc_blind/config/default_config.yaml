@@ -55,3 +55,9 @@ reference_generator:
 
 contact_sensor:
   update_rate: 20 # Hz
+
+# state estimation topics
+StateEstimation:
+  JointStatesTopic: "state_estimation/joint_states"
+  stateUpdateFreq:  400 #hz
+  ContactFlagTopic: "state_estimation/contact_flags"

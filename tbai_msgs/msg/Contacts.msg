@@ -1,0 +1,6 @@
+# The message also includes contact information for the feet.
+# There are four feet, each contains a single contact flag
+# The feet are ordered as follows: LF, RF, LH, RH
+
+time stamp
+float64[4] contact_flags
