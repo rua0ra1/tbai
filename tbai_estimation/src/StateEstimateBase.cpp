@@ -1,7 +1,7 @@
 //
-// Created by Ram Charan Thota 7th January 2025
+// Created by Ram Charan Teja Thota on 13 January 2025.
+// ref from : https://github.com/qiayuanl/legged_control
 //
-
 #include "tbai_estimation/StateEstimateBase.h"
 
 #include <ocs2_centroidal_model/FactoryFunctions.h>

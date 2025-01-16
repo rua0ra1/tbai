@@ -103,7 +103,7 @@ void JointStatesContactPublisher::OnUpdate() {
         joint_state_msg.joints_velocity[i] = jointVelocities[i];
     }
     // Observation time
-    joint_state_msg.stamp = ros::Time::now();
+    joint_state_msg.header.stamp = ros::Time::now();
     // Publish message
     jointStatePublisher_.publish(joint_state_msg);
 
@@ -113,7 +113,7 @@ void JointStatesContactPublisher::OnUpdate() {
     // Contact flags
     std::copy(contactFlags_.begin(), contactFlags_.end(), contact_msg.contact_flags.begin());
     // Observation time
-    contact_msg.stamp = ros::Time::now();
+    contact_msg.header.stamp = ros::Time::now();
 
     // Publish message
     contactFlagPublisher_.publish(contact_msg);

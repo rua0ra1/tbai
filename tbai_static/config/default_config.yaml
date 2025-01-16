@@ -33,3 +33,4 @@ contact_sensor:
 JointStatesTopic: "state_estimation/joint_states"
 stateUpdateFreq:  400 #hz
 ContactFlagTopic: "state_estimation/contact_flags"
+imuTopic:  "imu"

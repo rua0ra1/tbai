@@ -64,6 +64,14 @@
   <exec_depend>roscpp</exec_depend>
   <exec_depend>tbai_legged_common</exec_depend>
   <exec_depend>tf2_ros</exec_depend>
+  <depend>tbai_core</depend>
+  <depend>tbai_msgs</depend>
+  <depend>sensor_msgs</depend>
+  <depend>message_filters</depend>
+  
+
+
+
 
 
   <!-- The export tag contains other, unspecified, tags -->
