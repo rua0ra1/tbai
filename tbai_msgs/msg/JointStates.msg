@@ -8,7 +8,7 @@
 # There are four feet, each contains a single contact flag
 # The feet are ordered as follows: LF, RF, LH, RH
 
-time stamp
+std_msgs/Header header
 float64[12] joints_position
 float64[12] joints_velocity
 
