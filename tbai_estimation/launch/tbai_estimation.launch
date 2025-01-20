@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<launch>
+   
+    <arg name="task_file" default="$(find tbai_estimation)/config/task.info"/>
+    <param name="task_file" type="string" value="$(arg task_file)"/>
+
+    <arg name="reference_file" default="$(find tbai_estimation)/config/reference.info"/>
+    <param name="reference_file" type="string" value="$(arg reference_file)"/>
+
+
+    <!-- Launch tbai state estimation  node -->
+    <node name="state_estimate_publisher_node" pkg="tbai_estimation" type="state_estimate_publisher_node" output="screen"/>
+
+    
+
+</launch>

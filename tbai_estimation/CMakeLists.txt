@@ -19,12 +19,14 @@ find_package(catkin REQUIRED COMPONENTS
   sensor_msgs
   message_filters
   tbai_core
+  ocs2_centroidal_model
+  ocs2_pinocchio_interface
 )
 
 find_package(yaml-cpp REQUIRED)
 
-# find_package(PkgConfig REQUIRED)
-# pkg_check_modules(pinocchio REQUIRED pinocchio)
+find_package(PkgConfig REQUIRED)
+pkg_check_modules(pinocchio REQUIRED pinocchio)
 
 catkin_package(
         INCLUDE_DIRS
@@ -41,6 +43,8 @@ catkin_package(
         sensor_msgs
         message_filters
         tbai_core
+        ocs2_centroidal_model
+        ocs2_pinocchio_interface
         DEPENDS yaml-cpp
 )
 
@@ -54,23 +58,29 @@ catkin_package(
 include_directories(
   include
   ${catkin_INCLUDE_DIRS}
-  # ${pinocchio_INCLUDE_DIRS}
+  ${pinocchio_INCLUDE_DIRS}
   ${YAML_CPP_INCLUDE_DIR}
 
 )
 
-# link_directories(
-#         ${pinocchio_LIBRARY_DIRS}
-# )
+link_directories(
+        ${pinocchio_LIBRARY_DIRS}
+)
 
 
-add_executable(state_estimate_publisher_node src/StateEstimatePublisherNode.cpp src/StateEstimatePublisher.cpp)
+add_executable(state_estimate_publisher_node 
+              src/StateEstimatePublisherNode.cpp 
+              src/StateEstimatePublisher.cpp
+              src/StateEstimateBase.cpp
+              src/FromTopicEstimate.cpp
+              src/LinearKalmanFilter.cpp)
 
 
 ## Specify libraries to link a library or executable target against
 target_link_libraries(state_estimate_publisher_node
   ${catkin_LIBRARIES}
   ${YAML_CPP_LIBRARIES}
+  ${pinocchio_LIBRARIES}
 )
 
 target_compile_options(state_estimate_publisher_node PRIVATE ${OCS2_CXX_FLAGS})

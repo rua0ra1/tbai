@@ -12,13 +12,14 @@
 #include <nav_msgs/Odometry.h>
 #include <realtime_tools/realtime_publisher.h>
 
-#include <tbai_legged_common/ContactSensorInterface.h>
-#include <tbai_legged_common/HybridJointInterface.h>
+// #include <tbai_legged_common/ContactSensorInterface.h>
+// #include <tbai_legged_common/HybridJointInterface.h>
 #include <ocs2_centroidal_model/CentroidalModelInfo.h>
 #include <ocs2_legged_robot/common/ModelSettings.h>
 #include <ocs2_legged_robot/common/Types.h>
 #include <ocs2_legged_robot/gait/MotionPhaseDefinition.h>
 #include <ocs2_pinocchio_interface/PinocchioEndEffectorKinematics.h>
+#include <ocs2_centroidal_model/CentroidalModelPinocchioMapping.h>
 
 
 namespace tbai {

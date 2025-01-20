@@ -68,6 +68,11 @@
   <depend>tbai_msgs</depend>
   <depend>sensor_msgs</depend>
   <depend>message_filters</depend>
+  <depend>ocs2_centroidal_model</depend>
+  <depend>ocs2_pinocchio_interface</depend>
+
+
+
   
 
 
