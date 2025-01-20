@@ -59,6 +59,8 @@ StateEstimatePublisher::StateEstimatePublisher(ros::NodeHandle &nh, ros::NodeHan
     // state estimate
     stateEstimate_ =
         std::make_shared<KalmanFilterEstimate>(*pinocchioInterfacePtr_, centroidalModelInfo_, *eeKinematicsPtr_);
+    // publish the estiamted state as tbai rbd state message
+
 }
 
 void StateEstimatePublisher::synCallback(const tbai_msgs::JointStatesConstPtr &joint_states_ptr,
@@ -86,7 +88,7 @@ void StateEstimatePublisher::imuCallback(const sensor_msgs::ImuConstPtr &msg) {
 
 void StateEstimatePublisher::publishStateToRBDmsg(const ros::TimerEvent &event) {
     if (imu_data_ready && joint_contact_ready) {
-        ROS_INFO_STREAM("-------- loop is running:---------");
+        // ROS_INFO_STREAM("-------- loop is running:---------");
         vector_t jointPos(12), jointVel(12);
         contact_flag_t contacts;
         contact_flag_t contactFlag;
